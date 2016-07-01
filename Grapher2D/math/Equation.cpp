@@ -18,6 +18,7 @@
 
 typedef struct Node {
 	int type;
+	int childNum;
 	Node** children;
 	void** value;
 } Node;
@@ -161,14 +162,16 @@ void Equation::parse() {
 			if (i == 0) {
 				Node* tempNode = (Node*)malloc(sizeof(Node));
 				tempNode->type = NODE_TYPE_FUN;
-				tempNode->value = new void*[1];
+				tempNode->value = new void*[2];
 				tempNode->value[0] = (void*)new String("");
+				tempNode->value[1] = NULL;
 				unsortedNodes.push_back(tempNode);
 			} else if (stack[i-1]->type != TK_TYPE_STR) {
 				Node* tempNode = (Node*)malloc(sizeof(Node));
 				tempNode->type = NODE_TYPE_FUN;
-				tempNode->value = new void*[1];
+				tempNode->value = new void*[2];
 				tempNode->value[0] = (void*)new String("");
+				tempNode->value[1] = NULL;
 				unsortedNodes.push_back(tempNode);
 			}
 		} else {
@@ -188,7 +191,7 @@ void Equation::parse() {
 				tempNode->value = new void*[2];
 				tempNode->value[0] = (void*)t->value;
 				for (Function* f : m_funcs) {
-					if (f->name.equals(*t->value)) {
+					if (f->name->equals(*t->value)) {
 						tempNode->value[1] = (void*)f;
 						break;
 					}
@@ -207,15 +210,60 @@ void Equation::parse() {
 	void** result = parseExpression(unsortedNodes);
 }
 
+void*** getParts(std::vector<Node*> nodes) {
+	std::vector<std::vector<Node*>> parts;
+	parts.push_back(std::vector<Node*>());
+	int part = 0;
+	bool e = false;
+	for (Node* node:nodes) {
+		e = true;
+		if (node->type == NODE_TYPE_FSP) {
+			part++;
+			parts.push_back(std::vector<Node*>());
+		} else {
+			parts[part].push_back(node);
+		}
+	}
+
+	void*** result;
+	if (e) {
+		result = new void**[parts.size() + 1];
+		result[0] = new void*[1];
+		result[0][0] = (void*)parts.size();
+
+		for (int i = 1; i <= parts.size(); i++) {
+			int length = parts[i - 1].size();
+			void** arr = new void*[length + 1];
+			arr[0] = (void*)length;
+			for (int j = 1; j <= length; j++) {
+				arr[j] = (void*)parts[i - 1][j - 1];
+			}
+
+			result[i] = arr;
+		}
+	} else {
+		result = new void**[1];
+		result[0] = new void*[1];
+		result[0][0] = (void*)0;
+	}
+	
+	return result;
+}
+
+Node* parseSimpleExpression(std::vector<Node*> nodes) {
+
+	return nodes[0];
+}
+
 void** parseExpression(std::vector<Node*> nodes) {
 	std::vector<Node*> simple;
 	std::vector<Node*> funcTemp;
-	void** curFunc;
+	Function* curFunc = NULL;
 	int level = 0;
 	for (Node* node:nodes) {
 		if (level == 0) {
 			if (node->type == NODE_TYPE_FUN) {
-				curFunc = node->value;
+				curFunc = (Function*) node->value[1];
 				level++;
 			} else {
 				simple.push_back(node);
@@ -230,19 +278,48 @@ void** parseExpression(std::vector<Node*> nodes) {
 				funcTemp.push_back(node);
 			} else {
 				void** funcNodeArr = parseExpression(funcTemp);
-				Node* funcNode = (Node*)funcNodeArr[1];
+				Node* funcNode = NULL;
+				if (curFunc == NULL) {
+					funcNode = (Node*)funcNodeArr[1];
+				} else {
+					funcNode = (Node*)malloc(sizeof(Node));
+					int argc = (int)funcNodeArr[0];
+					funcNode->type = NODE_TYPE_FFN;
+					funcNode->value = new void*[1];
+					funcNode->value[0] = (void*)curFunc;
+					funcNode->childNum = argc;
+					funcNode->children = new Node*[argc];
+					
+					for (int i = 0; i < argc; i++) {
+						funcNode->children[i] = (Node*)funcNodeArr[i + 1];
+					}
+				}
 				simple.push_back(funcNode);
 				funcTemp.clear();
 			}
 		}
 	}
 
-	Node* resultN = (Node*)malloc(sizeof(Node));
-	resultN->type = 0;
 	
-	void** result = new void*[2];
-	result[0] = (void*)1;
-	result[1] = (void*)resultN;
+	
+	void*** parts = getParts(simple);
+	int partNum = (int)parts[0][0];
+
+	void** result = new void*[partNum+1];
+
+	result[0] = (void*)partNum;
+	
+	for (int i = 1; i <= partNum;i++) {
+		void** part = parts[i];
+		int partLen = (int)part[0];
+		std::vector<Node*> vec;
+		for (int j = 1; j <= partLen;j++) {
+			vec.push_back((Node*)part[j]);
+		}
+		Node* simplePart = parseSimpleExpression(vec);
+		result[i] = (void*)simplePart;
+	}
+
 	return result;
 }
 

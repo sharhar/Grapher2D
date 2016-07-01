@@ -9,6 +9,16 @@ double mul(double n1, double n2) {
 	return n1 * n2;
 }
 
+double max(double* args) {
+	double n1 = args[0];
+	double n2 = args[1];
+	if (n1 >= n2) {
+		return n1;
+	} else{
+		return n2;
+	}
+}
+
 int main() {
 	Opperator* addO = (Opperator*)malloc(sizeof(Opperator));
 	addO->name = '+';
@@ -20,10 +30,20 @@ int main() {
 	addO->order = 6;
 	mulO->func = &add;
 
+	Function* funcMax = (Function*)malloc(sizeof(Function));
+	funcMax->name = new String("max");
+	funcMax->func = &max;
+
+	Function* funcTan = (Function*)malloc(sizeof(Function));
+	funcTan->name = new String("tan");
+	funcTan->func = NULL;
+
 	Equation e;
-	e.setString("5 * 6 + 2 + sin( hello + tan(ln)* 4) * 6 + (4 + 7)");
+	e.setString("5 * (6 + 2)");
 	e.addOpperator(addO);
 	e.addOpperator(mulO);
+	e.addFunction(funcMax);
+	e.addFunction(funcTan);
 	e.parse();
 
 	system("PAUSE");

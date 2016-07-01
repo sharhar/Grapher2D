@@ -9,7 +9,7 @@ typedef struct Opperator {
 } Opperator;
 
 typedef struct Function {
-	String name;
+	String* name;
 	double(*func) (double*);
 } Function;
 
