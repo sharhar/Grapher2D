@@ -1,4 +1,11 @@
-﻿  main.cpp
+﻿  Equation.cpp
+c:\users\wiish\git\cpp\grapher2d\grapher2d\utils\string.h(136): warning C4018: '<': signed/unsigned mismatch
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(123): warning C4018: '<': signed/unsigned mismatch
+  Generating Code...
+  Compiling...
+  main.cpp
+c:\users\wiish\git\cpp\grapher2d\grapher2d\utils\string.h(136): warning C4018: '<': signed/unsigned mismatch
+  Generating Code...
 LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\Debug\Grapher2D.exe
   Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\Debug\Grapher2D.pdb (Partial PDB)
