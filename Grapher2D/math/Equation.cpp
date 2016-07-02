@@ -48,7 +48,7 @@ void Equation::parse() {
 	int tempType;
 	int lastType = 0;
 	String tempString;
-	for (int i = 0; i < m_string.length;i++) {
+	for (int i = 0; i < m_string.length; i++) {
 		char c = m_string[i];
 		if (c == ' ') {
 			continue;
@@ -61,7 +61,7 @@ void Equation::parse() {
 			tempType = TK_TYPE_NUM;
 		}
 
-		for (Opperator* o:m_ops) {
+		for (Opperator* o : m_ops) {
 			if (o->name == c) {
 				tempType = TK_TYPE_OPP;
 			}
@@ -86,10 +86,12 @@ void Equation::parse() {
 		if (lastType == 0) {
 			tempString = tempString + c;
 			lastType = tempType;
-		} else if(lastType == tempType){
+		}
+		else if (lastType == tempType) {
 			tempString = tempString + c;
-		} else {
-			Token* tempT = (Token*) malloc(sizeof(Token));
+		}
+		else {
+			Token* tempT = (Token*)malloc(sizeof(Token));
 			tempT->type = lastType;
 			tempT->value = new String(tempString);
 			tempStack.push_back(tempT);
@@ -106,27 +108,28 @@ void Equation::parse() {
 
 	std::vector<Token*> stack;
 
-	for (Token* t:tempStack) {
+	for (Token* t : tempStack) {
 		if ((t->type == TK_TYPE_OPP || t->type == TK_TYPE_FOP || t->type == TK_TYPE_FCL || t->type == TK_TYPE_FSP) && t->value->length > 1) {
 			Token* temp = (Token*)malloc(sizeof(Token));
 			temp->type = t->type;
 			String* value = new String(t->value->buff[0]);
 			temp->value = value;
-			for (int i = 0; i < t->value->length;i++) {
+			for (int i = 0; i < t->value->length; i++) {
 				stack.push_back(temp);
 			}
-		} else {
+		}
+		else {
 			stack.push_back(t);
 		}
 	}
 
 	std::vector<Node*> unsortedNodes;
-	for (int i = 0; i < stack.size();i++) {
+	for (int i = 0; i < stack.size(); i++) {
 		Token* t = stack[i];
 		if (t->type == TK_TYPE_NUM) {
 			std::string tempString;
 			String val = *(t->value);
-			for (int i = 0; i < val.length;i++) {
+			for (int i = 0; i < val.length; i++) {
 				tempString.push_back(val.buff[i]);
 			}
 			std::string::size_type sz;
@@ -136,29 +139,33 @@ void Equation::parse() {
 			Node* tempNode = (Node*)malloc(sizeof(Node));
 			tempNode->type = NODE_TYPE_NUM;
 			tempNode->value = new void*[1];
-			tempNode->value[0] = (void*) d;
+			tempNode->value[0] = (void*)d;
 			unsortedNodes.push_back(tempNode);
-		} else if (t->type == TK_TYPE_OPP) {
+		}
+		else if (t->type == TK_TYPE_OPP) {
 			Node* tempNode = (Node*)malloc(sizeof(Node));
 			tempNode->type = NODE_TYPE_OPP;
 			tempNode->value = new void*[2];
-			tempNode->value[0] = (void*) &(t->value->buff[0]);
+			tempNode->value[0] = (void*)&(t->value->buff[0]);
 			for (Opperator* o : m_ops) {
 				if (o->name == t->value->buff[0]) {
-					tempNode->value[1] = (void*) o;
+					tempNode->value[1] = (void*)o;
 					break;
 				}
 			}
 			unsortedNodes.push_back(tempNode);
-		} else if (t->type == TK_TYPE_FSP) {
+		}
+		else if (t->type == TK_TYPE_FSP) {
 			Node* tempNode = (Node*)malloc(sizeof(Node));
 			tempNode->type = NODE_TYPE_FSP;
 			unsortedNodes.push_back(tempNode);
-		} else if (t->type == TK_TYPE_FCL) {
+		}
+		else if (t->type == TK_TYPE_FCL) {
 			Node* tempNode = (Node*)malloc(sizeof(Node));
 			tempNode->type = NODE_TYPE_FCL;
 			unsortedNodes.push_back(tempNode);
-		} else if (t->type == TK_TYPE_FOP) {
+		}
+		else if (t->type == TK_TYPE_FOP) {
 			if (i == 0) {
 				Node* tempNode = (Node*)malloc(sizeof(Node));
 				tempNode->type = NODE_TYPE_FUN;
@@ -166,7 +173,8 @@ void Equation::parse() {
 				tempNode->value[0] = (void*)new String("");
 				tempNode->value[1] = NULL;
 				unsortedNodes.push_back(tempNode);
-			} else if (stack[i-1]->type != TK_TYPE_STR) {
+			}
+			else if (stack[i - 1]->type != TK_TYPE_STR) {
 				Node* tempNode = (Node*)malloc(sizeof(Node));
 				tempNode->type = NODE_TYPE_FUN;
 				tempNode->value = new void*[2];
@@ -174,16 +182,17 @@ void Equation::parse() {
 				tempNode->value[1] = NULL;
 				unsortedNodes.push_back(tempNode);
 			}
-		} else {
+		}
+		else {
 			if (i == stack.size() - 1) {
 				Node* tempNode = (Node*)malloc(sizeof(Node));
 				tempNode->type = NODE_TYPE_VAR;
 				tempNode->value = new void*[1];
-				tempNode->value[0] = (void*) t->value;
+				tempNode->value[0] = (void*)t->value;
 				unsortedNodes.push_back(tempNode);
 				continue;
 			}
-			Token* next = stack[i+1];
+			Token* next = stack[i + 1];
 
 			if (next->type == TK_TYPE_FOP) {
 				Node* tempNode = (Node*)malloc(sizeof(Node));
@@ -197,7 +206,8 @@ void Equation::parse() {
 					}
 				}
 				unsortedNodes.push_back(tempNode);
-			} else {
+			}
+			else {
 				Node* tempNode = (Node*)malloc(sizeof(Node));
 				tempNode->type = NODE_TYPE_VAR;
 				tempNode->value = new void*[1];
@@ -208,6 +218,7 @@ void Equation::parse() {
 	}
 
 	void** result = parseExpression(unsortedNodes);
+	m_rootNode = result[1];
 }
 
 void*** getParts(std::vector<Node*> nodes) {
@@ -251,8 +262,71 @@ void*** getParts(std::vector<Node*> nodes) {
 }
 
 Node* parseSimpleExpression(std::vector<Node*> nodes) {
+	if (nodes.size() == 1) {
+		return nodes[0];
+	}
+	
+	int level = -1;
+	for (Node* node:nodes) {
+		if (node->type == NODE_TYPE_OPP) {
+			Opperator* op = (Opperator*)node->value[1];
+			if (op->order > level) {
+				level = op->order;
+			}
+		}
+	}
 
-	return nodes[0];
+	for (Node* node:nodes) {
+		if (node->type == NODE_TYPE_OPP) {
+			Opperator* op = (Opperator*)node->value[1];
+		}
+	}
+
+	std::vector<Node*> tempVec;
+	for (int i = 0; i < nodes.size();i++) {
+		Node* node = nodes[i];
+		if (node->type != NODE_TYPE_OPP) {
+			tempVec.push_back(node);
+		} else if (node->type == NODE_TYPE_OPP) {
+			Opperator* op = (Opperator*)node->value[1];
+			if (op->order != level) {
+				tempVec.push_back(node);
+			} else {
+				Node* prev = parseSimpleExpression(tempVec);
+				std::vector<Node*> temp2;
+				int loc = -1;
+				for (int j = i + 1; j < nodes.size();j++) {
+					Node* node2 = nodes[j];
+					if (node2->type == NODE_TYPE_OPP) {
+						Opperator* op2 = (Opperator*)node2->value[1];
+						if (op2->order == level) {
+							loc = j;
+							break;
+						} else {
+							temp2.push_back(node2);
+						}
+					} else {
+						temp2.push_back(node2);
+					}
+				}
+				Node* next = parseSimpleExpression(temp2);
+
+				node->childNum = 2;
+				node->children = new Node*[2];
+				node->children[0] = prev;
+				node->children[1] = next;
+
+				if (loc != -1) {
+					i = loc - 1;
+					tempVec.clear();
+					tempVec.push_back(node);
+				} else {
+					return node;
+				}
+			}
+		}
+	}
+	return NULL;
 }
 
 void** parseExpression(std::vector<Node*> nodes) {

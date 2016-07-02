@@ -18,6 +18,7 @@ private:
 	String m_string;
 	std::vector<Opperator*> m_ops;
 	std::vector<Function*> m_funcs;
+	void* m_rootNode;
 public:
 	void setString(String string);
 	void addOpperator(Opperator* op);

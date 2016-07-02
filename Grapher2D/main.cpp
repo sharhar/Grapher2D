@@ -22,12 +22,12 @@ double max(double* args) {
 int main() {
 	Opperator* addO = (Opperator*)malloc(sizeof(Opperator));
 	addO->name = '+';
-	addO->order = 4;
+	addO->order = 10;
 	addO->func = &add;
 
 	Opperator* mulO = (Opperator*)malloc(sizeof(Opperator));
 	mulO->name = '*';
-	addO->order = 6;
+	mulO->order = 8;
 	mulO->func = &add;
 
 	Function* funcMax = (Function*)malloc(sizeof(Function));
@@ -39,7 +39,7 @@ int main() {
 	funcTan->func = NULL;
 
 	Equation e;
-	e.setString("5 * (6 + 2)");
+	e.setString("6 + 9 * tan(-1 * max(1000 * 2 + 1, 3 + 1))");
 	e.addOpperator(addO);
 	e.addOpperator(mulO);
 	e.addFunction(funcMax);
