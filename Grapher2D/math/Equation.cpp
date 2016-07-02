@@ -29,6 +29,7 @@ typedef struct Token {
 } Token;
 
 void** parseExpression(std::vector<Node*> nodes);
+double evalNode(Node* node, std::unordered_map<std::string, double>* vars);
 
 void Equation::setString(String string) {
 	m_string = String(string);
@@ -397,6 +398,46 @@ void** parseExpression(std::vector<Node*> nodes) {
 	return result;
 }
 
-void Equation::eval() {
-	
+void Equation::setVar(std::string name, double value) {
+	m_vars[name] = value;
+}
+
+double Equation::eval() {
+	Node* root = (Node*)m_rootNode;
+	double result = evalNode(root, &m_vars);
+	return result;
+}
+
+double evalNode(Node* node, std::unordered_map<std::string, double>* vars) {
+	if (node->type == NODE_TYPE_NUM) {
+		double result = ((double*)(node->value[0]))[0];
+		return result;
+	} else if (node->type == NODE_TYPE_VAR) {
+		String* nameP = (String*)node->value[0];
+		std::string name = nameP->getstdstring();
+		double result = (*vars)[name];
+		return result;
+	} else if (node->type == NODE_TYPE_OPP) {
+		Opperator* op = (Opperator*)node->value[1];
+		Node* prev = node->children[0];
+		Node* next = node->children[1];
+
+		double prevVal = evalNode(prev, vars);
+		double nextVal = evalNode(next, vars);
+
+		double result = (*op->func)(prevVal, nextVal);
+		return result;
+	} else if (node->type == NODE_TYPE_FFN) {
+		Function* func = (Function*)node->value[0];
+		int argc = node->childNum;
+		double* vals = new double[argc];
+		for (int i = 0; i < argc;i++) {
+			vals[i] = evalNode(node->children[i], vars);
+		}
+
+		double result = (*func->func)(vals);
+		return result;
+	}
+
+	return -1;
 }

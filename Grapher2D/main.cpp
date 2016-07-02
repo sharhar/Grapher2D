@@ -1,5 +1,6 @@
 #include "Window.h"
 #include "math/Equation.h"
+#include <math.h>
 
 double add(double n1, double n2) {
 	return n1 + n2;
@@ -9,14 +10,8 @@ double mul(double n1, double n2) {
 	return n1 * n2;
 }
 
-double max(double* args) {
-	double n1 = args[0];
-	double n2 = args[1];
-	if (n1 >= n2) {
-		return n1;
-	} else{
-		return n2;
-	}
+double tanF(double* input) {
+	return tan(input[0]);
 }
 
 int main() {
@@ -28,23 +23,24 @@ int main() {
 	Opperator* mulO = (Opperator*)malloc(sizeof(Opperator));
 	mulO->name = '*';
 	mulO->order = 8;
-	mulO->func = &add;
-
-	Function* funcMax = (Function*)malloc(sizeof(Function));
-	funcMax->name = new String("max");
-	funcMax->func = &max;
+	mulO->func = &mul;
 
 	Function* funcTan = (Function*)malloc(sizeof(Function));
 	funcTan->name = new String("tan");
-	funcTan->func = NULL;
+	funcTan->func = &tanF;
 
 	Equation e;
-	e.setString("6 + 9 * tan(-1 * max(1000 * 2 + 1, 3 + 1))");
+	e.setString("tan(pi * 0.4)");
 	e.addOpperator(addO);
 	e.addOpperator(mulO);
-	e.addFunction(funcMax);
 	e.addFunction(funcTan);
 	e.parse();
+
+	e.setVar("pi", 3.14159265);
+
+	double result = e.eval();
+
+	std::cout << "EVAL: " << result << "\n";
 
 	system("PAUSE");
 

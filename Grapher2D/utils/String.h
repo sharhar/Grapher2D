@@ -10,8 +10,6 @@
 
 using namespace std;
 
-
-
 class String {
 public:
 	int length;
@@ -145,6 +143,15 @@ public:
 		return result;
 	}
 
+	std::string getstdstring() {
+		std::string result;
+		for (int i = 0; i < length;i++) {
+			result.push_back((*this)[i]);
+		}
+
+		return result;
+	}
+
 	String& operator= (const String& other) {
 		if (this != &other) {
 			delete[] buff;
@@ -153,6 +160,20 @@ public:
 			cStrncpy(buff, other.buff, length);
 		}
 		return *this;
+	}
+
+	bool operator== (const String& other) {
+		if (length != other.length) {
+			return false;
+		}
+
+		for (int i = 0; i < length; i++) {
+			if (buff[i] != other.buff[i]) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	char& operator[] (int index) {
