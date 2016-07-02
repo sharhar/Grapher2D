@@ -14,6 +14,18 @@ double tanF(double* input) {
 	return tan(input[0]);
 }
 
+double maxF(double* input) {
+	if (input[0] >= input[1]) {
+		return input[0];
+	} else {
+		return input[1];
+	}
+}
+
+double blank(double* args) {
+	return args[0];
+}
+
 int main() {
 	Opperator* addO = (Opperator*)malloc(sizeof(Opperator));
 	addO->name = '+';
@@ -29,14 +41,22 @@ int main() {
 	funcTan->name = new String("tan");
 	funcTan->func = &tanF;
 
+	Function* funcMax = (Function*)malloc(sizeof(Function));
+	funcMax->name = new String("max");
+	funcMax->func = &maxF;
+
+	Function* funcBlank = (Function*)malloc(sizeof(Function));
+	funcMax->name = new String("");
+	funcMax->func = &blank;
+
 	Equation e;
-	e.setString("tan(pi * 0.4)");
+	e.setString("6 * (2 + 4)");
 	e.addOpperator(addO);
 	e.addOpperator(mulO);
 	e.addFunction(funcTan);
+	e.addFunction(funcMax);
+	e.addFunction(funcBlank);
 	e.parse();
-
-	e.setVar("pi", 3.14159265);
 
 	double result = e.eval();
 

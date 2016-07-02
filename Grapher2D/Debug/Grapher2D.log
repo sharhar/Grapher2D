@@ -1,4 +1,8 @@
-﻿  main.cpp
+﻿  Equation.cpp
 c:\users\wiish\git\cpp\grapher2d\grapher2d\utils\string.h(134): warning C4018: '<': signed/unsigned mismatch
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(128): warning C4018: '<': signed/unsigned mismatch
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(256): warning C4018: '<=': signed/unsigned mismatch
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(297): warning C4018: '<': signed/unsigned mismatch
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(309): warning C4018: '<': signed/unsigned mismatch
   Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\Debug\Grapher2D.exe
   Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\Debug\Grapher2D.pdb (Partial PDB)

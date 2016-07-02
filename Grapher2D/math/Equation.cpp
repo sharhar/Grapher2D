@@ -172,7 +172,12 @@ void Equation::parse() {
 				tempNode->type = NODE_TYPE_FUN;
 				tempNode->value = new void*[2];
 				tempNode->value[0] = (void*)new String("");
-				tempNode->value[1] = NULL;
+				for (Function* f : m_funcs) {
+					if (f->name->equals(String(""))) {
+						tempNode->value[1] = (void*)f;
+						break;
+					}
+				}
 				unsortedNodes.push_back(tempNode);
 			}
 			else if (stack[i - 1]->type != TK_TYPE_STR) {
@@ -180,7 +185,12 @@ void Equation::parse() {
 				tempNode->type = NODE_TYPE_FUN;
 				tempNode->value = new void*[2];
 				tempNode->value[0] = (void*)new String("");
-				tempNode->value[1] = NULL;
+				for (Function* f : m_funcs) {
+					if (f->name->equals(String(""))) {
+						tempNode->value[1] = (void*)f;
+						break;
+					}
+				}
 				unsortedNodes.push_back(tempNode);
 			}
 		}
@@ -354,20 +364,17 @@ void** parseExpression(std::vector<Node*> nodes) {
 			} else {
 				void** funcNodeArr = parseExpression(funcTemp);
 				Node* funcNode = NULL;
-				if (curFunc == NULL) {
-					funcNode = (Node*)funcNodeArr[1];
-				} else {
-					funcNode = (Node*)malloc(sizeof(Node));
-					int argc = (int)funcNodeArr[0];
-					funcNode->type = NODE_TYPE_FFN;
-					funcNode->value = new void*[1];
-					funcNode->value[0] = (void*)curFunc;
-					funcNode->childNum = argc;
-					funcNode->children = new Node*[argc];
-					
-					for (int i = 0; i < argc; i++) {
-						funcNode->children[i] = (Node*)funcNodeArr[i + 1];
-					}
+				
+				funcNode = (Node*)malloc(sizeof(Node));
+				int argc = (int)funcNodeArr[0];
+				funcNode->type = NODE_TYPE_FFN;
+				funcNode->value = new void*[1];
+				funcNode->value[0] = (void*)curFunc;
+				funcNode->childNum = argc;
+				funcNode->children = new Node*[argc];
+				
+				for (int i = 0; i < argc; i++) {
+					funcNode->children[i] = (Node*)funcNodeArr[i + 1];
 				}
 				simple.push_back(funcNode);
 				funcTemp.clear();
