@@ -22,6 +22,7 @@ private:
 	std::unordered_map<std::string, double> m_vars;
 	void* m_rootNode;
 public:
+	Equation();
 	void setString(String string);
 	void addOpperator(Opperator* op);
 	void addFunction(Function* func);

@@ -1,4 +1,5 @@
 #include "Equation.h"
+#include <math.h>
 
 #define TK_TYPE_OPP 1
 #define TK_TYPE_NUM 2
@@ -31,6 +32,144 @@ typedef struct Token {
 void** parseExpression(std::vector<Node*> nodes);
 double evalNode(Node* node, std::unordered_map<std::string, double>* vars);
 
+double addO(double n1, double n2) {
+	return n1 + n2;
+}
+
+double mulO(double n1, double n2) {
+	return n1 * n2;
+}
+
+double subO(double n1, double n2) {
+	return n1 - n2;
+}
+
+double divO(double n1, double n2) {
+	return n1 / n2;
+}
+
+double powO(double n1, double n2) {
+	return pow(n1, n2);
+}
+
+double tanF(double* input) {
+	return tan(input[0]);
+}
+
+double sinF(double* input) {
+	return sin(input[0]);
+}
+
+double cosF(double* input) {
+	return cos(input[0]);
+}
+
+double maxF(double* input) {
+	if (input[0] >= input[1]) {
+		return input[0];
+	}
+	else {
+		return input[1];
+	}
+}
+
+double lnF(double* input) {
+	return log(input[0]);
+}
+
+double logF(double* input) {
+	return log10(input[0]);
+}
+
+double expF(double* input) {
+	return exp(input[0]);
+}
+
+double blankF(double* args) {
+	return args[0];
+}
+
+void loadDefaults(Equation* e) {
+	Opperator* addOp = (Opperator*)malloc(sizeof(Opperator));
+	addOp->name = '+';
+	addOp->order = 10;
+	addOp->func = &addO;
+
+	Opperator* mulOp = (Opperator*)malloc(sizeof(Opperator));
+	mulOp->name = '*';
+	mulOp->order = 8;
+	mulOp->func = &mulO;
+
+	Opperator* subOp = (Opperator*)malloc(sizeof(Opperator));
+	subOp->name = '-';
+	subOp->order = 10;
+	subOp->func = &subO;
+
+	Opperator* divOp = (Opperator*)malloc(sizeof(Opperator));
+	divOp->name = '/';
+	divOp->order = 8;
+	divOp->func = &divO;
+
+	Opperator* powOp = (Opperator*)malloc(sizeof(Opperator));
+	powOp->name = '^';
+	powOp->order = 6;
+	powOp->func = &powO;
+
+	e->addOpperator(addOp);
+	e->addOpperator(mulOp);
+	e->addOpperator(subOp);
+	e->addOpperator(divOp);
+	e->addOpperator(powOp);
+
+	Function* funcTan = (Function*)malloc(sizeof(Function));
+	funcTan->name = new String("tan");
+	funcTan->func = &tanF;
+
+	Function* funcSin = (Function*)malloc(sizeof(Function));
+	funcSin->name = new String("sin");
+	funcSin->func = &sinF;
+
+	Function* funcCos = (Function*)malloc(sizeof(Function));
+	funcCos->name = new String("cos");
+	funcCos->func = &cosF;
+
+	Function* funcMax = (Function*)malloc(sizeof(Function));
+	funcMax->name = new String("max");
+	funcMax->func = &maxF;
+
+	Function* funcBlank = (Function*)malloc(sizeof(Function));
+	funcBlank->name = new String("");
+	funcBlank->func = &blankF;
+
+	Function* funcLn = (Function*)malloc(sizeof(Function));
+	funcLn->name = new String("ln");
+	funcLn->func = &lnF;
+
+	Function* funcLog = (Function*)malloc(sizeof(Function));
+	funcLog->name = new String("log");
+	funcLog->func = &logF;
+
+	Function* funcExp = (Function*)malloc(sizeof(Function));
+	funcExp->name = new String("exp");
+	funcExp->func = &expF;
+
+	e->addFunction(funcTan);
+	e->addFunction(funcSin);
+	e->addFunction(funcCos);
+	e->addFunction(funcMax);
+	e->addFunction(funcBlank);
+	e->addFunction(funcLn);
+	e->addFunction(funcLog);
+	e->addFunction(funcExp);
+
+	e->setVar("e", 2.718281828459045);
+	e->setVar("pi", 3.141592653589793);
+}
+
+Equation::Equation() {
+	loadDefaults(this);
+}
+
 void Equation::setString(String string) {
 	m_string = String(string);
 }
@@ -45,7 +184,6 @@ void Equation::addFunction(Function* func) {
 
 void Equation::parse() {
 	std::vector<Token*> tempStack;
-
 	int tempType;
 	int lastType = 0;
 	String tempString;
@@ -108,7 +246,6 @@ void Equation::parse() {
 	tempStack.push_back(tempT);
 
 	std::vector<Token*> stack;
-
 	for (Token* t : tempStack) {
 		if ((t->type == TK_TYPE_OPP || t->type == TK_TYPE_FOP || t->type == TK_TYPE_FCL || t->type == TK_TYPE_FSP) && t->value->length > 1) {
 			Token* temp = (Token*)malloc(sizeof(Token));
@@ -123,7 +260,6 @@ void Equation::parse() {
 			stack.push_back(t);
 		}
 	}
-
 	std::vector<Node*> unsortedNodes;
 	for (int i = 0; i < stack.size(); i++) {
 		Token* t = stack[i];
@@ -227,7 +363,6 @@ void Equation::parse() {
 			}
 		}
 	}
-
 	void** result = parseExpression(unsortedNodes);
 	m_rootNode = result[1];
 }

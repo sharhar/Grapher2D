@@ -1,87 +1,86 @@
 #include "Window.h"
 #include "math/Equation.h"
-#include <math.h>
 
-double add(double n1, double n2) {
-	return n1 + n2;
+#define VAL_NUM 100
+
+void drawAxes() {
+	glColor3f(0.0f, 0.0f, 0.0f);
+	glLineWidth(2.0f);
+	glBegin(GL_LINES);
+	glVertex2f(0, 300);
+	glVertex2f(800, 300);
+	glVertex2f(400, 0);
+	glVertex2f(400, 600);
+	glEnd();
 }
 
-double mul(double n1, double n2) {
-	return n1 * n2;
-}
-
-double tanF(double* input) {
-	return tan(input[0]);
-}
-
-double maxF(double* input) {
-	if (input[0] >= input[1]) {
-		return input[0];
-	} else {
-		return input[1];
+void genVals(double* arr, double xl, double xr, Equation* e) {
+	double xint = (xr - xl) / (VAL_NUM);
+	for (int i = 0; i < VAL_NUM;i++) {
+		double x = xint*i + xl;
+		e->setVar("x", x);
+		arr[i] = e->eval();
 	}
 }
 
-double blank(double* args) {
-	return args[0];
+void renderVals(double* arr, double yd, double yu) {
+	double xint = (800.0f)/(VAL_NUM-1);
+	double yh = (yu - yd);
+	
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glLineWidth(2.5f);
+	glBegin(GL_LINES);
+	for (int i = 1; i < VAL_NUM;i++) {
+		glVertex2f(xint*(i-1) + 0, ((arr[i-1] - yd)/yh)*600);
+		glVertex2f(xint*(i) + 0, ((arr[i] - yd)/yh)*600);
+	}
+	glEnd();
 }
 
 int main() {
-	Opperator* addO = (Opperator*)malloc(sizeof(Opperator));
-	addO->name = '+';
-	addO->order = 10;
-	addO->func = &add;
-
-	Opperator* mulO = (Opperator*)malloc(sizeof(Opperator));
-	mulO->name = '*';
-	mulO->order = 8;
-	mulO->func = &mul;
-
-	Function* funcTan = (Function*)malloc(sizeof(Function));
-	funcTan->name = new String("tan");
-	funcTan->func = &tanF;
-
-	Function* funcMax = (Function*)malloc(sizeof(Function));
-	funcMax->name = new String("max");
-	funcMax->func = &maxF;
-
-	Function* funcBlank = (Function*)malloc(sizeof(Function));
-	funcMax->name = new String("");
-	funcMax->func = &blank;
-
-	Equation e;
-	e.setString("6 * (2 + 4)");
-	e.addOpperator(addO);
-	e.addOpperator(mulO);
-	e.addFunction(funcTan);
-	e.addFunction(funcMax);
-	e.addFunction(funcBlank);
-	e.parse();
-
-	double result = e.eval();
-
-	std::cout << "EVAL: " << result << "\n";
-
-	system("PAUSE");
-
-	/*
 	glfwInit();
 
 	Window window(800, 600, "Hello!");
 
-	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0, 800, 0, 600, -1, 1);
+	glMatrixMode(GL_MODELVIEW);
+
+	Equation e;
+
+	e.setString("sin(x - a) + cos(x + a)");
+	e.parse();
+
+	double left = -5;
+	double right = 5;
+	double down = -5;
+	double up = 5;
+
+	double* vals = new double[VAL_NUM];
 
 	
 
 	while (window.isOpen()) {
 		window.poll();
+
+		e.setVar("a", glfwGetTime());
+		genVals(vals, left, right, &e);
+
 		glClear(GL_COLOR_BUFFER_BIT);
+		
+		drawAxes();
+		
+		renderVals(vals, down ,up);
+
 		window.swapBuffers();
 	}
 	
 	window.destroy();
 
 	glfwTerminate();
-	*/
+
 	return 0;
 }

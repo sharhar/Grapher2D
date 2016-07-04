@@ -44,7 +44,7 @@ public:
 	static int cStrlen(char * ptr) {
 		int len = 0;
 		char * p = ptr;
-		while (*p != '\0') {
+		while (p != NULL && *p != '\0') {
 			len++;
 			p++;
 		}
@@ -80,6 +80,10 @@ public:
 	}
 
 	bool equals(String other) {
+		if (other == nullptr) {
+			return false;
+		}
+
 		if (length != other.length) {
 			return false;
 		}
