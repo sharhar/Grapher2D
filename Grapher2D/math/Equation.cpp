@@ -196,14 +196,18 @@ void Equation::parse() {
 		if (c == '0' || c == '1' || c == '2' ||
 			c == '3' || c == '4' || c == '5' ||
 			c == '6' || c == '7' || c == '8' ||
-			c == '9' || c == '.') {
-			tempType = TK_TYPE_NUM;
+			c == '9' || c == '.' || c == '~') {
+			tempType = TK_TYPE_NUM;	
 		}
 
 		for (Opperator* o : m_ops) {
 			if (o->name == c) {
 				tempType = TK_TYPE_OPP;
 			}
+		}
+
+		if (tempType == TK_TYPE_NUM && c == '~') {
+			c = '-';
 		}
 
 		if (c == '(') {
@@ -309,7 +313,7 @@ void Equation::parse() {
 				tempNode->value = new void*[2];
 				tempNode->value[0] = (void*)new String("");
 				for (Function* f : m_funcs) {
-					if (f->name->equals(String(""))) {
+					if (f->name->length == 0) {
 						tempNode->value[1] = (void*)f;
 						break;
 					}
@@ -322,7 +326,7 @@ void Equation::parse() {
 				tempNode->value = new void*[2];
 				tempNode->value[0] = (void*)new String("");
 				for (Function* f : m_funcs) {
-					if (f->name->equals(String(""))) {
+					if (f->name->length == 0) {
 						tempNode->value[1] = (void*)f;
 						break;
 					}

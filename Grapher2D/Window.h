@@ -11,5 +11,6 @@ public:
 	void poll();
 	void destroy();
 	void swapBuffers();
+	void getSize(int* width, int* height);
 };
 

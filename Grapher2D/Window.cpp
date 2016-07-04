@@ -4,6 +4,8 @@ Window::Window(int width, int height, const char* title) {
 	m_window = glfwCreateWindow(width, height, title, NULL, NULL);
 	glfwMakeContextCurrent(m_window);
 
+	glfwSetWindowAspectRatio(m_window, width, height);
+
 	glfwSwapInterval(1);
 }
 
@@ -21,4 +23,8 @@ void Window::destroy() {
 
 void Window::swapBuffers() {
 	glfwSwapBuffers(m_window);
+}
+
+void Window::getSize(int* width, int* height) {
+	glfwGetWindowSize(m_window, width, height);
 }

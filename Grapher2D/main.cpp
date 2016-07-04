@@ -1,16 +1,16 @@
 #include "Window.h"
 #include "math/Equation.h"
 
-#define VAL_NUM 100
+#define VAL_NUM 150
 
-void drawAxes() {
+void drawAxes(int width, int height) {
 	glColor3f(0.0f, 0.0f, 0.0f);
 	glLineWidth(2.0f);
 	glBegin(GL_LINES);
-	glVertex2f(0, 300);
-	glVertex2f(800, 300);
-	glVertex2f(400, 0);
-	glVertex2f(400, 600);
+	glVertex2f(0, height/2.0f);
+	glVertex2f(width, height/2.0f);
+	glVertex2f(width/2.0f, 0);
+	glVertex2f(width/2.0f, height);
 	glEnd();
 }
 
@@ -23,16 +23,16 @@ void genVals(double* arr, double xl, double xr, Equation* e) {
 	}
 }
 
-void renderVals(double* arr, double yd, double yu) {
-	double xint = (800.0f)/(VAL_NUM-1);
+void renderVals(double* arr, double yd, double yu, int width, int height) {
+	double xint = (width * 1.0f)/(VAL_NUM-1);
 	double yh = (yu - yd);
 	
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glLineWidth(2.5f);
 	glBegin(GL_LINES);
 	for (int i = 1; i < VAL_NUM;i++) {
-		glVertex2f(xint*(i-1) + 0, ((arr[i-1] - yd)/yh)*600);
-		glVertex2f(xint*(i) + 0, ((arr[i] - yd)/yh)*600);
+		glVertex2f(xint*(i-1) + 0, ((arr[i-1] - yd)/yh)*height);
+		glVertex2f(xint*(i) + 0, ((arr[i] - yd)/yh)*height);
 	}
 	glEnd();
 }
@@ -51,17 +51,15 @@ int main() {
 
 	Equation e;
 
-	e.setString("sin(x - a) + cos(x + a)");
+	e.setString("sin(x)*e^(x/(cos(a)*2 + 4))");
 	e.parse();
 
-	double left = -5;
-	double right = 5;
-	double down = -5;
-	double up = 5;
+	double left = -10;
+	double right = 10;
+	double down = -10;
+	double up = 10;
 
 	double* vals = new double[VAL_NUM];
-
-	
 
 	while (window.isOpen()) {
 		window.poll();
@@ -70,10 +68,15 @@ int main() {
 		genVals(vals, left, right, &e);
 
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		int width, height;
 		
-		drawAxes();
-		
-		renderVals(vals, down ,up);
+		window.getSize(&width, &height);
+
+		glViewport(0, 0, width, height);
+
+		drawAxes(800, 600);
+		renderVals(vals, down ,up, 800, 600);
 
 		window.swapBuffers();
 	}
