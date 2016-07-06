@@ -43,3 +43,7 @@ void input::mouse::init() {
 	m_mouse->posY = -1;
 	m_mouse->button1 = false;
 }
+
+input::MouseData* input::mouse::getMouseData() {
+	return m_mouse;
+}

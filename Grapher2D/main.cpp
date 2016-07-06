@@ -1,17 +1,57 @@
 #include "Window.h"
 #include "math/Equation.h"
 
-#define VAL_NUM 100
+#define VAL_NUM 400
+#define ZOOM_PERCENT 0.1
+
+double g_left = -8;
+double g_right = 8;
+double g_down = -6;
+double g_up = 6;
+
+int g_windowWidth = 800;
+int g_windowHeight = 600;
 
 void drawAxes(int width, int height) {
-	glColor3f(0.0f, 0.0f, 0.0f);
-	glLineWidth(2.0f);
-	glBegin(GL_LINES);
-	glVertex2f(0, height/2.0f);
-	glVertex2f(width, height/2.0f);
-	glVertex2f(width/2.0f, 0);
-	glVertex2f(width/2.0f, height);
-	glEnd();
+	double l = abs(g_left);
+	double r = abs(g_right);
+
+	double xoff = (l/(r + l))* width;
+
+	if (g_left < 0 && g_right > 0) {
+		glPushMatrix();
+
+		glTranslatef(xoff, 0, 0);
+
+		glColor3f(0.0f, 0.0f, 0.0f);
+		glLineWidth(2.0f);
+		glBegin(GL_LINES);
+		glVertex2f(0, 0);
+		glVertex2f(0, height);
+		glEnd();
+
+		glPopMatrix();
+	}
+
+	double d = abs(g_down);
+	double u = abs(g_up);
+
+	double yoff = (d / (u + d))* height;
+
+	if (g_up > 0 && g_down < 0) {
+		glPushMatrix();
+
+		glTranslatef(0, yoff, 0);
+
+		glColor3f(0.0f, 0.0f, 0.0f);
+		glLineWidth(2.0f);
+		glBegin(GL_LINES);
+		glVertex2f(0, 0);
+		glVertex2f(width, 0);
+		glEnd();
+
+		glPopMatrix();
+	}
 }
 
 void genVals(double* arr, double xl, double xr, Equation* e) {
@@ -38,15 +78,52 @@ void renderVals(double* arr, double yd, double yu, int width, int height) {
 }
 
 void input::mouse::moved(double x, double y) {
-	//std::cout << "Moved: " << x << " " << y << "\n";
+
 }
 
 void input::mouse::dragged(double x, double y) {
-	//std::cout << "Dragged: " << x << " " << y << "\n";
+	double width = g_right - g_left;
+	double percentX = x / g_windowWidth;
+
+	double moveX = -width * percentX;
+
+	g_left += moveX;
+	g_right += moveX;
+
+	double height = g_up - g_down;
+	double percentY = y / g_windowHeight;
+
+	double moveY = height * percentY;
+
+	g_down += moveY;
+	g_up += moveY;
 }
 
 void input::mouse::scrolled(double s) {
-	//std::cout << "Scrolled: " << s << "\n";
+	input::MouseData* mouseData = input::mouse::getMouseData();
+	
+	double width = g_right - g_left;
+	double percentX = (mouseData->posX - g_windowHeight/2.0) / g_windowWidth;
+	double moveX = width * percentX;
+
+	double xpos = ((g_right + g_left) / 2.0);
+	double ypos = ((g_up + g_down) / 2.0);
+
+	double sizeX = g_right - g_left;
+	double sizeY = g_up - g_down;
+
+	if (s < 0) {
+		sizeX = sizeX / ((1 - ZOOM_PERCENT));
+		sizeY = sizeY / ((1 - ZOOM_PERCENT));
+	} else if (s > 0) {
+		sizeX = sizeX * ((1 - ZOOM_PERCENT));
+		sizeY = sizeY * ((1 - ZOOM_PERCENT));
+	}
+
+	g_left = xpos - sizeX / 2;
+	g_right = xpos + sizeX / 2;
+	g_down = ypos - sizeY / 2;
+	g_up = ypos + sizeY / 2;
 }
 
 int main() {
@@ -54,24 +131,19 @@ int main() {
 
 	input::mouse::init();
 
-	Window window(800, 600, "Hello!");
+	Window window(g_windowWidth, g_windowHeight, "Grapher");
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(0, 800, 0, 600, -1, 1);
+	glOrtho(0, g_windowWidth, 0, g_windowHeight, -1, 1);
 	glMatrixMode(GL_MODELVIEW);
 
 	Equation e;
 
-	e.setString("~1 * e^x");
+	e.setString("ln(x)");
 	e.parse();
-
-	double left = -10;
-	double right = 10;
-	double down = -10;
-	double up = 10;
 
 	double* vals = new double[VAL_NUM];
 
@@ -79,18 +151,16 @@ int main() {
 		window.poll();
 
 		e.setVar("a", glfwGetTime());
-		genVals(vals, left, right, &e);
+		genVals(vals, g_left, g_right, &e);
 
 		glClear(GL_COLOR_BUFFER_BIT);
-
-		int width, height;
 		
-		window.getSize(&width, &height);
+		window.getSize(&g_windowWidth, &g_windowHeight);
 
-		glViewport(0, 0, width, height);
+		glViewport(0, 0, g_windowWidth, g_windowHeight);
 
 		drawAxes(800, 600);
-		renderVals(vals, down ,up, 800, 600);
+		renderVals(vals, g_down , g_up, 800, 600);
 
 		window.swapBuffers();
 	}

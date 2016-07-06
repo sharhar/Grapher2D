@@ -22,6 +22,8 @@ namespace input {
 	namespace mouse {
 		void init();
 
+		MouseData* getMouseData();
+
 		void moved(double x, double y);
 		void dragged(double x, double y);
 		void scrolled(double s);
