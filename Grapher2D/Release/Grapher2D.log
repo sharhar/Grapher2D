@@ -1,0 +1,21 @@
+﻿  Input.cpp
+  main.cpp
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\../utils/String.h(138): warning C4018: '<': signed/unsigned mismatch
+main.cpp(24): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+main.cpp(30): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+main.cpp(44): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+main.cpp(50): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+main.cpp(74): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+main.cpp(75): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+  Equation.cpp
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\../utils/String.h(138): warning C4018: '<': signed/unsigned mismatch
+math\Equation.cpp(268): warning C4018: '<': signed/unsigned mismatch
+math\Equation.cpp(395): warning C4018: '<=': signed/unsigned mismatch
+math\Equation.cpp(436): warning C4018: '<': signed/unsigned mismatch
+math\Equation.cpp(448): warning C4018: '<': signed/unsigned mismatch
+  Window.cpp
+  Generating code
+  All 852 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\\Build\Windows\Win32\Grapher2D.exe
+  Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\\Build\Windows\Win32\Grapher2D.pdb (Full PDB)
