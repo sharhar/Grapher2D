@@ -1,8 +1,3 @@
-﻿  main.cpp
-c:\users\wiish\git\cpp\grapher2d\grapher2d\utils\string.h(138): warning C4018: '<': signed/unsigned mismatch
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(11): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(13): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(34): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(35): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+﻿  Input.cpp
   Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\Debug\Grapher2D.exe
   Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\Debug\Grapher2D.pdb (Partial PDB)

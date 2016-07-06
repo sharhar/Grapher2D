@@ -1,7 +1,7 @@
 #include "Window.h"
 #include "math/Equation.h"
 
-#define VAL_NUM 150
+#define VAL_NUM 100
 
 void drawAxes(int width, int height) {
 	glColor3f(0.0f, 0.0f, 0.0f);
@@ -37,8 +37,22 @@ void renderVals(double* arr, double yd, double yu, int width, int height) {
 	glEnd();
 }
 
+void input::mouse::moved(double x, double y) {
+	//std::cout << "Moved: " << x << " " << y << "\n";
+}
+
+void input::mouse::dragged(double x, double y) {
+	//std::cout << "Dragged: " << x << " " << y << "\n";
+}
+
+void input::mouse::scrolled(double s) {
+	//std::cout << "Scrolled: " << s << "\n";
+}
+
 int main() {
 	glfwInit();
+
+	input::mouse::init();
 
 	Window window(800, 600, "Hello!");
 
@@ -51,7 +65,7 @@ int main() {
 
 	Equation e;
 
-	e.setString("sin(x)*e^(x/(cos(a)*2 + 4))");
+	e.setString("~1 * e^x");
 	e.parse();
 
 	double left = -10;

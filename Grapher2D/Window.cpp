@@ -7,6 +7,10 @@ Window::Window(int width, int height, const char* title) {
 	glfwSetWindowAspectRatio(m_window, width, height);
 
 	glfwSwapInterval(1);
+
+	glfwSetCursorPosCallback(m_window, input::callbacks::mouse::pos);
+	glfwSetMouseButtonCallback(m_window, input::callbacks::mouse::button);
+	glfwSetScrollCallback(m_window, input::callbacks::mouse::scroll);
 }
 
 bool Window::isOpen() {
