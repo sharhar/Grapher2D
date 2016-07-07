@@ -1,0 +1,384 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\autofit\autofit.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftadvanc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftbbox.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftbdf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftbitmap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftcalc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftcid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftdbgmem.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftdebug.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftfstype.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftgasp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftgloadr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftglyph.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftgxval.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftinit.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftlcdfil.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftmm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftobjs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftotval.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftoutln.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftpatent.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftpfr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftrfork.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftsnames.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftstream.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftstroke.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftsynth.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftsystem.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\fttrigon.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\fttype1.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftutil.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftwinfnt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\base\ftxf86.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\bdf\bdf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\bzip2\ftbzip2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\cache\ftcache.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\cff\cff.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\cid\type1cid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\gzip\ftgzip.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\lzw\ftlzw.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\pcf\pcf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\pfr\pfr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\psaux\psaux.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\pshinter\pshinter.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\psnames\psmodule.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\raster\raster.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\sfnt\sfnt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\smooth\smooth.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\truetype\truetype.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\type1\type1.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\type42\type42.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\src\winfonts\winfnt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\freetype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ft2build.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftadvanc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftautoh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftbbox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftbdf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftbitmap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftbzip2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftcache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftcffdrv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftchapters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftcid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\fterrdef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\fterrors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftgasp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftglyph.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftgxval.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftgzip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftimage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftincrem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftlcdfil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftlist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftlzw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftmac.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftmm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftmodapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftmoderr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftotval.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftoutln.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftpfr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftrender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftsizes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftsnames.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftstroke.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftsynth.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftsystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\fttrigon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftttdrv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\fttypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftwinfnt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ftxf86.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\t1tables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ttnameid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\tttables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\tttags.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\ttunpat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\config\ftconfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\config\ftheader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\config\ftmodule.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\config\ftoption.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\config\ftstdlib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\autohint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\ftcalc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\ftdebug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\ftdriver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\ftgloadr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\ftmemory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\ftobjs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\ftpic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\ftrfork.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\ftserv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\ftstream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\fttrace.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\ftvalid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\psaux.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\pshints.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\sfnt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\t1types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\include\internal\tttypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\wiish\Git\Cpp\Grapher2D\Libs\FreeType\src\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{87474CD9-9A0F-3D4B-8427-C908F11A7E4D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{E45C2FF2-7C53-3166-9DD3-972DB9552804}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
