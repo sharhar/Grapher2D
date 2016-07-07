@@ -1,4 +1,11 @@
-﻿  main.cpp
+﻿  Window.cpp
+  Equation.cpp
+c:\users\wiish\git\cpp\grapher2d\grapher2d\utils\string.h(138): warning C4018: '<': signed/unsigned mismatch
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(268): warning C4018: '<': signed/unsigned mismatch
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(395): warning C4018: '<=': signed/unsigned mismatch
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(436): warning C4018: '<': signed/unsigned mismatch
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(448): warning C4018: '<': signed/unsigned mismatch
+  main.cpp
 c:\users\wiish\git\cpp\grapher2d\grapher2d\utils\string.h(138): warning C4018: '<': signed/unsigned mismatch
 c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(31): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
 c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(37): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
@@ -6,6 +13,9 @@ c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(51): warning C4244: 'argumen
 c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(57): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
 c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(81): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
 c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(82): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+  Input.cpp
+  GUI.cpp
+  Generating Code...
 LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\Debug\Grapher2D.exe
   Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\Debug\Grapher2D.pdb (Partial PDB)
