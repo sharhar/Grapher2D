@@ -8,6 +8,12 @@ Window::Window(int width, int height, const char* title) {
 
 	glfwSwapInterval(1);
 
+	const GLFWvidmode* vidMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+
+	glfwSetWindowPos(m_window,
+		(vidMode->width - width)/2,
+		(vidMode->height - height) / 2);
+
 	glfwSetCursorPosCallback(m_window, input::callbacks::mouse::pos);
 	glfwSetMouseButtonCallback(m_window, input::callbacks::mouse::button);
 	glfwSetScrollCallback(m_window, input::callbacks::mouse::scroll);

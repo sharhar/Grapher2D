@@ -1,5 +1,12 @@
 #include "Window.h"
 #include "math/Equation.h"
+#include "gui/GUI.h"
+
+#ifdef _WIN32
+#ifndef _DEBUG
+#include <windows.h>
+#endif
+#endif
 
 #define VAL_NUM 400
 #define ZOOM_PERCENT 0.1
@@ -127,6 +134,12 @@ void input::mouse::scrolled(double s) {
 }
 
 int main() {
+#ifdef _WIN32
+#ifndef _DEBUG
+	FreeConsole();
+#endif
+#endif
+
 	glfwInit();
 
 	input::mouse::init();
@@ -140,6 +153,8 @@ int main() {
 	glOrtho(0, g_windowWidth, 0, g_windowHeight, -1, 1);
 	glMatrixMode(GL_MODELVIEW);
 
+	GUI g;
+
 	Equation e;
 
 	e.setString("ln(x)");
@@ -147,7 +162,7 @@ int main() {
 
 	double* vals = new double[VAL_NUM];
 
-	while (window.isOpen()) {
+	while (window.isOpen() && g.running) {
 		window.poll();
 
 		e.setVar("a", glfwGetTime());
@@ -166,6 +181,8 @@ int main() {
 	}
 	
 	window.destroy();
+
+	g.stop();
 
 	glfwTerminate();
 

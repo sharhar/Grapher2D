@@ -1,0 +1,26 @@
+﻿  Window.cpp
+  Equation.cpp
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(396): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(398): warning C4312: 'type cast': conversion from 'int' to 'void *' of greater size
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(508): warning C4311: 'type cast': pointer truncation from 'void *' to 'int'
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(508): warning C4302: 'type cast': truncation from 'void *' to 'int'
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(527): warning C4311: 'type cast': pointer truncation from 'void *' to 'int'
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(527): warning C4302: 'type cast': truncation from 'void *' to 'int'
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(531): warning C4312: 'type cast': conversion from 'int' to 'void *' of greater size
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(535): warning C4311: 'type cast': pointer truncation from 'void *' to 'int'
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(535): warning C4302: 'type cast': truncation from 'void *' to 'int'
+  main.cpp
+c:\program files (x86)\windows kits\8.1\include\shared\minwindef.h(130): warning C4005: 'APIENTRY': macro redefinition
+  c:\users\wiish\git\cpp\grapher2d\libs\glfw-3.2\include\glfw\glfw3.h(98): note: see previous definition of 'APIENTRY'
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(29): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(35): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(49): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(55): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(79): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(80): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+  Input.cpp
+  GUI.cpp
+  Generating Code...
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\x64\Debug\Grapher2D.exe
+  Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\x64\Debug\Grapher2D.pdb (Partial PDB)
