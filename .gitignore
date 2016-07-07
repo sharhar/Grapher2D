@@ -24,3 +24,7 @@
 *.lib
 
 *.DS_Store
+
+*.iobj
+*.ipdb
+*.pdb
