@@ -8,8 +8,8 @@
 #endif
 #endif
 
-#define VAL_NUM 400
-#define ZOOM_PERCENT 0.1
+#define VAL_NUM 600
+#define ZOOM_PERCENT 0.05
 
 double g_left = -8;
 double g_right = 8;
@@ -73,13 +73,56 @@ void genVals(double* arr, double xl, double xr, Equation* e) {
 void renderVals(double* arr, double yd, double yu, int width, int height) {
 	double xint = (width * 1.0f)/(VAL_NUM-1);
 	double yh = (yu - yd);
+
+	float x1;
+	float y1;
+	float x2;
+	float y2;
+
+	bool y1d;
+	bool y1u;
+	bool y1o;
+	
+	bool y2d;
+	bool y2u;
+	bool y2o;
 	
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glLineWidth(2.5f);
 	glBegin(GL_LINES);
 	for (int i = 1; i < VAL_NUM;i++) {
-		glVertex2f(xint*(i-1) + 0, ((arr[i-1] - yd)/yh)*height);
-		glVertex2f(xint*(i) + 0, ((arr[i] - yd)/yh)*height);
+		x1 = xint*(i - 1);
+		y1 = ((arr[i - 1] - yd) / yh)*height;
+		x2 = xint*(i);
+		y2 = ((arr[i] - yd) / yh)*height;
+
+		y1d = y1 < 0;
+		y1u = y1 > height;
+		y1o = (y1d || y1u);
+
+		y2d = y2 < 0;
+		y2u = y2 > height;
+		y2o = (y2d || y2u);
+
+		if (y1o && y2o) {
+			continue;
+		}
+
+		if (y1d) {
+			y1 = 0;
+		} else if (y1u) {
+			y1 = height;
+		}
+
+		if (y2d) {
+			y2 = 0;
+		}
+		else if (y2u) {
+			y2 = height;
+		}
+
+		glVertex2f(x1, y1);
+		glVertex2f(x2, y2);
 	}
 	glEnd();
 }
@@ -157,7 +200,7 @@ int main() {
 
 	Equation e;
 
-	e.setString("ln(x)");
+	e.setString("1/cos(x)");
 	e.parse();
 
 	double* vals = new double[VAL_NUM];
@@ -165,7 +208,7 @@ int main() {
 	while (window.isOpen() && g.running) {
 		window.poll();
 
-		e.setVar("a", glfwGetTime());
+		//e.setVar("a", glfwGetTime());
 		genVals(vals, g_left, g_right, &e);
 
 		glClear(GL_COLOR_BUFFER_BIT);

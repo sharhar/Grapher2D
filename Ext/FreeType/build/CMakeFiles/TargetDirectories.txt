@@ -1,6 +1,0 @@
-C:/Users/wiish/Git/Cpp/Grapher2D/Libs/FreeType/src/build/CMakeFiles/PACKAGE.dir
-C:/Users/wiish/Git/Cpp/Grapher2D/Libs/FreeType/src/build/CMakeFiles/freetype.dir
-C:/Users/wiish/Git/Cpp/Grapher2D/Libs/FreeType/src/build/CMakeFiles/dist.dir
-C:/Users/wiish/Git/Cpp/Grapher2D/Libs/FreeType/src/build/CMakeFiles/INSTALL.dir
-C:/Users/wiish/Git/Cpp/Grapher2D/Libs/FreeType/src/build/CMakeFiles/ALL_BUILD.dir
-C:/Users/wiish/Git/Cpp/Grapher2D/Libs/FreeType/src/build/CMakeFiles/ZERO_CHECK.dir
