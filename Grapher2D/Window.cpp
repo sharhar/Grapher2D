@@ -26,6 +26,14 @@ Window::Window(int width, int height, const char* title) {
 	m_context = SDL_GL_CreateContext(m_window);
 }
 
+void Window::setVSync(bool vSync) {
+	if (vSync) {
+		SDL_GL_SetSwapInterval(1);
+	} else {
+		SDL_GL_SetSwapInterval(0);
+	}
+}
+
 bool Window::isOpen() {
 	return open;
 }

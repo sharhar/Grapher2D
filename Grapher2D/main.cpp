@@ -1,10 +1,10 @@
-#include "Window.h"
-#include "math/Equation.h"
-#include "gui/GUI.h"
-
 #define PRINT_FPS
 #define VAL_NUM 800
 #define ZOOM_PERCENT 0.05
+
+#include "Window.h"
+#include "math/Equation.h"
+#include "gui/GUI.h"
 
 double g_left = -8;
 double g_right = 8;
@@ -64,8 +64,9 @@ void genVals(double* arr, double xl, double xr, Equation* e, Variable* xVar) {
 	}
 }
 
-void renderVals(double* arr, double yd, double yu, int width, int height) {
+void renderVals(double* arr, double xl, double xr, double yd, double yu, int width, int height) {
 	double xint = (width * 1.0f)/(VAL_NUM-1);
+	double axint = (xr - xl) / (VAL_NUM);
 	double yh = (yu - yd);
 
 	float x1;
@@ -73,46 +74,65 @@ void renderVals(double* arr, double yd, double yu, int width, int height) {
 	float x2;
 	float y2;
 
-	bool y1d;
-	bool y1u;
-	bool y1o;
-	
-	bool y2d;
-	bool y2u;
-	bool y2o;
-	
+	float m;
+
+	float ax1;
+	float ax2;
+	float ay1;
+	float ay2;
+	float ax3;
+	float ax4;
+	float ay3;
+	float ay4;
+
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glLineWidth(2.5f);
 	glBegin(GL_LINES);
 	for (int i = 1; i < VAL_NUM;i++) {
+		ay1 = arr[i - 1];
+		ay2 = arr[i];
+
 		x1 = xint*(i - 1);
-		y1 = ((arr[i - 1] - yd) / yh)*height;
 		x2 = xint*(i);
-		y2 = ((arr[i] - yd) / yh)*height;
 
-		y1d = y1 < 0;
-		y1u = y1 > height;
-		y1o = (y1d || y1u);
+		y1 = ((ay1 - yd) / yh)*height;
+		y2 = ((ay2 - yd) / yh)*height;
 
-		y2d = y2 < 0;
-		y2u = y2 > height;
-		y2o = (y2d || y2u);
+		if (i-1 > 0 && i+1 < VAL_NUM) {
+			ax1 = axint*(i - 1) + xl;
+			ax2 = axint*i + xl;
 
-		if (y1o && y2o) {
-			continue;
-		}
+			ay3 = arr[i - 2];
+			ay4 = arr[i + 1];
 
-		if (y1d) {
-			y1 = 0;
-		} else if (y1u) {
-			y1 = height;
-		}
+			ax3 = axint*(i - 2) + xl;
+			ax4 = axint*(i + 1) + xl;
+			
+			float m1 = (ay1 - ay3) / (ax1 - ax3);
+			float m2 = (ay2 - ay4) / (ax2 - ax4);
+			float m =  (ay1 - ay2) / (ax1 - ax2);
 
-		if (y2d) {
-			y2 = 0;
-		}
-		else if (y2u) {
-			y2 = height;
+			bool p1 = m1 > 0;
+			bool p2 = m2 > 0;
+			bool p = m > 0;
+
+			if (p1 == p2 && p1 != p && abs(m) > 2) {
+				if (p) {
+					glVertex2f(x1, y1);
+					glVertex2f(x1, 0);
+
+					glVertex2f(x2, y2);
+					glVertex2f(x2, height);
+				} else {
+					glVertex2f(x1, y1);
+					glVertex2f(x1, height);
+
+					glVertex2f(x2, y2);
+					glVertex2f(x2, 0);
+				}
+
+				continue;
+			}
 		}
 
 		glVertex2f(x1, y1);
@@ -176,6 +196,7 @@ int main(int argc, char** argv) {
 	input::mouse::init();
 
 	Window window(g_windowWidth, g_windowHeight, "Grapher");
+	window.setVSync(false);
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -192,7 +213,7 @@ int main(int argc, char** argv) {
 	Variable* tVar;
 
 	Equation e;
-	e.setString("ln(x - time)");
+	e.setString("sin(x)^2 *cos(x)^2 + sin(x - time*4)");
 	xVar = e.createVariable("x");
 	tVar = e.createVariable("time");
 	e.parse();
@@ -233,7 +254,7 @@ int main(int argc, char** argv) {
 		glViewport(0, 0, g_windowWidth, g_windowHeight);
 
 		drawAxes(800, 600);
-		renderVals(vals, g_down , g_up, 800, 600);
+		renderVals(vals, g_left, g_right, g_down , g_up, 800, 600);
 
 		window.swapBuffers();
 

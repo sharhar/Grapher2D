@@ -72,6 +72,18 @@ double cosF(double* input) {
 	return cos(input[0]);
 }
 
+double cotF(double* input) {
+	return 1/tan(input[0]);
+}
+
+double cscF(double* input) {
+	return 1/sin(input[0]);
+}
+
+double secF(double* input) {
+	return 1/cos(input[0]);
+}
+
 double maxF(double* input) {
 	if (input[0] >= input[1]) {
 		return input[0];
@@ -167,6 +179,18 @@ void loadDefaults(Equation* e) {
 	funcExp->name = new String("exp");
 	funcExp->func = &expF;
 
+	Function* funcCot = (Function*)malloc(sizeof(Function));
+	funcCot->name = new String("cot");
+	funcCot->func = &cotF;
+
+	Function* funcCsc = (Function*)malloc(sizeof(Function));
+	funcCsc->name = new String("csc");
+	funcCsc->func = &cscF;
+
+	Function* funcSec = (Function*)malloc(sizeof(Function));
+	funcSec->name = new String("sec");
+	funcSec->func = &secF;
+
 	e->addFunction(funcTan);
 	e->addFunction(funcSin);
 	e->addFunction(funcCos);
@@ -175,6 +199,9 @@ void loadDefaults(Equation* e) {
 	e->addFunction(funcLn);
 	e->addFunction(funcLog);
 	e->addFunction(funcExp);
+	e->addFunction(funcCot);
+	e->addFunction(funcCsc);
+	e->addFunction(funcSec);
 
 	Variable* eVar = e->createVariable("e");
 	eVar->value = 2.718281828459045;

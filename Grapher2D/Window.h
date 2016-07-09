@@ -15,6 +15,7 @@ private:
 	float m_aspectRatio;
 public:
 	Window(int width, int height, const char* title);
+	void setVSync(bool vSync);
 	bool isOpen();
 	void poll();
 	void destroy();
