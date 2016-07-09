@@ -1,14 +1,13 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
+#include <SDL/SDL.h>
 #include <thread>
 #include <iostream>
 
 class GUI {
 private:
-	GLFWwindow* m_window;
-	std::thread m_thread;
 	
+	std::thread m_thread;
 public:
 	bool running;
 

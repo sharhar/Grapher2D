@@ -1,17 +1,25 @@
 #pragma once
 
 #include "Input.h"
-#include <GLFW/glfw3.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_opengl.h>
 
 class Window {
 private:
-	GLFWwindow* m_window;
+	SDL_Window* m_window;
+	SDL_GLContext m_context;
+	int m_originalWidth;
+	int m_originalHeight;
+	char* m_title;
+	bool open = false;
+	float m_aspectRatio;
 public:
 	Window(int width, int height, const char* title);
 	bool isOpen();
 	void poll();
 	void destroy();
 	void swapBuffers();
-	void getSize(int* width, int* height);
+	int getWidth() { return m_originalWidth; };
+	int getHeight() { return m_originalHeight; };
 };
 

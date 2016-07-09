@@ -14,19 +14,24 @@ typedef struct Function {
 	double(*func) (double*);
 } Function;
 
+typedef struct Variable {
+	String* name;
+	double value;
+} Variable;
+
 class Equation {
 private:
 	String m_string;
 	std::vector<Opperator*> m_ops;
 	std::vector<Function*> m_funcs;
-	std::unordered_map<std::string, double> m_vars;
+	std::vector<Variable*> m_vars;
 	void* m_rootNode;
 public:
 	Equation();
 	void setString(String string);
+	Variable* createVariable(String name);
 	void addOpperator(Opperator* op);
 	void addFunction(Function* func);
-	void setVar(std::string name, double value);
 	void parse();
 	double eval();
 };

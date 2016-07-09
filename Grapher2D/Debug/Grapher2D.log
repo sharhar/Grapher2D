@@ -1,22 +1,24 @@
-﻿  GUI.cpp
-c:\users\wiish\git\cpp\grapher2d\libs\nanogui\include\nanogui\formhelper.h(82): warning C4316: 'nanogui::Label': object allocated on the heap may not be aligned 16
-c:\users\wiish\git\cpp\grapher2d\libs\nanogui\include\nanogui\formhelper.h(130): warning C4316: 'nanogui::Button': object allocated on the heap may not be aligned 16
-c:\users\wiish\git\cpp\grapher2d\libs\nanogui\include\nanogui\formhelper.h(146): warning C4316: 'nanogui::Label': object allocated on the heap may not be aligned 16
-c:\users\wiish\git\cpp\grapher2d\libs\nanogui\include\nanogui\formhelper.h(122): error C2719: 'v': formal parameter with requested alignment of 16 won't be aligned
-  c:\users\wiish\git\cpp\grapher2d\grapher2d\gui\gui.cpp(71): note: see reference to function template instantiation 'nanogui::detail::FormWidget<nanogui::Color,std::true_type> *nanogui::FormHelper::addVariable<nanogui::Color>(const std::string &,Type &,bool)' being compiled
-          with
-          [
-              Type=nanogui::Color
-          ]
-c:\program files (x86)\microsoft visual studio 14.0\vc\include\functional(270): error C2719: '<_Args_0>': formal parameter with requested alignment of 16 won't be aligned
-  c:\program files (x86)\microsoft visual studio 14.0\vc\include\functional(462): note: see reference to class template instantiation 'std::_Func_class<_Ret,Type>' being compiled
-          with
-          [
-              _Ret=void,
-              Type=nanogui::Color
-          ]
-  c:\users\wiish\git\cpp\grapher2d\libs\nanogui\include\nanogui\formhelper.h(125): note: see reference to class template instantiation 'std::function<void (Type)>' being compiled
-          with
-          [
-              Type=nanogui::Color
-          ]
+﻿  Window.cpp
+  Equation.cpp
+c:\users\wiish\git\cpp\grapher2d\grapher2d\utils\string.h(138): warning C4018: '<': signed/unsigned mismatch
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(268): warning C4018: '<': signed/unsigned mismatch
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(395): warning C4018: '<=': signed/unsigned mismatch
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(436): warning C4018: '<': signed/unsigned mismatch
+c:\users\wiish\git\cpp\grapher2d\grapher2d\math\equation.cpp(448): warning C4018: '<': signed/unsigned mismatch
+  main.cpp
+c:\users\wiish\git\cpp\grapher2d\grapher2d\utils\string.h(138): warning C4018: '<': signed/unsigned mismatch
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(25): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(31): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(45): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(51): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(88): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(89): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(90): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(91): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(108): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(115): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+  Input.cpp
+  GUI.cpp
+  Generating Code...
+  Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\Debug\Grapher2D.exe
+  Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\Debug\Grapher2D.pdb (Partial PDB)

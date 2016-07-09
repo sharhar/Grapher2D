@@ -2,7 +2,7 @@
 #ifndef INPUT_H
 #define INPUT_H
 
-#include <GLFW/glfw3.h>
+#include <SDL/SDL.h>
 #include <iostream>
 
 namespace input {
@@ -13,9 +13,9 @@ namespace input {
 
 	namespace callbacks {
 		namespace mouse {
-			void pos(GLFWwindow* window, double xpos, double ypos);
-			void button(GLFWwindow* window, int button, int action, int mods);
-			void scroll(GLFWwindow* window, double xoffset, double yoffset);
+			void pos(double xpos, double ypos);
+			void button(int button, bool state);
+			void scroll(double xoffset, double yoffset);
 		}
 	}
 

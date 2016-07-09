@@ -2,13 +2,8 @@
 #include "math/Equation.h"
 #include "gui/GUI.h"
 
-#ifdef _WIN32
-#ifndef _DEBUG
-#include <windows.h>
-#endif
-#endif
-
-#define VAL_NUM 600
+#define PRINT_FPS
+#define VAL_NUM 800
 #define ZOOM_PERCENT 0.05
 
 double g_left = -8;
@@ -61,11 +56,10 @@ void drawAxes(int width, int height) {
 	}
 }
 
-void genVals(double* arr, double xl, double xr, Equation* e) {
+void genVals(double* arr, double xl, double xr, Equation* e, Variable* xVar) {
 	double xint = (xr - xl) / (VAL_NUM);
 	for (int i = 0; i < VAL_NUM;i++) {
-		double x = xint*i + xl;
-		e->setVar("x", x);
+		xVar->value = xint*i + xl;
 		arr[i] = e->eval();
 	}
 }
@@ -176,14 +170,8 @@ void input::mouse::scrolled(double s) {
 	g_up = ypos + sizeY / 2;
 }
 
-int main() {
-#ifdef _WIN32
-#ifndef _DEBUG
-	FreeConsole();
-#endif
-#endif
-
-	glfwInit();
+int main(int argc, char** argv) {
+	SDL_Init(SDL_INIT_EVERYTHING);
 
 	input::mouse::init();
 
@@ -196,24 +184,51 @@ int main() {
 	glOrtho(0, g_windowWidth, 0, g_windowHeight, -1, 1);
 	glMatrixMode(GL_MODELVIEW);
 
+	glEnable(GL_MULTISAMPLE);
+
 	GUI g;
 
-	Equation e;
+	Variable* xVar;
+	Variable* tVar;
 
-	e.setString("1/cos(x)");
+	Equation e;
+	e.setString("ln(x - time)");
+	xVar = e.createVariable("x");
+	tVar = e.createVariable("time");
 	e.parse();
 
 	double* vals = new double[VAL_NUM];
 
+	genVals(vals, g_left, g_right, &e, xVar);
+
+#if defined(PRINT_FPS) && defined(_DEBUG)
+	int frame = 0;
+	int fps = 0;
+	Uint32 start = SDL_GetTicks();
+#endif
+
 	while (window.isOpen() && g.running) {
 		window.poll();
 
-		//e.setVar("a", glfwGetTime());
-		genVals(vals, g_left, g_right, &e);
+#if defined(PRINT_FPS) && defined(_DEBUG)
+		Uint32 time = SDL_GetTicks();
+		
+		if (time - start > 1000) {
+			fps = frame;
+			std::cout << "FPS: " << fps << "\n";
+			frame = 0;
+			start = time;
+		}
+		
+		frame++;
+#endif
+		tVar->value = SDL_GetTicks() / 1000.0;
+		genVals(vals, g_left, g_right, &e, xVar);
 
 		glClear(GL_COLOR_BUFFER_BIT);
 		
-		window.getSize(&g_windowWidth, &g_windowHeight);
+		g_windowWidth = window.getWidth();
+		g_windowHeight = window.getHeight();
 
 		glViewport(0, 0, g_windowWidth, g_windowHeight);
 
@@ -221,13 +236,15 @@ int main() {
 		renderVals(vals, g_down , g_up, 800, 600);
 
 		window.swapBuffers();
+
+		//SDL_Delay(1000);
 	}
 	
 	window.destroy();
 
 	g.stop();
 
-	glfwTerminate();
+	SDL_Quit();
 
 	return 0;
 }

@@ -30,7 +30,7 @@ typedef struct Token {
 } Token;
 
 void** parseExpression(std::vector<Node*> nodes);
-double evalNode(Node* node, std::unordered_map<std::string, double>* vars);
+double evalNode(Node* node);
 
 double addO(double n1, double n2) {
 	return n1 + n2;
@@ -50,6 +50,14 @@ double divO(double n1, double n2) {
 
 double powO(double n1, double n2) {
 	return pow(n1, n2);
+}
+
+double eqO(double n1, double n2) {
+	if (n1 == n2) {
+		return 1;
+	}
+
+	return 0;
 }
 
 double tanF(double* input) {
@@ -115,11 +123,17 @@ void loadDefaults(Equation* e) {
 	powOp->order = 6;
 	powOp->func = &powO;
 
+	Opperator* eqOp = (Opperator*)malloc(sizeof(Opperator));
+	eqOp->name = '=';
+	eqOp->order = 100;
+	eqOp->func = &eqO;
+
 	e->addOpperator(addOp);
 	e->addOpperator(mulOp);
 	e->addOpperator(subOp);
 	e->addOpperator(divOp);
 	e->addOpperator(powOp);
+	e->addOpperator(eqOp);
 
 	Function* funcTan = (Function*)malloc(sizeof(Function));
 	funcTan->name = new String("tan");
@@ -162,8 +176,10 @@ void loadDefaults(Equation* e) {
 	e->addFunction(funcLog);
 	e->addFunction(funcExp);
 
-	e->setVar("e", 2.718281828459045);
-	e->setVar("pi", 3.141592653589793);
+	Variable* eVar = e->createVariable("e");
+	eVar->value = 2.718281828459045;
+	Variable* piVar = e->createVariable("pi");
+	piVar->value = 3.141592653589793;
 }
 
 Equation::Equation() {
@@ -180,6 +196,14 @@ void Equation::addOpperator(Opperator* op) {
 
 void Equation::addFunction(Function* func) {
 	m_funcs.push_back(func);
+}
+
+Variable* Equation::createVariable(String name) {
+	Variable* var = (Variable*)malloc(sizeof(Variable));
+	var->name = new String(name);
+	
+	m_vars.push_back(var);
+	return var;
 }
 
 void Equation::parse() {
@@ -267,6 +291,7 @@ void Equation::parse() {
 	std::vector<Node*> unsortedNodes;
 	for (int i = 0; i < stack.size(); i++) {
 		Token* t = stack[i];
+
 		if (t->type == TK_TYPE_NUM) {
 			std::string tempString;
 			String val = *(t->value);
@@ -339,7 +364,12 @@ void Equation::parse() {
 				Node* tempNode = (Node*)malloc(sizeof(Node));
 				tempNode->type = NODE_TYPE_VAR;
 				tempNode->value = new void*[1];
-				tempNode->value[0] = (void*)t->value;
+				for (Variable* v:m_vars) {
+					if (v->name->equals(*t->value)) {
+						tempNode->value[0] = (void*)v;
+						break;
+					}
+				}
 				unsortedNodes.push_back(tempNode);
 				continue;
 			}
@@ -362,11 +392,17 @@ void Equation::parse() {
 				Node* tempNode = (Node*)malloc(sizeof(Node));
 				tempNode->type = NODE_TYPE_VAR;
 				tempNode->value = new void*[1];
-				tempNode->value[0] = (void*)t->value;
+				for (Variable* v : m_vars) {
+					if (v->name->equals(*t->value)) {
+						tempNode->value[0] = (void*)v;
+						break;
+					}
+				}
 				unsortedNodes.push_back(tempNode);
 			}
 		}
 	}
+
 	void** result = parseExpression(unsortedNodes);
 	m_rootNode = result[1];
 }
@@ -415,10 +451,11 @@ Node* parseSimpleExpression(std::vector<Node*> nodes) {
 	if (nodes.size() == 1) {
 		return nodes[0];
 	}
-	
+
 	int level = -1;
 	for (Node* node:nodes) {
 		if (node->type == NODE_TYPE_OPP) {
+			
 			Opperator* op = (Opperator*)node->value[1];
 			if (op->order > level) {
 				level = op->order;
@@ -520,8 +557,6 @@ void** parseExpression(std::vector<Node*> nodes) {
 			}
 		}
 	}
-
-	
 	
 	void*** parts = getParts(simple);
 	int partNum = (int)parts[0][0];
@@ -544,32 +579,25 @@ void** parseExpression(std::vector<Node*> nodes) {
 	return result;
 }
 
-void Equation::setVar(std::string name, double value) {
-	m_vars[name] = value;
-}
-
 double Equation::eval() {
 	Node* root = (Node*)m_rootNode;
-	double result = evalNode(root, &m_vars);
+	double result = evalNode(root);
 	return result;
 }
 
-double evalNode(Node* node, std::unordered_map<std::string, double>* vars) {
+double evalNode(Node* node) {
 	if (node->type == NODE_TYPE_NUM) {
-		double result = ((double*)(node->value[0]))[0];
-		return result;
+		return ((double*)(node->value[0]))[0];
 	} else if (node->type == NODE_TYPE_VAR) {
-		String* nameP = (String*)node->value[0];
-		std::string name = nameP->getstdstring();
-		double result = (*vars)[name];
-		return result;
+		Variable* var = (Variable*)node->value[0];
+		return var->value;
 	} else if (node->type == NODE_TYPE_OPP) {
 		Opperator* op = (Opperator*)node->value[1];
 		Node* prev = node->children[0];
 		Node* next = node->children[1];
 
-		double prevVal = evalNode(prev, vars);
-		double nextVal = evalNode(next, vars);
+		double prevVal = evalNode(prev);
+		double nextVal = evalNode(next);
 
 		double result = (*op->func)(prevVal, nextVal);
 		return result;
@@ -578,10 +606,11 @@ double evalNode(Node* node, std::unordered_map<std::string, double>* vars) {
 		int argc = node->childNum;
 		double* vals = new double[argc];
 		for (int i = 0; i < argc;i++) {
-			vals[i] = evalNode(node->children[i], vars);
+			vals[i] = evalNode(node->children[i]);
 		}
 
 		double result = (*func->func)(vals);
+		delete[] vals;
 		return result;
 	}
 

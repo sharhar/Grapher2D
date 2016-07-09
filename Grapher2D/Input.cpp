@@ -2,7 +2,7 @@
 
 input::MouseData* m_mouse;
 
-void input::callbacks::mouse::pos(GLFWwindow* window, double xpos, double ypos) {
+void input::callbacks::mouse::pos(double xpos, double ypos) {
 	double difX, difY;
 	
 	if (m_mouse->posX == -1) {
@@ -23,17 +23,13 @@ void input::callbacks::mouse::pos(GLFWwindow* window, double xpos, double ypos) 
 	}
 }
 
-void input::callbacks::mouse::button(GLFWwindow* window, int button, int action, int mods) {
-	if (button == GLFW_MOUSE_BUTTON_1) {
-		if (action == GLFW_PRESS) {
-			m_mouse->button1 = true;
-		} else if (action == GLFW_RELEASE) {
-			m_mouse->button1 = false;
-		}
+void input::callbacks::mouse::button(int button, bool state) {
+	if (button == 1) {
+		m_mouse->button1 = state;
 	}
 }
 
-void input::callbacks::mouse::scroll(GLFWwindow* window, double xoffset, double yoffset) {
+void input::callbacks::mouse::scroll(double xoffset, double yoffset) {
 	input::mouse::scrolled(yoffset);
 }
 

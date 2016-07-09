@@ -1,32 +1,16 @@
-﻿  GUI.cpp
-c:\users\wiish\git\cpp\grapher2d\libs\nanogui\include\nanogui\textbox.h(224): warning C4305: 'argument': truncation from 'double' to 'float'
-  c:\users\wiish\git\cpp\grapher2d\libs\nanogui\include\nanogui\textbox.h(220): note: while compiling class template member function 'nanogui::FloatBox<T>::FloatBox(nanogui::Widget *,Scalar)'
-          with
-          [
-              T=float,
-              Scalar=float
-          ]
-  c:\users\wiish\git\cpp\grapher2d\libs\nanogui\include\nanogui\formhelper.h(228): note: see reference to function template instantiation 'nanogui::FloatBox<T>::FloatBox(nanogui::Widget *,Scalar)' being compiled
-          with
-          [
-              T=float,
-              Scalar=float
-          ]
-  c:\users\wiish\git\cpp\grapher2d\libs\nanogui\include\nanogui\formhelper.h(226): note: see reference to class template instantiation 'nanogui::FloatBox<T>' being compiled
-          with
-          [
-              T=float
-          ]
-  c:\users\wiish\git\cpp\grapher2d\libs\nanogui\include\nanogui\formhelper.h(96): note: see reference to class template instantiation 'nanogui::detail::FormWidget<float,std::true_type>' being compiled
-  c:\users\wiish\git\cpp\grapher2d\libs\nanogui\include\nanogui\formhelper.h(125): note: see reference to function template instantiation 'nanogui::detail::FormWidget<float,std::true_type> *nanogui::FormHelper::addVariable<Type>(const std::string &,const std::function<void (float)> &,const std::function<Type (void)> &,bool)' being compiled
-          with
-          [
-              Type=float
-          ]
-  c:\users\wiish\git\cpp\grapher2d\grapher2d\gui\gui.cpp(67): note: see reference to function template instantiation 'nanogui::detail::FormWidget<float,std::true_type> *nanogui::FormHelper::addVariable<float>(const std::string &,Type &,bool)' being compiled
-          with
-          [
-              Type=float
-          ]
+﻿  main.cpp
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(26): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(32): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(46): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(52): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(88): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(89): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(90): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(91): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(108): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(115): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+  Generating Code...
+  Skipping... (no relevant changes detected)
+  GUI.cpp
   Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\x64\Debug\Grapher2D.exe
   Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\x64\Debug\Grapher2D.pdb (Partial PDB)
