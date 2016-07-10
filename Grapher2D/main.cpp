@@ -1,4 +1,4 @@
-#define PRINT_FPS
+//#define PRINT_FPS
 #define VAL_NUM 800
 #define ZOOM_PERCENT 0.05
 
@@ -12,6 +12,17 @@ double g_up = 6;
 
 int g_windowWidth = 800;
 int g_windowHeight = 600;
+
+typedef struct Color {
+	float r, g, b;
+} Color;
+
+typedef struct Graph {
+	Equation* e;
+	double* vals;
+	Variable* xVar;
+	Variable* tVar;
+} Graph;
 
 void drawAxes(int width, int height) {
 	double l = abs(g_left);
@@ -63,7 +74,7 @@ void genVals(double* arr, double xl, double xr, Equation* e, Variable* xVar) {
 	}
 }
 
-void renderVals(double* arr, double xl, double xr, double yd, double yu, int width, int height) {
+void renderVals(double* arr, double xl, double xr, double yd, double yu, int width, int height, Color color) {
 	double xint = (width * 1.0f)/(VAL_NUM-1);
 	double axint = (xr - xl) / (VAL_NUM);
 	double yh = (yu - yd);
@@ -84,7 +95,7 @@ void renderVals(double* arr, double xl, double xr, double yd, double yu, int wid
 	float ay3;
 	float ay4;
 
-	glColor3f(1.0f, 0.0f, 0.0f);
+	glColor3f(color.r, color.g, color.b);
 	glLineWidth(2.5f);
 	glBegin(GL_LINES);
 	for (int i = 1; i < VAL_NUM;i++) {
@@ -190,12 +201,17 @@ void input::mouse::scrolled(double s) {
 }
 
 int main(int argc, char** argv) {
+	std::cout << "argc: " << argc << "\n";
+	for (int i = 0; i < argc;i++) {
+		std::cout << "argv[" << i << "]: " << argv[i] << "\n";
+	}
+
 	SDL_Init(SDL_INIT_EVERYTHING);
 
 	input::mouse::init();
 
 	Window window(g_windowWidth, g_windowHeight, "Grapher");
-	window.setVSync(false);
+	window.setVSync(true);
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -206,24 +222,47 @@ int main(int argc, char** argv) {
 
 	glEnable(GL_MULTISAMPLE);
 
-	Variable* xVar;
-	Variable* tVar;
+	Graph** graphs;
 
-	Equation e;
-	e.setString("sec(sin(x))");
-	xVar = e.createVariable("x");
-	tVar = e.createVariable("time");
-	e.parse();
+	const bool multiGraph = argc > 1;
 
-	double* vals = new double[VAL_NUM];
+	if (multiGraph) {
+		graphs = new Graph*[argc-1];
+		for (int i = 0; i < argc - 1;i++) {
+			graphs[i] = (Graph*)malloc(sizeof(Graph));
+			graphs[i]->e = new Equation();
+			graphs[i]->e->setString(argv[i+1]);
 
-	genVals(vals, g_left, g_right, &e, xVar);
+			graphs[i]->xVar = graphs[i]->e->createVariable("x");
+			graphs[i]->tVar = graphs[i]->e->createVariable("time");
+			graphs[i]->e->parse();
+			graphs[i]->vals = new double[VAL_NUM];
+		}
+	} else {
+		graphs = new Graph*[1];
+		graphs[0] = (Graph*)malloc(sizeof(Graph));
+		graphs[0]->e = new Equation();
+		graphs[0]->e->setString("sin(x)");
+
+		graphs[0]->xVar = graphs[0]->e->createVariable("x");
+		graphs[0]->tVar = graphs[0]->e->createVariable("time");
+		graphs[0]->e->parse();
+		graphs[0]->vals = new double[VAL_NUM];
+	}
 
 #if defined(PRINT_FPS) && defined(_DEBUG)
 	int frame = 0;
 	int fps = 0;
 	Uint32 start = SDL_GetTicks();
 #endif
+
+	int colorNum = 5;
+	Color* colors = new Color[colorNum];
+	colors[0] = { 0.8f, 0.2f, 0.2f };
+	colors[1] = { 0.1f, 0.6f, 0.1f };
+	colors[2] = { 0.2f, 0.2f, 0.9f };
+	colors[3] = { 0.9f, 0.65f, 0.2f };
+	colors[4] = { 0.8f, 0.2f, 0.8f };
 
 	while (window.isOpen()) {
 		window.poll();
@@ -240,19 +279,28 @@ int main(int argc, char** argv) {
 		
 		frame++;
 #endif
-		tVar->value = SDL_GetTicks() / 1000.0;
-		genVals(vals, g_left, g_right, &e, xVar);
-
 		glClear(GL_COLOR_BUFFER_BIT);
-		
+
 		g_windowWidth = window.getWidth();
 		g_windowHeight = window.getHeight();
 
 		glViewport(0, 0, g_windowWidth, g_windowHeight);
 
 		drawAxes(800, 600);
-		renderVals(vals, g_left, g_right, g_down , g_up, 800, 600);
 
+		if (multiGraph) {
+			for (int i = 0; i < argc - 1; i++) {
+				graphs[i]->tVar->value = SDL_GetTicks() / 1000.0;
+				genVals(graphs[i]->vals, g_left, g_right, graphs[i]->e, graphs[i]->xVar);
+				renderVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 800, 600, colors[i%colorNum]);
+			}
+		}
+		else {
+			graphs[0]->tVar->value = SDL_GetTicks() / 1000.0;
+			genVals(graphs[0]->vals, g_left, g_right, graphs[0]->e, graphs[0]->xVar);
+			renderVals(graphs[0]->vals, g_left, g_right, g_down, g_up, 800, 600, colors[0]);
+		}
+		
 		window.swapBuffers();
 	}
 	
