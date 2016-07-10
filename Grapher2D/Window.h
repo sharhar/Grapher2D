@@ -7,6 +7,8 @@
 class Window {
 private:
 	SDL_Window* m_window;
+	SDL_Window* e_window;
+	SDL_Renderer* e_renderer;
 	SDL_GLContext m_context;
 	int m_originalWidth;
 	int m_originalHeight;

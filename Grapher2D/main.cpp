@@ -4,7 +4,6 @@
 
 #include "Window.h"
 #include "math/Equation.h"
-#include "gui/GUI.h"
 
 double g_left = -8;
 double g_right = 8;
@@ -207,13 +206,11 @@ int main(int argc, char** argv) {
 
 	glEnable(GL_MULTISAMPLE);
 
-	GUI g;
-
 	Variable* xVar;
 	Variable* tVar;
 
 	Equation e;
-	e.setString("sin(x)^2 *cos(x)^2 + sin(x - time*4)");
+	e.setString("sec(sin(x))");
 	xVar = e.createVariable("x");
 	tVar = e.createVariable("time");
 	e.parse();
@@ -228,7 +225,7 @@ int main(int argc, char** argv) {
 	Uint32 start = SDL_GetTicks();
 #endif
 
-	while (window.isOpen() && g.running) {
+	while (window.isOpen()) {
 		window.poll();
 
 #if defined(PRINT_FPS) && defined(_DEBUG)
@@ -257,13 +254,9 @@ int main(int argc, char** argv) {
 		renderVals(vals, g_left, g_right, g_down , g_up, 800, 600);
 
 		window.swapBuffers();
-
-		//SDL_Delay(1000);
 	}
 	
 	window.destroy();
-
-	g.stop();
 
 	SDL_Quit();
 

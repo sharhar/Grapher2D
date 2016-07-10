@@ -1,25 +1,5 @@
-﻿  main.cpp
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(26): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(32): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(46): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(52): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(92): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(93): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(95): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(96): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(98): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(99): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(102): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(103): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(105): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(106): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(108): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(109): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(125): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(128): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\wiish\git\cpp\grapher2d\grapher2d\main.cpp(77): warning C4101: 'm': unreferenced local variable
-  Generating Code...
-  Skipping... (no relevant changes detected)
-  GUI.cpp
+﻿  Window.cpp
+c:\users\wiish\git\cpp\grapher2d\grapher2d\window.cpp(66): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+c:\users\wiish\git\cpp\grapher2d\grapher2d\window.cpp(69): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
   Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\x64\Debug\Grapher2D.exe
   Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\x64\Debug\Grapher2D.pdb (Partial PDB)
