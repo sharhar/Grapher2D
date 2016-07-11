@@ -29,4 +29,6 @@
 *.ipdb
 *.pdb
 
+Grapher2D.sdf
+
 Libs/
