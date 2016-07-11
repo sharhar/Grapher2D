@@ -1,13 +1,7 @@
-﻿  Equation.cpp
-c:\users\wiish\git\cpp\grapher2d\grapher2d\math\../utils/String.h(138): warning C4018: '<': signed/unsigned mismatch
-math\Equation.cpp(377): warning C4018: '<': signed/unsigned mismatch
-math\Equation.cpp(516): warning C4018: '<=': signed/unsigned mismatch
-math\Equation.cpp(558): warning C4018: '<': signed/unsigned mismatch
-math\Equation.cpp(570): warning C4018: '<': signed/unsigned mismatch
-  Generating code
-  3 of 635 functions ( 0.5%) were compiled, the rest were copied from previous compilation.
+﻿  Generating code
+  0 of 635 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    2 functions had inline decision re-evaluated but remain unchanged
+    1 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\\Build\Windows\Win32\Grapher2D.exe
   Grapher2D.vcxproj -> C:\Users\wiish\Git\Cpp\Grapher2D\\Build\Windows\Win32\Grapher2D.pdb (Full PDB)
