@@ -1,1 +1,0 @@
-clang++ main.o Equation.o Input.o Window.o -o Grapher2D -L"." -lglfw3 -framework OpenGL -framework Cocoa -framework CoreVideo -framework IOKit
