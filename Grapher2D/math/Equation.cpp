@@ -84,6 +84,30 @@ double secF(double* input) {
 	return 1/cos(input[0]);
 }
 
+double atanF(double* input) {
+	return atan(input[0]);
+}
+
+double asinF(double* input) {
+	return asin(input[0]);
+}
+
+double acosF(double* input) {
+	return acos(input[0]);
+}
+
+double acotF(double* input) {
+	return atan(1 / input[0]);
+}
+
+double acscF(double* input) {
+	return asin(1 / input[0]);
+}
+
+double asecF(double* input) {
+	return acos(1 / input[0]);
+}
+
 double maxF(double* input) {
 	if (input[0] >= input[1]) {
 		return input[0];
@@ -191,6 +215,32 @@ void loadDefaults(Equation* e) {
 	funcSec->name = new String("sec");
 	funcSec->func = &secF;
 
+
+
+	Function* funcaTan = (Function*)malloc(sizeof(Function));
+	funcaTan->name = new String("atan");
+	funcaTan->func = &atanF;
+
+	Function* funcaSin = (Function*)malloc(sizeof(Function));
+	funcaSin->name = new String("asin");
+	funcaSin->func = &asinF;
+
+	Function* funcaCos = (Function*)malloc(sizeof(Function));
+	funcaCos->name = new String("acos");
+	funcaCos->func = &acosF;
+
+	Function* funcaCot = (Function*)malloc(sizeof(Function));
+	funcaCot->name = new String("acot");
+	funcaCot->func = &acotF;
+
+	Function* funcaCsc = (Function*)malloc(sizeof(Function));
+	funcaCsc->name = new String("acsc");
+	funcaCsc->func = &acscF;
+
+	Function* funcaSec = (Function*)malloc(sizeof(Function));
+	funcaSec->name = new String("asec");
+	funcaSec->func = &asecF;
+
 	e->addFunction(funcTan);
 	e->addFunction(funcSin);
 	e->addFunction(funcCos);
@@ -202,11 +252,19 @@ void loadDefaults(Equation* e) {
 	e->addFunction(funcCot);
 	e->addFunction(funcCsc);
 	e->addFunction(funcSec);
+	e->addFunction(funcaTan);
+	e->addFunction(funcaSin);
+	e->addFunction(funcaCos);
+	e->addFunction(funcaCot);
+	e->addFunction(funcaCsc);
+	e->addFunction(funcaSec);
 
 	Variable* eVar = e->createVariable("e");
 	eVar->value = 2.718281828459045;
 	Variable* piVar = e->createVariable("pi");
 	piVar->value = 3.141592653589793;
+	Variable* tauVar = e->createVariable("tau");
+	tauVar->value = 3.141592653589793*2;
 }
 
 Equation::Equation() {
