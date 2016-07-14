@@ -1,0 +1,10 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+ 
+PROJECT(Grapher2D)
+
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
+FIND_PACKAGE(OpenGL REQUIRED)
+
+add_subdirectory(SDL2)
+add_subdirectory(Grapher2D)

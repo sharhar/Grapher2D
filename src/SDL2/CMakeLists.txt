@@ -1535,3 +1535,15 @@ configure_file(
 
 add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+
+
+# Expose A's definitions (in this case only the ones of C transitively)
+# to other subprojects through cache variable.
+set(${PROJECT_NAME}_DEFINITIONS
+    CACHE INTERNAL "${PROJECT_NAME}: Definitions" FORCE)
+
+# Expose A's public includes (including the ones of A's dependencies
+# transitively) to other subprojects through cache variable.
+set(${PROJECT_NAME}_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include
+    CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE)
+	
