@@ -13,3 +13,5 @@ CLI instructions:<br>
 example on windows:   (Grapher2D.exe "x^2" "sin(x)" "sec(x - time)")<br>
 or if on linux/mac:   (./Grapher2D "x^2" "sin(x)" "sec(x - time)")<br>
 
+##Compiling
+If you dont want to use the included binaries you can build the project yourself. To build the project just go into the src folder and use cmake to generate the respective build files for your OS. Then build. It will build SDL and link it automatically.
