@@ -10,7 +10,7 @@
 
 class UI {
 private:
-	static std::thread thread;
+	static std::thread* thread;
 public:
 	static glui::TextBox** texts;
 	static glui::Button** buttons;

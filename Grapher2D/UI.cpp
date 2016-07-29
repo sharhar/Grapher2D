@@ -1,7 +1,7 @@
 #include "UI.h"
 
 bool UI::open = true;
-std::thread UI::thread;
+std::thread* UI::thread = 0;
 
 using namespace glui;
 
@@ -43,6 +43,7 @@ void run() {
 
 	Color white = { 1,1,1 };
 	Color black = { 0,0,0 };
+	Color grey = {0.8f, 0.8f, 0.8f};
 
 	TextStyle bstyle = {
 		20, font20, white
@@ -91,7 +92,7 @@ void run() {
 	
 	while (UI::open && win.isOpen()) {
 		win.poll();
-		Renderer::clear({0.8f, 0.8f, 0.8f});
+		Renderer::clear(grey);
 
 		for (int i = 0; i < 5;i++) {
 			UI::buttons[i]->poll();
@@ -112,10 +113,10 @@ void run() {
 }
 
 void UI::start() {
-	thread = std::thread(run);
+	thread =  new std::thread(run);
 }
 
 void UI::stop() {
 	open = false;
-	thread.join();
+	thread->join();
 }
