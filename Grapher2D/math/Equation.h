@@ -29,6 +29,7 @@ private:
 public:
 	Equation();
 	void setString(String string);
+	String getString() { return m_string; }
 	Variable* createVariable(String name);
 	void addOpperator(Opperator* op);
 	void addFunction(Function* func);

@@ -30,7 +30,7 @@ typedef struct Token {
 } Token;
 
 void** parseExpression(std::vector<Node*> nodes);
-double evalNode(Node* node);
+double evalNode(Node* node, Node* prev, Equation* e);
 
 double addO(double n1, double n2) {
 	return n1 + n2;
@@ -305,7 +305,7 @@ void Equation::parse() {
 		if (c == '0' || c == '1' || c == '2' ||
 			c == '3' || c == '4' || c == '5' ||
 			c == '6' || c == '7' || c == '8' ||
-			c == '9' || c == '.' || c == '~') {
+			c == '9' || c == '.') {
 			tempType = TK_TYPE_NUM;	
 		}
 
@@ -313,10 +313,6 @@ void Equation::parse() {
 			if (o->name == c) {
 				tempType = TK_TYPE_OPP;
 			}
-		}
-
-		if (tempType == TK_TYPE_NUM && c == '~') {
-			c = '-';
 		}
 
 		if (c == '(') {
@@ -666,32 +662,55 @@ void** parseExpression(std::vector<Node*> nodes) {
 
 double Equation::eval() {
 	Node* root = (Node*)m_rootNode;
-	double result = evalNode(root);
+	double result = evalNode(root, NULL, this);
 	return result;
 }
 
-double evalNode(Node* node) {
+double evalNode(Node* node, Node* prev, Equation* e) {
+	if (node == nullptr) {
+		if (prev != nullptr && prev->type == NODE_TYPE_OPP) {
+			Opperator* op = (Opperator*)prev->value[1];
+			if (op->name == '-') {
+				return 0;
+			}
+		}
+		std::cout << "Error in equation: '" << e->getString() << "'\n";
+		return 0;
+	}
+	if ((long)node == (long)0xFDFDFDFD) {
+		std::cout << "Error in equation: '" << e->getString() << "'\n";
+		return 0;
+	}
+
 	if (node->type == NODE_TYPE_NUM) {
 		return ((double*)(node->value[0]))[0];
 	} else if (node->type == NODE_TYPE_VAR) {
 		Variable* var = (Variable*)node->value[0];
+		if ((long)var == (long)0xCDCDCDCD) {
+			std::cout << "Error in equation: '" << e->getString() << "'\n";
+			return 0;
+		}
 		return var->value;
 	} else if (node->type == NODE_TYPE_OPP) {
 		Opperator* op = (Opperator*)node->value[1];
 		Node* prev = node->children[0];
 		Node* next = node->children[1];
 
-		double prevVal = evalNode(prev);
-		double nextVal = evalNode(next);
+		double prevVal = evalNode(prev, node, e);
+		double nextVal = evalNode(next, node, e);
 
 		double result = (*op->func)(prevVal, nextVal);
 		return result;
 	} else if (node->type == NODE_TYPE_FFN) {
 		Function* func = (Function*)node->value[0];
+		if ((long)func == (long)0xCDCDCDCD) {
+			std::cout << "Error in equation: '" << e->getString() << "'\n";
+			return 0;
+		}
 		int argc = node->childNum;
 		double* vals = new double[argc];
 		for (int i = 0; i < argc;i++) {
-			vals[i] = evalNode(node->children[i]);
+			vals[i] = evalNode(node->children[i], node, e);
 		}
 
 		double result = (*func->func)(vals);

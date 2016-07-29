@@ -23,6 +23,7 @@ typedef struct Graph {
 	double* vals;
 	Variable* xVar;
 	Variable* tVar;
+	bool used = false;
 } Graph;
 
 Graph** graphs;
@@ -73,7 +74,11 @@ void genVals(double* arr, double xl, double xr, Equation* e, Variable* xVar) {
 	double xint = (xr - xl) / (VAL_NUM);
 	for (int i = 0; i < VAL_NUM;i++) {
 		xVar->value = xint*i + xl;
-		arr[i] = e->eval();
+		try {
+			arr[i] = e->eval();
+		} catch (const std::exception& e) {
+			std::cout << "Equation:  is invalid!\n";
+		}
 	}
 }
 
@@ -205,6 +210,14 @@ void input::mouse::scrolled(double s) {
 
 void UI::addGraph(std::string eq, int index) {
 	if (eq.size() == 0) {
+		if (graphs[index] == NULL) {
+			return;
+		}
+
+		while (graphs[index]->used) {
+			
+		}
+
 		graphs[index] = NULL;
 		return;
 	}
@@ -215,8 +228,14 @@ void UI::addGraph(std::string eq, int index) {
 
 	graphs[index]->xVar = graphs[index]->e->createVariable("x");
 	graphs[index]->tVar = graphs[index]->e->createVariable("time");
-	graphs[index]->e->parse();
 	graphs[index]->vals = new double[VAL_NUM];
+
+	try {
+		graphs[index]->e->parse();
+	} catch (const std::exception& e) {
+		std::cout << "Equation: '" << eq << "' is invalid!\n";
+	}
+	
 }
 
 int main(int argc, char** argv) {
@@ -285,9 +304,13 @@ int main(int argc, char** argv) {
 			if (graphs[i] == NULL) {
 				continue;
 			}
+			graphs[i]->used = true;
+
 			graphs[i]->tVar->value = SDL_GetTicks() / 1000.0;
 			genVals(graphs[i]->vals, g_left, g_right, graphs[i]->e, graphs[i]->xVar);
 			renderVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 800, 600, colors[i%colorNum]);
+
+			graphs[i]->used = false;
 		}
 		
 		window.swapBuffers();
