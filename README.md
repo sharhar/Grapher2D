@@ -7,7 +7,9 @@ A 2d graphing calculator.
 3. Very very fast.
 
 ##Usage
-Enter the equations on the editor window 
+Enter the equations on the editor window <br>
+Make sure that arial.ttf is at the working directory of the executable. <br>
+It can be downloaded from [here](http://www5.miele.nl/apps/vg/nl/miele/mielea02.nsf/0e87ea0c369c2704c12568ac005c1831/07583f73269e053ac1257274003344e0?OpenDocument).
 
 ##Disclaimer
 you cant move the cursor using the arrow keys or mouse
