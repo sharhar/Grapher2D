@@ -7,11 +7,10 @@ A 2d graphing calculator.
 3. Very very fast.
 
 ##Usage
-CLI instructions:<br>
-(./ if on linux/mac)Grapher2D(.exe if on windows) [equations to graph] <br>
-<br>
-example on windows:   (Grapher2D.exe "x^2" "sin(x)" "sec(x - time)")<br>
-or if on linux/mac:   (./Grapher2D "x^2" "sin(x)" "sec(x - time)")<br>
+Enter the equations on the editor window 
+
+##Disclaimer
+you cant move the cursor using the arrow keys or mouse
 
 ##Compiling
-If you dont want to use the included binaries you can build the project yourself. To build the project just go into the src folder and use cmake to generate the respective build files for your OS. Then build. It will build SDL and link it automatically.
+If you dont want to use the included binaries you can build the project yourself. To build the project just go into the src folder and use cmake to generate the respective build files for your OS. Then build. It will build all the dependencies and link them automatically. The Executable will be in the bin folder in the cmake build directory.
