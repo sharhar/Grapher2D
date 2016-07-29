@@ -4,6 +4,7 @@
 
 #include "Window.h"
 #include "math/Equation.h"
+#include "UI.h"
 
 double g_left = -8;
 double g_right = 8;
@@ -23,6 +24,8 @@ typedef struct Graph {
 	Variable* xVar;
 	Variable* tVar;
 } Graph;
+
+Graph** graphs;
 
 void drawAxes(int width, int height) {
 	double l = abs(g_left);
@@ -200,12 +203,23 @@ void input::mouse::scrolled(double s) {
 	g_up = ypos + sizeY / 2;
 }
 
-int main(int argc, char** argv) {
-	std::cout << "argc: " << argc << "\n";
-	for (int i = 0; i < argc;i++) {
-		std::cout << "argv[" << i << "]: " << argv[i] << "\n";
+void UI::addGraph(std::string eq, int index) {
+	if (eq.size() == 0) {
+		graphs[index] = NULL;
+		return;
 	}
 
+	graphs[index] = (Graph*)malloc(sizeof(Graph));
+	graphs[index]->e = new Equation();
+	graphs[index]->e->setString(String((char*) eq.c_str()));
+
+	graphs[index]->xVar = graphs[index]->e->createVariable("x");
+	graphs[index]->tVar = graphs[index]->e->createVariable("time");
+	graphs[index]->e->parse();
+	graphs[index]->vals = new double[VAL_NUM];
+}
+
+int main(int argc, char** argv) {
 	SDL_Init(SDL_INIT_EVERYTHING);
 
 	input::mouse::init();
@@ -222,32 +236,11 @@ int main(int argc, char** argv) {
 
 	glEnable(GL_MULTISAMPLE);
 
-	Graph** graphs;
-
-	const bool multiGraph = argc > 1;
-
-	if (multiGraph) {
-		graphs = new Graph*[argc-1];
-		for (int i = 0; i < argc - 1;i++) {
-			graphs[i] = (Graph*)malloc(sizeof(Graph));
-			graphs[i]->e = new Equation();
-			graphs[i]->e->setString(argv[i+1]);
-
-			graphs[i]->xVar = graphs[i]->e->createVariable("x");
-			graphs[i]->tVar = graphs[i]->e->createVariable("time");
-			graphs[i]->e->parse();
-			graphs[i]->vals = new double[VAL_NUM];
-		}
-	} else {
-		graphs = new Graph*[1];
-		graphs[0] = (Graph*)malloc(sizeof(Graph));
-		graphs[0]->e = new Equation();
-		graphs[0]->e->setString("sin(x)");
-
-		graphs[0]->xVar = graphs[0]->e->createVariable("x");
-		graphs[0]->tVar = graphs[0]->e->createVariable("time");
-		graphs[0]->e->parse();
-		graphs[0]->vals = new double[VAL_NUM];
+	UI::start();
+	
+	graphs = new Graph*[5];
+	for (int i = 0; i < 5; i++) {
+		graphs[i] = NULL;
 	}
 
 #if defined(PRINT_FPS) && defined(_DEBUG)
@@ -264,7 +257,7 @@ int main(int argc, char** argv) {
 	colors[3] = { 0.9f, 0.65f, 0.2f };
 	colors[4] = { 0.8f, 0.2f, 0.8f };
 
-	while (window.isOpen()) {
+	while (window.isOpen() && UI::open) {
 		window.poll();
 
 #if defined(PRINT_FPS) && defined(_DEBUG)
@@ -288,23 +281,21 @@ int main(int argc, char** argv) {
 
 		drawAxes(800, 600);
 
-		if (multiGraph) {
-			for (int i = 0; i < argc - 1; i++) {
-				graphs[i]->tVar->value = SDL_GetTicks() / 1000.0;
-				genVals(graphs[i]->vals, g_left, g_right, graphs[i]->e, graphs[i]->xVar);
-				renderVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 800, 600, colors[i%colorNum]);
+		for (int i = 0; i < 5; i++) {
+			if (graphs[i] == NULL) {
+				continue;
 			}
-		}
-		else {
-			graphs[0]->tVar->value = SDL_GetTicks() / 1000.0;
-			genVals(graphs[0]->vals, g_left, g_right, graphs[0]->e, graphs[0]->xVar);
-			renderVals(graphs[0]->vals, g_left, g_right, g_down, g_up, 800, 600, colors[0]);
+			graphs[i]->tVar->value = SDL_GetTicks() / 1000.0;
+			genVals(graphs[i]->vals, g_left, g_right, graphs[i]->e, graphs[i]->xVar);
+			renderVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 800, 600, colors[i%colorNum]);
 		}
 		
 		window.swapBuffers();
 	}
 	
 	window.destroy();
+
+	UI::stop();
 
 	SDL_Quit();
 
