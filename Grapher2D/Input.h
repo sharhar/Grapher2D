@@ -2,7 +2,7 @@
 #ifndef INPUT_H
 #define INPUT_H
 
-#include <SDL/SDL.h>
+#include "SDL.h"
 #include <iostream>
 
 namespace input {

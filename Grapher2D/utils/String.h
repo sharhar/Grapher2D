@@ -80,10 +80,6 @@ public:
 	}
 
 	bool equals(String other) {
-		if (other == nullptr) {
-			return false;
-		}
-
 		if (length != other.length) {
 			return false;
 		}

@@ -627,14 +627,14 @@ void** parseExpression(std::vector<Node*> nodes) {
 				Node* funcNode = NULL;
 				
 				funcNode = (Node*)malloc(sizeof(Node));
-				int argc = (int)funcNodeArr[0];
+				long argc = (long)funcNodeArr[0];
 				funcNode->type = NODE_TYPE_FFN;
 				funcNode->value = new void*[1];
 				funcNode->value[0] = (void*)curFunc;
 				funcNode->childNum = argc;
 				funcNode->children = new Node*[argc];
 				
-				for (int i = 0; i < argc; i++) {
+				for (long i = 0; i < argc; i++) {
 					funcNode->children[i] = (Node*)funcNodeArr[i + 1];
 				}
 				simple.push_back(funcNode);
@@ -644,17 +644,17 @@ void** parseExpression(std::vector<Node*> nodes) {
 	}
 	
 	void*** parts = getParts(simple);
-	int partNum = (int)parts[0][0];
+	long partNum = (long)parts[0][0];
 
 	void** result = new void*[partNum+1];
 
 	result[0] = (void*)partNum;
 	
-	for (int i = 1; i <= partNum;i++) {
+	for (long i = 1; i <= partNum;i++) {
 		void** part = parts[i];
-		int partLen = (int)part[0];
+		long partLen = (long)part[0];
 		std::vector<Node*> vec;
-		for (int j = 1; j <= partLen;j++) {
+		for (long j = 1; j <= partLen;j++) {
 			vec.push_back((Node*)part[j]);
 		}
 		Node* simplePart = parseSimpleExpression(vec);
