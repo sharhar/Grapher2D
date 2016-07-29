@@ -28,9 +28,13 @@ typedef struct Graph {
 
 Graph** graphs;
 
+double abs_c(double n1) {
+	return n1 > 0 ? n1 : -(n1);
+}
+
 void drawAxes(int width, int height) {
-	double l = abs(g_left);
-	double r = abs(g_right);
+	double l = abs_c(g_left);
+	double r = abs_c(g_right);
 
 	double xoff = (l/(r + l))* width;
 
@@ -49,8 +53,8 @@ void drawAxes(int width, int height) {
 		glPopMatrix();
 	}
 
-	double d = abs(g_down);
-	double u = abs(g_up);
+	double d = abs_c(g_down);
+	double u = abs_c(g_up);
 
 	double yoff = (d / (u + d))* height;
 
@@ -134,7 +138,7 @@ void renderVals(double* arr, double xl, double xr, double yd, double yu, int wid
 			bool p2 = m2 > 0;
 			bool p = m > 0;
 
-			if (p1 == p2 && p1 != p && abs(m) > 2) {
+			if (p1 == p2 && p1 != p && abs_c(m) > 2) {
 				if (p) {
 					glVertex2f(x1, y1);
 					glVertex2f(x1, 0);
