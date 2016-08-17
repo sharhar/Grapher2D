@@ -1,7 +1,5 @@
-#include <GLUI/Window.h>
-#include <GLUI/Input.h>
-#include <iostream>
-#include <GLFW/glfw3.h>
+#include <GLUI/GLUI.h>
+#include <GLUIExt.h>
 
 namespace glui {
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -24,29 +22,39 @@ namespace glui {
 		m_width = width;
 		m_height = height;
 
+		glfwWindowHint(GLFW_SAMPLES, 4);
+
 		GLFWwindow* window = glfwCreateWindow(width, height, title, NULL, NULL);
 		glfwMakeContextCurrent(window);
+
+		glfwSwapInterval(1);
+
 		glfwSetKeyCallback(window, keyCallback);
 		glfwSetMouseButtonCallback(window, mouseButtonCallback);
 		glfwSetCursorPosCallback(window, mousePosCallback);
 		glfwSetCharCallback(window, textCallBack);
-		m_window = (void*)window;
+		m_window = window;
 	}
 
 	void Window::poll() {
 		glfwPollEvents();
+
+		GLenum err = GL_NO_ERROR;
+		while ((err = glGetError()) != GL_NO_ERROR) {
+			std::cout << "GLError: " << err << "\n";
+		}
 	}
 
 	void Window::swap() {
-		glfwSwapBuffers((GLFWwindow*) m_window);
+		glfwSwapBuffers(m_window);
 	}
 
 	bool Window::isOpen() {
-		return !glfwWindowShouldClose((GLFWwindow*) m_window);
+		return !glfwWindowShouldClose(m_window);
 	}
 
 	void Window::destroy() {
-		glfwDestroyWindow((GLFWwindow*) m_window);
+		glfwDestroyWindow(m_window);
 	}
 
 	void* Window::getGLFWwindow() {

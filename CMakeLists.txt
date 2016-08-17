@@ -11,7 +11,6 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 FIND_PACKAGE(OpenGL REQUIRED)
 
 if(NOT MSVC)
-
 	include(CheckCXXCompilerFlag)
 	CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 	CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
@@ -27,10 +26,11 @@ if(NOT MSVC)
 
 endif()
 
+option(GLUI_BUILD_TEST OFF)
+
 include_directories(
 	"${CMAKE_SOURCE_DIR}/GLUI/include"
 )
 
-add_subdirectory(SDL2)
 add_subdirectory(GLUI)
-add_subdirectory(Grapher2D)
+add_subdirectory(src)
