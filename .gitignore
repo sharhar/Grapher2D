@@ -30,3 +30,4 @@
 *.pdb
 
 /build
+/GLUI/ext
