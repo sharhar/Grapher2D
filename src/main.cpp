@@ -312,7 +312,7 @@ int main() {
 	g_colors[3] = { 0.9f, 0.65f, 0.2f };
 	g_colors[4] = { 0.8f, 0.2f, 0.8f };
 
-	addGraph("-sin(x)", 0);
+	addGraph("sin(x-time)", 0);
 
 	while (win.isOpen()) {
 		win.poll();

@@ -8,7 +8,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 option(GLUI_BUILD_TEST "Build the GLUI-Test project" ON)
 
-set(EXT_EXTRACT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext")
+set(EXT_EXTRACT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
 set(GLFW_SOURCE_NAME "glfw-3.2")
 set(GLFW_URL "http://downloads.sourceforge.net/project/glfw/glfw/3.2/${GLFW_SOURCE_NAME}.tar.gz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fglfw%2Ffiles%2Fglfw%2F3.2%2F&ts=1470492725&use_mirror=heanet")
@@ -41,10 +41,10 @@ if(NOT MSVC)
 
 endif()
 
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/ext/glcorearb/glcorearb.h")
+if(NOT EXISTS "${EXT_EXTRACT_DIR}/glcorearb/glcorearb.h")
 	message("Did not find glcorearb.h...")
 	message("Downloading glcorearb.h...")
-	file(DOWNLOAD "https://www.opengl.org/registry/api/GL/glcorearb.h" "${CMAKE_SOURCE_DIR}/ext/glcorearb/glcorearb.h")
+	file(DOWNLOAD "https://www.opengl.org/registry/api/GL/glcorearb.h" "${EXT_EXTRACT_DIR}/glcorearb/glcorearb.h")
 else()
 	message("Found glcorearb.h...")
 endif()
@@ -64,11 +64,11 @@ if(NOT EXISTS ${GLFW_SOURCE_DIR})
 	#Next we extract the .tar.gz. This works on Windows as well
 	execute_process(
 		COMMAND ${CMAKE_COMMAND} -E tar xvf ${GLFW_DOWNLOAD_PATH}
-		WORKING_DIRECTORY ${EXT_EXTRACT_DIR}
+		WORKING_DIRECTORY "${EXT_EXTRACT_DIR}"
 	)
-		
+	
 	#If the extraction fails, go to here.
-	if(NOT EXISTS ${GLFW_SOURCE_DIR})
+	if(NOT EXISTS "${GLFW_SOURCE_DIR}")
 		message(FATAL_ERROR "Failed to extract GLFW source! Please retry or file a bug report.")
 	else()
 		message(STATUS "GLFW extracted.")
@@ -119,22 +119,9 @@ include_directories(
 	"${GLFW_SOURCE_DIR}/include"
 	"${FT_SOURCE_DIR}/include"
 	"${FT_SOURCE_DIR}/ext/freetype-2.6/devel"
-	"${CMAKE_CURRENT_SOURCE_DIR}/ext/glcorearb"
-	"${CMAKE_CURRENT_SOURCE_DIR}/ext/GLUIExt"
+	"${CMAKE_CURRENT_SOURCE_DIR}/glcorearb"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
-
-#if(GLUI_NON_ROOT_BUILD)
-	execute_process(
-		COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/ext" "${CMAKE_CURRENT_SOURCE_DIR}/ext"
-		WORKING_DIRECTORY ${EXT_EXTRACT_DIR}
-	)
-	
-	execute_process(
-		COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_SOURCE_DIR}/ext/"
-		WORKING_DIRECTORY ${EXT_EXTRACT_DIR}
-	)
-#else()
 
 option(GLFW_BUILD_EXAMPLES "Build the GLFW example programs" OFF)
 
@@ -143,7 +130,7 @@ option(GLFW_BUILD_TESTS "Build the GLFW test programs" OFF)
 option(GLFW_BUILD_DOCS "Build the GLFW documentation" OFF)
 
 add_subdirectory("${GLFW_SOURCE_DIR}")
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/freetype-2.6")
+add_subdirectory("${FT_SOURCE_DIR}")
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src/GLUI")
 
