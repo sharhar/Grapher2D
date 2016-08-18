@@ -269,6 +269,32 @@ int main() {
 			g_down += moveY;
 			g_up += moveY;
 		}
+		
+		if (data->scroll != 0) {
+			double width = g_right - g_left;
+			double percentX = (data->pos.x - g_windowHeight / 2.0) / g_windowWidth;
+			double moveX = width * percentX;
+
+			double xpos = ((g_right + g_left) / 2.0);
+			double ypos = ((g_up + g_down) / 2.0);
+
+			double sizeX = g_right - g_left;
+			double sizeY = g_up - g_down;
+
+			if (data->scroll < 0) {
+				sizeX = sizeX / ((1 - ZOOM_PERCENT));
+				sizeY = sizeY / ((1 - ZOOM_PERCENT));
+			}
+			else if (data->scroll > 0) {
+				sizeX = sizeX * ((1 - ZOOM_PERCENT));
+				sizeY = sizeY * ((1 - ZOOM_PERCENT));
+			}
+
+			g_left = xpos - sizeX / 2;
+			g_right = xpos + sizeX / 2;
+			g_down = ypos - sizeY / 2;
+			g_up = ypos + sizeY / 2;
+		}
 	}, theme);
 
 	graphs = new Graph*[5];
@@ -282,7 +308,7 @@ int main() {
 	g_colors[3] = { 0.9f, 0.65f, 0.2f };
 	g_colors[4] = { 0.8f, 0.2f, 0.8f };
 
-	addGraph("sin(x)", 0);
+	addGraph("cos(1/x)", 0);
 
 	while (win.isOpen()) {
 		win.poll();

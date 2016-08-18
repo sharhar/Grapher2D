@@ -15,6 +15,7 @@ namespace glui {
 		bool leftDown;
 		Vector2f pos;
 		Vector2f difference;
+		float scroll;
 	} GLPanelMouseData;
 
 	class GLPanel : public GLUIObject {
@@ -30,6 +31,7 @@ namespace glui {
 		GLFuncs* m_glFuncs;
 		Theme m_theme;
 
+		float m_prevScroll;
 		GLPanelMouseData* m_mouseData;
 		Vector2f m_fboSize;
 	public:

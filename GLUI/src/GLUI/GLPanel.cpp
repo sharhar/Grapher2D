@@ -22,11 +22,13 @@ namespace glui {
 		m_inputMouseFunc = inputMouseFunc;
 		m_fboSize = fboSize;
 		m_theme = theme;
+		m_prevScroll = 0;
 
 		m_mouseData = (GLPanelMouseData*)malloc(sizeof(GLFuncs));
 		m_mouseData->difference = {0, 0};
 		m_mouseData->pos = {-1, -1};
 		m_mouseData->leftDown = false;
+		m_mouseData->scroll = 0;
 
 		m_glFuncs = (GLFuncs*)malloc(sizeof(GLFuncs));
 
@@ -91,7 +93,8 @@ namespace glui {
 			posy -= (m_layout->getHeight() - (m_bounds.y + m_bounds.h));
 
 			if (hovering) {
-				if (m_mouseData->pos.x != posx || m_mouseData->pos.y != posy || m_mouseData->leftDown != down) {
+				if (m_mouseData->pos.x != posx || m_mouseData->pos.y != posy 
+					|| m_mouseData->leftDown != down || m_mouseData->scroll != input::Input::scrollTotal) {
 					if (m_mouseData->difference.x != -1) {
 						m_mouseData->difference = { posx - m_mouseData->pos.x, posy - m_mouseData->pos.y };
 					}
@@ -100,9 +103,12 @@ namespace glui {
 					}
 					m_mouseData->pos = { posx, posy };
 					m_mouseData->leftDown = down;
+					m_mouseData->scroll = input::Input::scrollTotal - m_prevScroll;
 
 					m_inputMouseFunc(m_mouseData);
 				}
+
+				m_prevScroll = input::Input::scrollTotal;
 			}
 		}
 
