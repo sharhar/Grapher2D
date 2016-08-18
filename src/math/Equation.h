@@ -3,11 +3,11 @@
 #include "../utils/String.h"
 #include <unordered_map>
 
-typedef struct Opperator {
+typedef struct Operator {
 	char name;
 	int order;
 	double(*func) (double, double);
-} Opperator;
+} Operator;
 
 typedef struct Function {
 	String* name;
@@ -22,17 +22,19 @@ typedef struct Variable {
 class Equation {
 private:
 	String m_string;
-	std::vector<Opperator*> m_ops;
+	std::vector<Operator*> m_ops;
 	std::vector<Function*> m_funcs;
 	std::vector<Variable*> m_vars;
 	void* m_rootNode;
 public:
 	Equation();
+
+	String* parseError;
 	void setString(String string);
 	String getString() { return m_string; }
 	Variable* createVariable(String name);
-	void addOpperator(Opperator* op);
+	void addOperator(Operator* op);
 	void addFunction(Function* func);
-	void parse();
+	String* parse();
 	double eval();
 };

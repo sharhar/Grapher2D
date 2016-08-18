@@ -16,6 +16,7 @@
 #define NODE_TYPE_FCL 6
 #define NODE_TYPE_EXP 7
 #define NODE_TYPE_FFN 8
+#define NODE_TYPE_ZRO 9
 
 typedef struct Node {
 	int type;
@@ -29,7 +30,7 @@ typedef struct Token {
 	String* value;
 } Token;
 
-void** parseExpression(std::vector<Node*> nodes);
+void** parseExpression(std::vector<Node*> nodes, Equation* e);
 double evalNode(Node* node, Node* prev, Equation* e);
 
 double addO(double n1, double n2) {
@@ -134,42 +135,42 @@ double blankF(double* args) {
 }
 
 void loadDefaults(Equation* e) {
-	Opperator* addOp = (Opperator*)malloc(sizeof(Opperator));
+	Operator* addOp = (Operator*)malloc(sizeof(Operator));
 	addOp->name = '+';
 	addOp->order = 10;
 	addOp->func = &addO;
 
-	Opperator* mulOp = (Opperator*)malloc(sizeof(Opperator));
+	Operator* mulOp = (Operator*)malloc(sizeof(Operator));
 	mulOp->name = '*';
 	mulOp->order = 8;
 	mulOp->func = &mulO;
 
-	Opperator* subOp = (Opperator*)malloc(sizeof(Opperator));
+	Operator* subOp = (Operator*)malloc(sizeof(Operator));
 	subOp->name = '-';
 	subOp->order = 10;
 	subOp->func = &subO;
 
-	Opperator* divOp = (Opperator*)malloc(sizeof(Opperator));
+	Operator* divOp = (Operator*)malloc(sizeof(Operator));
 	divOp->name = '/';
 	divOp->order = 8;
 	divOp->func = &divO;
 
-	Opperator* powOp = (Opperator*)malloc(sizeof(Opperator));
+	Operator* powOp = (Operator*)malloc(sizeof(Operator));
 	powOp->name = '^';
 	powOp->order = 6;
 	powOp->func = &powO;
 
-	Opperator* eqOp = (Opperator*)malloc(sizeof(Opperator));
+	Operator* eqOp = (Operator*)malloc(sizeof(Operator));
 	eqOp->name = '=';
 	eqOp->order = 100;
 	eqOp->func = &eqO;
 
-	e->addOpperator(addOp);
-	e->addOpperator(mulOp);
-	e->addOpperator(subOp);
-	e->addOpperator(divOp);
-	e->addOpperator(powOp);
-	e->addOpperator(eqOp);
+	e->addOperator(addOp);
+	e->addOperator(mulOp);
+	e->addOperator(subOp);
+	e->addOperator(divOp);
+	e->addOperator(powOp);
+	e->addOperator(eqOp);
 
 	Function* funcTan = (Function*)malloc(sizeof(Function));
 	funcTan->name = new String("tan");
@@ -269,13 +270,14 @@ void loadDefaults(Equation* e) {
 
 Equation::Equation() {
 	loadDefaults(this);
+	parseError = NULL;
 }
 
 void Equation::setString(String string) {
 	m_string = String(string);
 }
 
-void Equation::addOpperator(Opperator* op) {
+void Equation::addOperator(Operator* op) {
 	m_ops.push_back(op);
 }
 
@@ -291,7 +293,7 @@ Variable* Equation::createVariable(String name) {
 	return var;
 }
 
-void Equation::parse() {
+String* Equation::parse() {
 	std::vector<Token*> tempStack;
 	int tempType;
 	int lastType = 0;
@@ -309,7 +311,7 @@ void Equation::parse() {
 			tempType = TK_TYPE_NUM;	
 		}
 
-		for (Opperator* o : m_ops) {
+		for (Operator* o : m_ops) {
 			if (o->name == c) {
 				tempType = TK_TYPE_OPP;
 			}
@@ -394,12 +396,18 @@ void Equation::parse() {
 			tempNode->type = NODE_TYPE_OPP;
 			tempNode->value = new void*[2];
 			tempNode->value[0] = (void*)&(t->value->buff[0]);
-			for (Opperator* o : m_ops) {
+			tempNode->value[1] = NULL;
+			for (Operator* o : m_ops) {
 				if (o->name == t->value->buff[0]) {
 					tempNode->value[1] = (void*)o;
 					break;
 				}
 			}
+
+			if (tempNode->value[1] == NULL) {
+				return new String("Unknown variable: " + String(t->value->buff));
+			}
+
 			unsortedNodes.push_back(tempNode);
 		}
 		else if (t->type == TK_TYPE_FSP) {
@@ -418,12 +426,18 @@ void Equation::parse() {
 				tempNode->type = NODE_TYPE_FUN;
 				tempNode->value = new void*[2];
 				tempNode->value[0] = (void*)new String("");
+				tempNode->value[1] = NULL;
 				for (Function* f : m_funcs) {
 					if (f->name->length == 0) {
 						tempNode->value[1] = (void*)f;
 						break;
 					}
 				}
+
+				if (tempNode->value[1] == NULL) {
+					return new String("Parentheses error");
+				}
+
 				unsortedNodes.push_back(tempNode);
 			}
 			else if (stack[i - 1]->type != TK_TYPE_STR) {
@@ -431,12 +445,18 @@ void Equation::parse() {
 				tempNode->type = NODE_TYPE_FUN;
 				tempNode->value = new void*[2];
 				tempNode->value[0] = (void*)new String("");
+				tempNode->value[1] = NULL;
 				for (Function* f : m_funcs) {
 					if (f->name->length == 0) {
 						tempNode->value[1] = (void*)f;
 						break;
 					}
 				}
+
+				if (tempNode->value[1] == NULL) {
+					return new String("Unknown variable: " + *t->value);
+				}
+
 				unsortedNodes.push_back(tempNode);
 			}
 		}
@@ -445,12 +465,18 @@ void Equation::parse() {
 				Node* tempNode = (Node*)malloc(sizeof(Node));
 				tempNode->type = NODE_TYPE_VAR;
 				tempNode->value = new void*[1];
+				tempNode->value[0] = NULL;
 				for (Variable* v:m_vars) {
 					if (v->name->equals(*t->value)) {
 						tempNode->value[0] = (void*)v;
 						break;
 					}
 				}
+
+				if (tempNode->value[0] == NULL) {
+					return new String("Unknown variable: " + *t->value);
+				}
+
 				unsortedNodes.push_back(tempNode);
 				continue;
 			}
@@ -461,31 +487,55 @@ void Equation::parse() {
 				tempNode->type = NODE_TYPE_FUN;
 				tempNode->value = new void*[2];
 				tempNode->value[0] = (void*)t->value;
+				tempNode->value[1] = NULL;
 				for (Function* f : m_funcs) {
 					if (f->name->equals(*t->value)) {
 						tempNode->value[1] = (void*)f;
 						break;
 					}
 				}
+
+				if (tempNode->value[1] == NULL) {
+					return new String("Unknown variable: " + *t->value);
+				}
+
 				unsortedNodes.push_back(tempNode);
 			}
 			else {
 				Node* tempNode = (Node*)malloc(sizeof(Node));
 				tempNode->type = NODE_TYPE_VAR;
 				tempNode->value = new void*[1];
+				tempNode->value[0] = NULL;
 				for (Variable* v : m_vars) {
 					if (v->name->equals(*t->value)) {
 						tempNode->value[0] = (void*)v;
 						break;
 					}
 				}
+
+				if (tempNode->value[0] == NULL) {
+					return new String("Unknown variable: " + *t->value);
+				}
+
 				unsortedNodes.push_back(tempNode);
 			}
 		}
 	}
 
-	void** result = parseExpression(unsortedNodes);
+	void** result = parseExpression(unsortedNodes, this);
+
+	if (result == NULL) {
+		if (parseError != NULL) {
+			return parseError;
+		}
+		else {
+			return new String("Unkown error");
+		}
+	}
+
 	m_rootNode = result[1];
+
+	return NULL;
 }
 
 void*** getParts(std::vector<Node*> nodes) {
@@ -528,7 +578,11 @@ void*** getParts(std::vector<Node*> nodes) {
 	return result;
 }
 
-Node* parseSimpleExpression(std::vector<Node*> nodes) {
+Node* parseSimpleExpression(std::vector<Node*> nodes, Equation* e) {
+	if (nodes.size() == 0) {
+		return NULL;
+	}
+	
 	if (nodes.size() == 1) {
 		return nodes[0];
 	}
@@ -537,7 +591,7 @@ Node* parseSimpleExpression(std::vector<Node*> nodes) {
 	for (Node* node:nodes) {
 		if (node->type == NODE_TYPE_OPP) {
 			
-			Opperator* op = (Opperator*)node->value[1];
+			Operator* op = (Operator*)node->value[1];
 			if (op->order > level) {
 				level = op->order;
 			}
@@ -546,7 +600,7 @@ Node* parseSimpleExpression(std::vector<Node*> nodes) {
 
 	for (Node* node:nodes) {
 		if (node->type == NODE_TYPE_OPP) {
-			Opperator* op = (Opperator*)node->value[1];
+			Operator* op = (Operator*)node->value[1];
 		}
 	}
 
@@ -556,17 +610,28 @@ Node* parseSimpleExpression(std::vector<Node*> nodes) {
 		if (node->type != NODE_TYPE_OPP) {
 			tempVec.push_back(node);
 		} else if (node->type == NODE_TYPE_OPP) {
-			Opperator* op = (Opperator*)node->value[1];
+			Operator* op = (Operator*)node->value[1];
 			if (op->order != level) {
 				tempVec.push_back(node);
 			} else {
-				Node* prev = parseSimpleExpression(tempVec);
+				Node* prev = parseSimpleExpression(tempVec, e);
+
+				if (prev == NULL) {
+					if (op->name == '-') {
+						prev = (Node*)malloc(sizeof(Node));
+						prev->type = NODE_TYPE_ZRO;
+					} else {
+						e->parseError = new String(String("Left side of operator '") + String(op->name) + String("' is blank"));
+						return NULL;
+					}
+				}
+
 				std::vector<Node*> temp2;
 				int loc = -1;
 				for (int j = i + 1; j < nodes.size();j++) {
 					Node* node2 = nodes[j];
 					if (node2->type == NODE_TYPE_OPP) {
-						Opperator* op2 = (Opperator*)node2->value[1];
+						Operator* op2 = (Operator*)node2->value[1];
 						if (op2->order == level) {
 							loc = j;
 							break;
@@ -577,7 +642,12 @@ Node* parseSimpleExpression(std::vector<Node*> nodes) {
 						temp2.push_back(node2);
 					}
 				}
-				Node* next = parseSimpleExpression(temp2);
+				Node* next = parseSimpleExpression(temp2, e);
+
+				if (next == NULL) {
+					e->parseError = new String(String("Right side of operator '") + String(op->name) + String("' is blank"));
+					return NULL;
+				}
 
 				node->childNum = 2;
 				node->children = new Node*[2];
@@ -594,10 +664,11 @@ Node* parseSimpleExpression(std::vector<Node*> nodes) {
 			}
 		}
 	}
+
 	return NULL;
 }
 
-void** parseExpression(std::vector<Node*> nodes) {
+void** parseExpression(std::vector<Node*> nodes, Equation* e) {
 	std::vector<Node*> simple;
 	std::vector<Node*> funcTemp;
 	Function* curFunc = NULL;
@@ -619,7 +690,12 @@ void** parseExpression(std::vector<Node*> nodes) {
 			if (level != 0) {
 				funcTemp.push_back(node);
 			} else {
-				void** funcNodeArr = parseExpression(funcTemp);
+				void** funcNodeArr = parseExpression(funcTemp, e);
+
+				if (funcNodeArr == NULL) {
+					return NULL;
+				}
+
 				Node* funcNode = NULL;
 				
 				funcNode = (Node*)malloc(sizeof(Node));
@@ -653,7 +729,10 @@ void** parseExpression(std::vector<Node*> nodes) {
 		for (long j = 1; j <= partLen;j++) {
 			vec.push_back((Node*)part[j]);
 		}
-		Node* simplePart = parseSimpleExpression(vec);
+		Node* simplePart = parseSimpleExpression(vec, e);
+		if (simplePart == NULL) {
+			return NULL;
+		}
 		result[i] = (void*)simplePart;
 	}
 
@@ -668,31 +747,22 @@ double Equation::eval() {
 
 double evalNode(Node* node, Node* prev, Equation* e) {
 	if (node == nullptr) {
-		if (prev != nullptr && prev->type == NODE_TYPE_OPP) {
-			Opperator* op = (Opperator*)prev->value[1];
+		if (prev != nullptr && prev->type == NODE_TYPE_OPP && prev->children[0] == node && prev->children[1] != node) {
+			Operator* op = (Operator*)prev->value[1];
 			if (op->name == '-') {
 				return 0;
 			}
 		}
-		std::cout << "Error in equation: '" << e->getString() << "'\n";
-		return 0;
 	}
-	if ((long)node == (long)0xFDFDFDFD) {
-		std::cout << "Error in equation: '" << e->getString() << "'\n";
+	if (node->type == NODE_TYPE_ZRO) {
 		return 0;
-	}
-
-	if (node->type == NODE_TYPE_NUM) {
+	} else if (node->type == NODE_TYPE_NUM) {
 		return ((double*)(node->value[0]))[0];
 	} else if (node->type == NODE_TYPE_VAR) {
 		Variable* var = (Variable*)node->value[0];
-		if ((long)var == (long)0xCDCDCDCD) {
-			std::cout << "Error in equation: '" << e->getString() << "'\n";
-			return 0;
-		}
 		return var->value;
 	} else if (node->type == NODE_TYPE_OPP) {
-		Opperator* op = (Opperator*)node->value[1];
+		Operator* op = (Operator*)node->value[1];
 		Node* prev = node->children[0];
 		Node* next = node->children[1];
 
@@ -703,10 +773,6 @@ double evalNode(Node* node, Node* prev, Equation* e) {
 		return result;
 	} else if (node->type == NODE_TYPE_FFN) {
 		Function* func = (Function*)node->value[0];
-		if ((long)func == (long)0xCDCDCDCD) {
-			std::cout << "Error in equation: '" << e->getString() << "'\n";
-			return 0;
-		}
 		int argc = node->childNum;
 		double* vals = new double[argc];
 		for (int i = 0; i < argc;i++) {

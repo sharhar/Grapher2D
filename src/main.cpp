@@ -23,7 +23,6 @@ typedef struct Graph {
 	double* vals;
 	Variable* xVar;
 	Variable* tVar;
-	bool used = false;
 } Graph;
 
 Graph** graphs;
@@ -167,12 +166,12 @@ void renderVals(double* arr, double xl, double xr, double yd, double yu, int wid
 
 void addGraph(std::string eq, int index) {
 	if (eq.size() == 0) {
-		if (graphs[index] == NULL) {
-			return;
-		}
-
-		while (graphs[index]->used) {
-
+		if (graphs[index] != NULL) {
+			delete graphs[index]->e;
+			delete graphs[index]->xVar;
+			delete graphs[index]->tVar;
+			delete[] graphs[index]->vals;
+			delete graphs[index];
 		}
 
 		graphs[index] = NULL;
@@ -187,13 +186,21 @@ void addGraph(std::string eq, int index) {
 	graphs[index]->tVar = graphs[index]->e->createVariable("time");
 	graphs[index]->vals = new double[VAL_NUM];
 
-	try {
-		graphs[index]->e->parse();
-	}
-	catch (const std::exception& e) {
-		std::cout << "Equation: '" << eq << "' is invalid!\n";
-	}
+	String* result = graphs[index]->e->parse();
 
+	if (result != NULL) {
+		std::cout << "Error parsing expression: '" << eq << "'\n";
+		std::cout << "Error: " << *result << "\n";
+
+		delete result;
+		delete graphs[index]->e;
+		delete graphs[index]->xVar;
+		delete graphs[index]->tVar;
+		delete[] graphs[index]->vals;
+		delete graphs[index];
+
+		graphs[index] = NULL;
+	}
 }
 
 int main() {
@@ -242,13 +249,10 @@ int main() {
 			if (graphs[i] == NULL) {
 				continue;
 			}
-			graphs[i]->used = true;
 
 			graphs[i]->tVar->value = glfwGetTime();
 			genVals(graphs[i]->vals, g_left, g_right, graphs[i]->e, graphs[i]->xVar);
 			renderVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 600, 600, g_colors[i%g_colorNum]);
-
-			graphs[i]->used = false;
 		}
 	},
 	[](GLPanelMouseData* data)->void {
@@ -308,7 +312,7 @@ int main() {
 	g_colors[3] = { 0.9f, 0.65f, 0.2f };
 	g_colors[4] = { 0.8f, 0.2f, 0.8f };
 
-	addGraph("cos(1/x)", 0);
+	addGraph("-sin(x)", 0);
 
 	while (win.isOpen()) {
 		win.poll();
