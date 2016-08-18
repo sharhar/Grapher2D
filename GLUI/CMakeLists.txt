@@ -8,7 +8,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 option(GLUI_BUILD_TEST "Build the GLUI-Test project" ON)
 
-set(EXT_EXTRACT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(EXT_EXTRACT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext")
 
 set(GLFW_SOURCE_NAME "glfw-3.2")
 set(GLFW_URL "http://downloads.sourceforge.net/project/glfw/glfw/3.2/${GLFW_SOURCE_NAME}.tar.gz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fglfw%2Ffiles%2Fglfw%2F3.2%2F&ts=1470492725&use_mirror=heanet")
@@ -39,6 +39,13 @@ if(NOT MSVC)
 		message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 	endif()
 
+endif()
+
+if(NOT EXISTS ${EXT_EXTRACT_DIR})
+	execute_process(
+		COMMAND ${CMAKE_COMMAND} -E make_directory "ext"
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+	)
 endif()
 
 if(NOT EXISTS "${EXT_EXTRACT_DIR}/glcorearb/glcorearb.h")
@@ -118,8 +125,8 @@ endif()
 include_directories(
 	"${GLFW_SOURCE_DIR}/include"
 	"${FT_SOURCE_DIR}/include"
-	"${FT_SOURCE_DIR}/ext/freetype-2.6/devel"
-	"${CMAKE_CURRENT_SOURCE_DIR}/glcorearb"
+	"${FT_SOURCE_DIR}/freetype-2.6/devel"
+	"${EXT_EXTRACT_DIR}/glcorearb"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 

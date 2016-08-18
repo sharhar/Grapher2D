@@ -25,8 +25,6 @@ typedef struct Graph {
 	Variable* tVar;
 } Graph;
 
-Graph** graphs;
-
 double abs_c(double n1) {
 	return n1 > 0 ? n1 : -(n1);
 }
@@ -164,45 +162,6 @@ void renderVals(double* arr, double xl, double xr, double yd, double yu, int wid
 	glEnd();
 }
 
-void addGraph(std::string eq, int index) {
-	if (eq.size() == 0) {
-		if (graphs[index] != NULL) {
-			delete graphs[index]->e;
-			delete graphs[index]->xVar;
-			delete graphs[index]->tVar;
-			delete[] graphs[index]->vals;
-			delete graphs[index];
-		}
-
-		graphs[index] = NULL;
-		return;
-	}
-
-	graphs[index] = (Graph*)malloc(sizeof(Graph));
-	graphs[index]->e = new Equation();
-	graphs[index]->e->setString(String((char*)eq.c_str()));
-
-	graphs[index]->xVar = graphs[index]->e->createVariable("x");
-	graphs[index]->tVar = graphs[index]->e->createVariable("time");
-	graphs[index]->vals = new double[VAL_NUM];
-
-	String* result = graphs[index]->e->parse();
-
-	if (result != NULL) {
-		std::cout << "Error parsing expression: '" << eq << "'\n";
-		std::cout << "Error: " << *result << "\n";
-
-		delete result;
-		delete graphs[index]->e;
-		delete graphs[index]->xVar;
-		delete graphs[index]->tVar;
-		delete[] graphs[index]->vals;
-		delete graphs[index];
-
-		graphs[index] = NULL;
-	}
-}
-
 int main() {
 	GLUI::init();
 
@@ -210,9 +169,19 @@ int main() {
 	Renderer::init(&win);
 	Layout* layout = new AbsoluteLayout(&win, 1000, 620);
 
-	Font* font30 = new Font("arial.ttf", 30);
+	Font* font24 = new Font("arial.ttf", 24);
 
-	if (!font30->inited()) {
+	if (!font24->inited()) {
+		win.destroy();
+#if defined(_WIN32) || defined (_WIN64)
+		system("PAUSE");
+#endif
+		return -1;
+	}
+
+	Font* font20 = new Font("arial.ttf", 20);
+
+	if (!font20->inited()) {
 		win.destroy();
 #if defined(_WIN32) || defined (_WIN64)
 		system("PAUSE");
@@ -229,7 +198,12 @@ int main() {
 	theme.press = color::darkGrey;
 	theme.text = color::black;
 
-	TextStyle textStyle = { 30, font30 };
+	TextStyle textStyle = { 20, font20 };
+	TextStyle buttonStyle = { 24, font24 };
+
+	std::vector<Button*> buttons;
+	std::vector<TextBox*> textBoxes;
+	std::vector<Graph*> graphs;
 
 	GLPanel panel({ 390, 10, 600, 600 }, { 600, 600 }, layout,
 	[]()->void {
@@ -241,11 +215,11 @@ int main() {
 		glMatrixMode(GL_MODELVIEW);
 
 	},
-	[]()->void {
+	[&]()->void {
 		glClear(GL_COLOR_BUFFER_BIT);
 		drawAxes(600, 600);
 
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < graphs.size(); i++) {
 			if (graphs[i] == NULL) {
 				continue;
 			}
@@ -301,10 +275,92 @@ int main() {
 		}
 	}, theme);
 
-	graphs = new Graph*[5];
-	for (int i = 0; i < 5; i++) {
-		graphs[i] = NULL;
-	}
+	Button* addGraphButton = NULL;
+	Button* removeGraphButton = NULL;
+
+	auto deleteGraph = [&](int index)->void {
+		if (graphs[index] != NULL) {
+			delete graphs[index]->e;
+			delete graphs[index]->xVar;
+			delete graphs[index]->tVar;
+			delete[] graphs[index]->vals;
+			delete graphs[index];
+
+			graphs[index] = NULL;
+		}
+	};
+
+	auto setGraph = [&](std::string eq, int index)->void {
+		if (graphs[index] != NULL) {
+			deleteGraph(index);
+		}
+
+		if (eq.size() == 0) {
+			return;
+		}
+
+		graphs[index] = (Graph*)malloc(sizeof(Graph));
+
+		graphs[index]->e = new Equation();
+		graphs[index]->e->setString(String((char*)eq.c_str()));
+
+		graphs[index]->xVar = graphs[index]->e->createVariable("x");
+		graphs[index]->tVar = graphs[index]->e->createVariable("time");
+		graphs[index]->vals = new double[VAL_NUM];
+
+		String* result = graphs[index]->e->parse();
+
+		if (result != NULL) {
+			std::cout << "Error parsing expression: '" << eq << "'\n";
+			std::cout << "Error: " << *result << "\n";
+
+			deleteGraph(index);
+		}
+	};
+	
+	std::function<void(void)> addGraphButtonCallback = [&]() -> void {
+		Rectangle boundsa = addGraphButton->getBounds();
+		addGraphButton->setPos({ boundsa.x, boundsa.y - 60 });
+		Rectangle boundsr = removeGraphButton->getBounds();
+		removeGraphButton->setPos({ boundsr.x, boundsr.y - 60 });
+
+		int bSize = buttons.size();
+
+		TextBox* textBox = new TextBox({ 10, (float)(560 - 60.0f * buttons.size()) + 10, 290, 30 }, layout, { textStyle , 1, 2, theme });
+
+		Button* button = new Button({ 310, (float)(560 - 60.0f * buttons.size()) + 10, 70, 30 }, layout, "Submit", { textStyle,
+			[bSize, textBox, setGraph]()->void {
+			setGraph(textBox->m_text, bSize);
+		}, 2, theme
+		});
+
+
+		textBoxes.push_back(textBox);
+		buttons.push_back(button);
+		graphs.push_back(NULL);
+	};
+
+	addGraphButton = new Button({ 10 - 2, 560, 360 / 2, 50 }, layout, "Add Graph", { buttonStyle, addGraphButtonCallback, 3, theme });
+
+	removeGraphButton = new Button({ 360/2 + 20, 560, 360 / 2, 50 }, layout, "Remove Graph", { buttonStyle,
+		[&]() -> void {
+			Rectangle boundsa = addGraphButton->getBounds();
+			addGraphButton->setPos({ boundsa.x, boundsa.y + 60 });
+			Rectangle boundsr = removeGraphButton->getBounds();
+			removeGraphButton->setPos({ boundsr.x, boundsr.y + 60 });
+
+			delete buttons[buttons.size()-1];
+			buttons.pop_back();
+
+			delete textBoxes[textBoxes.size() - 1];
+			textBoxes.pop_back();
+
+			deleteGraph(buttons.size() - 1);
+			graphs.pop_back();
+	}, 3, theme
+	});
+
+	addGraphButtonCallback();
 
 	g_colors[0] = { 0.8f, 0.2f, 0.2f };
 	g_colors[1] = { 0.1f, 0.6f, 0.1f };
@@ -312,16 +368,34 @@ int main() {
 	g_colors[3] = { 0.9f, 0.65f, 0.2f };
 	g_colors[4] = { 0.8f, 0.2f, 0.8f };
 
-	addGraph("sin(x-time)", 0);
-
 	while (win.isOpen()) {
 		win.poll();
 		
 		panel.poll();
+		addGraphButton->poll();
+		removeGraphButton->poll();
+
+		for (Button* b:buttons) {
+			b->poll();
+		}
+
+		for (TextBox* t:textBoxes) {
+			t->poll();
+		}
 
 		Renderer::clear({0.6f, 0.75f, 1});
 
 		panel.render();
+		addGraphButton->render();
+		removeGraphButton->render();
+
+		for (Button* b : buttons) {
+			b->render();
+		}
+
+		for (TextBox* t : textBoxes) {
+			t->render();
+		}
 
 		win.swap();
 	}

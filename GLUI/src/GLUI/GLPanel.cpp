@@ -15,7 +15,7 @@ namespace glui {
 #define glFramebufferTexture m_glFuncs->glFramebufferTexture
 #define glCheckFramebufferStatus m_glFuncs->glCheckFramebufferStatus
 
-	GLPanel::GLPanel(Rectangle bounds, Vector2f fboSize, Layout* layout, glpanel_init_gl_func initGLFunc, glpanel_render_func renderFunc, glpanel_input_mouse_func inputMouseFunc, Theme theme) :
+	GLPanel::GLPanel(Rectangle bounds, Vector2f fboSize, Layout* layout, std::function<void(void)> initGLFunc, std::function<void(void)> renderFunc, std::function<void(GLPanelMouseData* data)> inputMouseFunc, Theme theme) :
 		GLUIObject(bounds,layout){
 		m_renderFunc = renderFunc;
 		m_initGLFunc = initGLFunc;

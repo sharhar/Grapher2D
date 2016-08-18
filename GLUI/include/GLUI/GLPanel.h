@@ -2,14 +2,11 @@
 
 #include <GLUI/Utils.h>
 #include <GLUI/Layout.h>
+#include <functional>
 
 namespace glui {
 	struct GLFuncs;
 	struct GLPanelMouseData;
-
-	typedef void(*glpanel_render_func)(void);
-	typedef void(*glpanel_init_gl_func)(void);
-	typedef void(*glpanel_input_mouse_func)(GLPanelMouseData* data);
 
 	typedef struct GLPanelMouseData {
 		bool leftDown;
@@ -24,9 +21,9 @@ namespace glui {
 		unsigned int m_tex;
 		unsigned int m_dtex;
 		unsigned int m_glInitList;
-		glpanel_render_func m_renderFunc;
-		glpanel_init_gl_func m_initGLFunc;
-		glpanel_input_mouse_func m_inputMouseFunc;
+		std::function<void(void)> m_renderFunc;
+		std::function<void(void)> m_initGLFunc;
+		std::function<void(GLPanelMouseData* data)> m_inputMouseFunc;
 
 		GLFuncs* m_glFuncs;
 		Theme m_theme;
@@ -35,7 +32,7 @@ namespace glui {
 		GLPanelMouseData* m_mouseData;
 		Vector2f m_fboSize;
 	public:
-		GLPanel(Rectangle bounds, Vector2f fboSize, Layout* layout, glpanel_init_gl_func initGLFunc, glpanel_render_func renderFunc, glpanel_input_mouse_func inputMouseFunc, Theme theme);
+		GLPanel(Rectangle bounds, Vector2f fboSize, Layout* layout, std::function<void(void)> initGLFunc, std::function<void(void)> renderFunc, std::function<void(GLPanelMouseData* data)> inputMouseFunc, Theme theme);
 		void poll() override;
 		void render() override;
 		void renderDepth();
