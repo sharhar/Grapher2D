@@ -283,6 +283,7 @@ int main() {
 
 	auto deleteGraph = [&](int index)->void {
 		if (graphs[index] != NULL) {
+			graphs[index]->e->cleanUp();
 			delete graphs[index]->e;
 			delete graphs[index]->xVar;
 			delete graphs[index]->tVar;

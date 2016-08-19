@@ -2,6 +2,7 @@
 
 #include "../utils/String.h"
 #include <unordered_map>
+#include <functional>
 
 typedef struct Operator {
 	char name;
@@ -37,4 +38,5 @@ public:
 	void addFunction(Function* func);
 	String* parse();
 	double eval();
+	void cleanUp();
 };

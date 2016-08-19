@@ -33,223 +33,156 @@ typedef struct Token {
 void** parseExpression(std::vector<Node*> nodes, Equation* e);
 double evalNode(Node* node, Node* prev, Equation* e);
 
-double addO(double n1, double n2) {
-	return n1 + n2;
-}
-
-double mulO(double n1, double n2) {
-	return n1 * n2;
-}
-
-double subO(double n1, double n2) {
-	return n1 - n2;
-}
-
-double divO(double n1, double n2) {
-	return n1 / n2;
-}
-
-double powO(double n1, double n2) {
-	return pow(n1, n2);
-}
-
-double eqO(double n1, double n2) {
-	if (n1 == n2) {
-		return 1;
-	}
-
-	return 0;
-}
-
-double tanF(double* input) {
-	return tan(input[0]);
-}
-
-double sinF(double* input) {
-	return sin(input[0]);
-}
-
-double cosF(double* input) {
-	return cos(input[0]);
-}
-
-double cotF(double* input) {
-	return 1/tan(input[0]);
-}
-
-double cscF(double* input) {
-	return 1/sin(input[0]);
-}
-
-double secF(double* input) {
-	return 1/cos(input[0]);
-}
-
-double atanF(double* input) {
-	return atan(input[0]);
-}
-
-double asinF(double* input) {
-	return asin(input[0]);
-}
-
-double acosF(double* input) {
-	return acos(input[0]);
-}
-
-double acotF(double* input) {
-	return atan(1 / input[0]);
-}
-
-double acscF(double* input) {
-	return asin(1 / input[0]);
-}
-
-double asecF(double* input) {
-	return acos(1 / input[0]);
-}
-
-double maxF(double* input) {
-	if (input[0] >= input[1]) {
-		return input[0];
-	}
-	else {
-		return input[1];
-	}
-}
-
-double lnF(double* input) {
-	return log(input[0]);
-}
-
-double logF(double* input) {
-	return log10(input[0]);
-}
-
-double expF(double* input) {
-	return exp(input[0]);
-}
-
-double blankF(double* args) {
-	return args[0];
-}
-
 void loadDefaults(Equation* e) {
 	Operator* addOp = (Operator*)malloc(sizeof(Operator));
 	addOp->name = '+';
 	addOp->order = 10;
-	addOp->func = &addO;
+	addOp->func = [](double n1, double n2)->double {
+		return n1 + n2;
+	};
 
 	Operator* mulOp = (Operator*)malloc(sizeof(Operator));
 	mulOp->name = '*';
 	mulOp->order = 8;
-	mulOp->func = &mulO;
+	mulOp->func = [](double n1, double n2)->double {
+		return n1 * n2;
+	};
 
+	
 	Operator* subOp = (Operator*)malloc(sizeof(Operator));
 	subOp->name = '-';
 	subOp->order = 10;
-	subOp->func = &subO;
+	subOp->func = [](double n1, double n2)->double {
+		return n1 - n2;
+	};
 
+	
 	Operator* divOp = (Operator*)malloc(sizeof(Operator));
 	divOp->name = '/';
 	divOp->order = 8;
-	divOp->func = &divO;
+	divOp->func = [](double n1, double n2)->double {
+		return n1 / n2;
+	};
 
 	Operator* powOp = (Operator*)malloc(sizeof(Operator));
 	powOp->name = '^';
 	powOp->order = 6;
-	powOp->func = &powO;
-
-	Operator* eqOp = (Operator*)malloc(sizeof(Operator));
-	eqOp->name = '=';
-	eqOp->order = 100;
-	eqOp->func = &eqO;
+	powOp->func = [](double n1, double n2)->double {
+		return pow(n1, n2);
+	};
 
 	e->addOperator(addOp);
 	e->addOperator(mulOp);
 	e->addOperator(subOp);
 	e->addOperator(divOp);
 	e->addOperator(powOp);
-	e->addOperator(eqOp);
+
 
 	Function* funcTan = (Function*)malloc(sizeof(Function));
 	funcTan->name = new String("tan");
-	funcTan->func = &tanF;
+	funcTan->func = [](double* input)->double {
+		return tan(input[0]);
+	};
 
 	Function* funcSin = (Function*)malloc(sizeof(Function));
 	funcSin->name = new String("sin");
-	funcSin->func = &sinF;
+	funcSin->func = [](double* input)->double {
+		return sin(input[0]);
+	};
 
+	
 	Function* funcCos = (Function*)malloc(sizeof(Function));
 	funcCos->name = new String("cos");
-	funcCos->func = &cosF;
-
-	Function* funcMax = (Function*)malloc(sizeof(Function));
-	funcMax->name = new String("max");
-	funcMax->func = &maxF;
-
-	Function* funcBlank = (Function*)malloc(sizeof(Function));
-	funcBlank->name = new String("");
-	funcBlank->func = &blankF;
-
-	Function* funcLn = (Function*)malloc(sizeof(Function));
-	funcLn->name = new String("ln");
-	funcLn->func = &lnF;
-
-	Function* funcLog = (Function*)malloc(sizeof(Function));
-	funcLog->name = new String("log");
-	funcLog->func = &logF;
-
-	Function* funcExp = (Function*)malloc(sizeof(Function));
-	funcExp->name = new String("exp");
-	funcExp->func = &expF;
+	funcCos->func = [](double* input)->double {
+		return cos(input[0]);
+	};
 
 	Function* funcCot = (Function*)malloc(sizeof(Function));
 	funcCot->name = new String("cot");
-	funcCot->func = &cotF;
+	funcCot->func = [](double* input)->double {
+		return 1/tan(input[0]);
+	};
 
 	Function* funcCsc = (Function*)malloc(sizeof(Function));
 	funcCsc->name = new String("csc");
-	funcCsc->func = &cscF;
+	funcCsc->func = [](double* input)->double {
+		return 1/sin(input[0]);
+	};
 
 	Function* funcSec = (Function*)malloc(sizeof(Function));
 	funcSec->name = new String("sec");
-	funcSec->func = &secF;
-
-
+	funcSec->func = [](double* input)->double {
+		return 1/cos(input[0]);
+	};
 
 	Function* funcaTan = (Function*)malloc(sizeof(Function));
 	funcaTan->name = new String("atan");
-	funcaTan->func = &atanF;
+	funcaTan->func = [](double* input)->double {
+		return atan(input[0]);
+	};
 
 	Function* funcaSin = (Function*)malloc(sizeof(Function));
 	funcaSin->name = new String("asin");
-	funcaSin->func = &asinF;
+	funcaSin->func = [](double* input)->double {
+		return asin(input[0]);
+	};
 
 	Function* funcaCos = (Function*)malloc(sizeof(Function));
 	funcaCos->name = new String("acos");
-	funcaCos->func = &acosF;
+	funcaCos->func = [](double* input)->double {
+		return acos(input[0]);
+	};
 
 	Function* funcaCot = (Function*)malloc(sizeof(Function));
 	funcaCot->name = new String("acot");
-	funcaCot->func = &acotF;
+	funcaCot->func = [](double* input)->double {
+		return atan(1 / input[0]);
+	};
 
 	Function* funcaCsc = (Function*)malloc(sizeof(Function));
 	funcaCsc->name = new String("acsc");
-	funcaCsc->func = &acscF;
+	funcaCsc->func = [](double* input)->double {
+		return asin(1 / input[0]);
+	};
 
 	Function* funcaSec = (Function*)malloc(sizeof(Function));
 	funcaSec->name = new String("asec");
-	funcaSec->func = &asecF;
+	funcaSec->func = [](double* input)->double {
+		return acos(1 / input[0]);
+	};
+
+	Function* funcMax = (Function*)malloc(sizeof(Function));
+	funcMax->name = new String("max");
+	funcMax->func = [](double* input)->double {
+		if (input[0] >= input[1]) {
+			return input[0];
+		}
+		else {
+			return input[1];
+		}
+	};
+
+	Function* funcLn = (Function*)malloc(sizeof(Function));
+	funcLn->name = new String("ln");
+	funcLn->func = [](double* input)->double {
+		return log(input[0]);
+	};
+
+	Function* funcLog = (Function*)malloc(sizeof(Function));
+	funcLog->name = new String("log");
+	funcLog->func = [](double* input)->double {
+		return log10(input[0]);
+	};
+
+	Function* funcExp = (Function*)malloc(sizeof(Function));
+	funcExp->name = new String("exp");
+	funcExp->func = [](double* input)->double {
+		return exp(input[0]);
+	};
 
 	e->addFunction(funcTan);
 	e->addFunction(funcSin);
 	e->addFunction(funcCos);
-	e->addFunction(funcMax);
-	e->addFunction(funcBlank);
-	e->addFunction(funcLn);
-	e->addFunction(funcLog);
-	e->addFunction(funcExp);
 	e->addFunction(funcCot);
 	e->addFunction(funcCsc);
 	e->addFunction(funcSec);
@@ -259,6 +192,10 @@ void loadDefaults(Equation* e) {
 	e->addFunction(funcaCot);
 	e->addFunction(funcaCsc);
 	e->addFunction(funcaSec);
+	e->addFunction(funcMax);
+	e->addFunction(funcLn);
+	e->addFunction(funcLog);
+	e->addFunction(funcExp);
 
 	Variable* eVar = e->createVariable("e");
 	eVar->value = 2.718281828459045;
@@ -405,7 +342,7 @@ String* Equation::parse() {
 			}
 
 			if (tempNode->value[1] == NULL) {
-				return new String("Unknown variable: " + String(t->value->buff));
+				return new String("Unknown operator: " + String(t->value->buff));
 			}
 
 			unsortedNodes.push_back(tempNode);
@@ -427,16 +364,6 @@ String* Equation::parse() {
 				tempNode->value = new void*[2];
 				tempNode->value[0] = (void*)new String("");
 				tempNode->value[1] = NULL;
-				for (Function* f : m_funcs) {
-					if (f->name->length == 0) {
-						tempNode->value[1] = (void*)f;
-						break;
-					}
-				}
-
-				if (tempNode->value[1] == NULL) {
-					return new String("Parentheses error");
-				}
 
 				unsortedNodes.push_back(tempNode);
 			}
@@ -446,16 +373,6 @@ String* Equation::parse() {
 				tempNode->value = new void*[2];
 				tempNode->value[0] = (void*)new String("");
 				tempNode->value[1] = NULL;
-				for (Function* f : m_funcs) {
-					if (f->name->length == 0) {
-						tempNode->value[1] = (void*)f;
-						break;
-					}
-				}
-
-				if (tempNode->value[1] == NULL) {
-					return new String("Unknown variable: " + *t->value);
-				}
 
 				unsortedNodes.push_back(tempNode);
 			}
@@ -496,7 +413,7 @@ String* Equation::parse() {
 				}
 
 				if (tempNode->value[1] == NULL) {
-					return new String("Unknown variable: " + *t->value);
+					return new String("Unknown function: " + *t->value);
 				}
 
 				unsortedNodes.push_back(tempNode);
@@ -776,20 +693,39 @@ double evalNode(Node* node, Node* prev, Equation* e) {
 		double prevVal = evalNode(prev, node, e);
 		double nextVal = evalNode(next, node, e);
 
-		double result = (*op->func)(prevVal, nextVal);
+		double result = op->func(prevVal, nextVal);
 		return result;
 	} else if (node->type == NODE_TYPE_FFN) {
 		Function* func = (Function*)node->value[0];
+		if (func == NULL) {
+			return evalNode(node->children[0], node, e);
+		}
 		int argc = node->childNum;
 		double* vals = new double[argc];
 		for (int i = 0; i < argc;i++) {
 			vals[i] = evalNode(node->children[i], node, e);
 		}
 
-		double result = (*func->func)(vals);
+		double result = func->func(vals);
 		delete[] vals;
 		return result;
 	}
 
 	return -1;
+}
+
+static void deleteEq(Node* node) {
+	if (node->childNum > 0) {
+		for (int i = 0; i < node->childNum;i++) {
+			deleteEq(node->children[i]);
+		}
+	}
+
+	delete[] node->value;
+	delete node;
+	node = NULL;
+}
+
+void Equation::cleanUp() {
+	deleteEq((Node*)m_rootNode);
 }
