@@ -23,6 +23,8 @@ typedef struct Graph {
 	double* vals;
 	Variable* xVar;
 	Variable* tVar;
+	Variable* atVar;
+	double startTime;
 } Graph;
 
 double abs_c(double n1) {
@@ -224,7 +226,8 @@ int main() {
 				continue;
 			}
 
-			graphs[i]->tVar->value = glfwGetTime();
+			graphs[i]->atVar->value = glfwGetTime();
+			graphs[i]->tVar->value = graphs[i]->atVar->value - graphs[i]->startTime;
 			genVals(graphs[i]->vals, g_left, g_right, graphs[i]->e, graphs[i]->xVar);
 			renderVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 600, 600, g_colors[i%g_colorNum]);
 		}
@@ -305,7 +308,9 @@ int main() {
 		graphs[index]->e->setString(String((char*)eq.c_str()));
 
 		graphs[index]->xVar = graphs[index]->e->createVariable("x");
-		graphs[index]->tVar = graphs[index]->e->createVariable("time");
+		graphs[index]->tVar = graphs[index]->e->createVariable("t");
+		graphs[index]->atVar = graphs[index]->e->createVariable("at");
+		graphs[index]->startTime = glfwGetTime();
 		graphs[index]->vals = new double[VAL_NUM];
 
 		String* result = graphs[index]->e->parse();
