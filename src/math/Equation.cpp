@@ -714,8 +714,14 @@ void** parseExpression(std::vector<Node*> nodes, Equation* e) {
 			}
 		}
 	}
+
+	if (level != 0) {
+		e->parseError = new String("Parentheses error");
+		return NULL;
+	}
 	
 	void*** parts = getParts(simple);
+
 	long partNum = (long)parts[0][0];
 
 	void** result = new void*[partNum+1];
@@ -730,6 +736,7 @@ void** parseExpression(std::vector<Node*> nodes, Equation* e) {
 			vec.push_back((Node*)part[j]);
 		}
 		Node* simplePart = parseSimpleExpression(vec, e);
+
 		if (simplePart == NULL) {
 			return NULL;
 		}
