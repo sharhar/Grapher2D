@@ -266,8 +266,6 @@ int main() {
 	[]()->void {
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-		glEnable(GL_MULTISAMPLE);
-
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glOrtho(0, g_windowWidth, 0, g_windowHeight, -1, 1);
