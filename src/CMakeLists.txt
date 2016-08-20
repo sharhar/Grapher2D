@@ -3,6 +3,10 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 file(GLOB_RECURSE GRAPHER_SRC *.cpp)
 file(GLOB_RECURSE GRAPHER_H *.h)
 
+include_directories(
+	"${CMAKE_SOURCE_DIR}/GLUI/ext/glcorearb"
+)
+
 if(APPLE)
 	add_executable(
 		Grapher2D 

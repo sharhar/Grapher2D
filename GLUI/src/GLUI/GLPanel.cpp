@@ -7,13 +7,11 @@ namespace glui {
 		PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
 		PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer;
 		PFNGLFRAMEBUFFERTEXTUREPROC glFramebufferTexture;
-		PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatus;
 	} GLFuncs;
 
 #define glGenFramebuffers m_glFuncs->glGenFramebuffers
 #define glBindFramebuffer m_glFuncs->glBindFramebuffer
 #define glFramebufferTexture m_glFuncs->glFramebufferTexture
-#define glCheckFramebufferStatus m_glFuncs->glCheckFramebufferStatus
 
 	GLPanel::GLPanel(Rectangle bounds, Vector2f fboSize, Layout* layout, std::function<void(void)> initGLFunc, std::function<void(void)> renderFunc, std::function<void(GLPanelMouseData* data)> inputMouseFunc, Theme theme) :
 		GLUIObject(bounds,layout){
@@ -35,7 +33,6 @@ namespace glui {
 		glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)glfwGetProcAddress("glGenFramebuffers");
 		glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC)glfwGetProcAddress("glBindFramebuffer");
 		glFramebufferTexture = (PFNGLFRAMEBUFFERTEXTUREPROC)glfwGetProcAddress("glFramebufferTexture");
-		glCheckFramebufferStatus = (PFNGLCHECKFRAMEBUFFERSTATUSPROC)glfwGetProcAddress("glCheckFramebufferStatus");
 
 		GLuint fbo;
 		GLuint tex;

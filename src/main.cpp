@@ -1,6 +1,7 @@
 #include <GLUI/GLUI.h>
 #include <GLFW/glfw3.h>
 #include "math/Equation.h"
+#include <glcorearb.h>
 
 using namespace glui;
 
@@ -207,7 +208,61 @@ int main() {
 	std::vector<TextBox*> textBoxes;
 	std::vector<Graph*> graphs;
 
-	GLPanel panel({ 390, 10, 600, 600 }, { 600, 600 }, layout,
+	typedef struct GLFuncs {
+		PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
+		PFNGLGENRENDERBUFFERSPROC glGenRenderbuffers;
+		PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer;
+		PFNGLBINDRENDERBUFFERPROC glBindRenderbuffer;
+		PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC glRenderbufferStorageMultisample;
+		PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbuffer;
+		PFNGLBLITFRAMEBUFFERPROC glBlitFramebuffer;
+	} GLFuncs;
+
+	GLFuncs* glFuncs = (GLFuncs*)malloc(sizeof(GLFuncs));
+
+#define glGenFramebuffers glFuncs->glGenFramebuffers
+#define glGenRenderbuffers glFuncs->glGenRenderbuffers
+#define glBindFramebuffer glFuncs->glBindFramebuffer
+#define glBindRenderbuffer glFuncs->glBindRenderbuffer
+#define glRenderbufferStorageMultisample glFuncs->glRenderbufferStorageMultisample
+#define glFramebufferRenderbuffer glFuncs->glFramebufferRenderbuffer
+#define glBlitFramebuffer glFuncs->glBlitFramebuffer
+
+	glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)glfwGetProcAddress("glGenFramebuffers");
+	glGenRenderbuffers = (PFNGLGENRENDERBUFFERSPROC)glfwGetProcAddress("glGenRenderbuffers");
+	glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC)glfwGetProcAddress("glBindFramebuffer");
+	glBindRenderbuffer = (PFNGLBINDRENDERBUFFERPROC)glfwGetProcAddress("glBindRenderbuffer");
+	glRenderbufferStorageMultisample = (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)glfwGetProcAddress("glRenderbufferStorageMultisample");
+	glFramebufferRenderbuffer = (PFNGLFRAMEBUFFERRENDERBUFFERPROC)glfwGetProcAddress("glFramebufferRenderbuffer");
+	glBlitFramebuffer = (PFNGLBLITFRAMEBUFFERPROC)glfwGetProcAddress("glBlitFramebuffer");
+
+	int frameBufferWidth, frameBufferHeight;
+	glfwGetFramebufferSize((GLFWwindow*) win.getGLFWwindow(), &frameBufferWidth, &frameBufferHeight);
+
+	int samples = 8;
+	GLuint fbo = 0;
+	GLuint colorRenderBuffer = 0;
+	GLuint depthRenderBuffer = 0;
+
+	glGenRenderbuffers(1, &colorRenderBuffer);
+	glGenRenderbuffers(1, &depthRenderBuffer);
+
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER ,fbo);
+
+	glBindRenderbuffer(GL_RENDERBUFFER, colorRenderBuffer);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGBA8, frameBufferWidth, frameBufferHeight);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorRenderBuffer);
+
+	glBindRenderbuffer(GL_RENDERBUFFER, depthRenderBuffer);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, frameBufferWidth, frameBufferHeight);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBuffer);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	GLPanel* panel;
+
+	panel = new GLPanel({ 390, 10, 600, 600 }, { 600, 600 }, layout,
 	[]()->void {
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -218,6 +273,8 @@ int main() {
 
 	},
 	[&]()->void {
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
 		glClear(GL_COLOR_BUFFER_BIT);
 		drawAxes(600, 600);
 
@@ -231,6 +288,14 @@ int main() {
 			genVals(graphs[i]->vals, g_left, g_right, graphs[i]->e, graphs[i]->xVar);
 			renderVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 600, 600, g_colors[i%g_colorNum]);
 		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, panel->getFBO());
+
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+		glBlitFramebuffer(0, 0, frameBufferWidth, frameBufferHeight, 0, 0, frameBufferWidth, frameBufferHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer(GL_FRAMEBUFFER, panel->getFBO());
 	},
 	[](GLPanelMouseData* data)->void {
 		if ((data->difference.x != 0 || data->difference.y != 0) && data->leftDown) {
@@ -378,7 +443,7 @@ int main() {
 	while (win.isOpen()) {
 		win.poll();
 		
-		panel.poll();
+		panel->poll();
 		addGraphButton->poll();
 		removeGraphButton->poll();
 
@@ -392,7 +457,7 @@ int main() {
 
 		Renderer::clear({0.6f, 0.75f, 1});
 
-		panel.render();
+		panel->render();
 		addGraphButton->render();
 		removeGraphButton->render();
 

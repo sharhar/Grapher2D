@@ -36,5 +36,6 @@ namespace glui {
 		void poll() override;
 		void render() override;
 		void renderDepth();
+		unsigned int getFBO() { return m_FBO; }
 	};
 }
