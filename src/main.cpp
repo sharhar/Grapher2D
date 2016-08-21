@@ -239,7 +239,7 @@ int main() {
 	int frameBufferWidth, frameBufferHeight;
 	glfwGetFramebufferSize((GLFWwindow*) win.getGLFWwindow(), &frameBufferWidth, &frameBufferHeight);
 
-	int samples = 8;
+	int samples = 4;
 	GLuint fbo = 0;
 	GLuint colorRenderBuffer = 0;
 	GLuint depthRenderBuffer = 0;
