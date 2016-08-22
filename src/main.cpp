@@ -7,6 +7,13 @@ using namespace glui;
 
 #define VAL_NUM 600
 #define ZOOM_PERCENT 0.05
+#define glGenFramebuffers glFuncs->glGenFramebuffersM
+#define glGenRenderbuffers glFuncs->glGenRenderbuffersM
+#define glBindFramebuffer glFuncs->glBindFramebufferM
+#define glBindRenderbuffer glFuncs->glBindRenderbufferM
+#define glRenderbufferStorageMultisample glFuncs->glRenderbufferStorageMultisampleM
+#define glFramebufferRenderbuffer glFuncs->glFramebufferRenderbufferM
+#define glBlitFramebuffer glFuncs->glBlitFramebufferM
 
 double g_left = -6;
 double g_right = 6;
@@ -18,6 +25,16 @@ int g_windowHeight = 600;
 
 int g_colorNum = 5;
 Color* g_colors = new Color[g_colorNum];
+
+typedef struct MGLFuncs {
+	PFNGLGENFRAMEBUFFERSPROC glGenFramebuffersM;
+	PFNGLGENRENDERBUFFERSPROC glGenRenderbuffersM;
+	PFNGLBINDFRAMEBUFFERPROC glBindFramebufferM;
+	PFNGLBINDRENDERBUFFERPROC glBindRenderbufferM;
+	PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC glRenderbufferStorageMultisampleM;
+	PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbufferM;
+	PFNGLBLITFRAMEBUFFERPROC glBlitFramebufferM;
+} MGLFuncs;
 
 typedef struct Graph {
 	Equation* e;
@@ -208,25 +225,7 @@ int main() {
 	std::vector<TextBox*> textBoxes;
 	std::vector<Graph*> graphs;
 
-	typedef struct GLFuncs {
-		PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
-		PFNGLGENRENDERBUFFERSPROC glGenRenderbuffers;
-		PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer;
-		PFNGLBINDRENDERBUFFERPROC glBindRenderbuffer;
-		PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC glRenderbufferStorageMultisample;
-		PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbuffer;
-		PFNGLBLITFRAMEBUFFERPROC glBlitFramebuffer;
-	} GLFuncs;
-
-	GLFuncs* glFuncs = (GLFuncs*)malloc(sizeof(GLFuncs));
-
-#define glGenFramebuffers glFuncs->glGenFramebuffers
-#define glGenRenderbuffers glFuncs->glGenRenderbuffers
-#define glBindFramebuffer glFuncs->glBindFramebuffer
-#define glBindRenderbuffer glFuncs->glBindRenderbuffer
-#define glRenderbufferStorageMultisample glFuncs->glRenderbufferStorageMultisample
-#define glFramebufferRenderbuffer glFuncs->glFramebufferRenderbuffer
-#define glBlitFramebuffer glFuncs->glBlitFramebuffer
+	MGLFuncs* glFuncs =  (MGLFuncs*)malloc(sizeof(MGLFuncs));
 
 	glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)glfwGetProcAddress("glGenFramebuffers");
 	glGenRenderbuffers = (PFNGLGENRENDERBUFFERSPROC)glfwGetProcAddress("glGenRenderbuffers");

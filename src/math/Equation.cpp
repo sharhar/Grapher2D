@@ -715,14 +715,18 @@ double evalNode(Node* node, Node* prev, Equation* e) {
 }
 
 static void deleteEq(Node* node) {
+	if(node == (void*)0xCDCDCDCD) {
+		return;
+	}
+
 	if (node->childNum > 0) {
 		for (int i = 0; i < node->childNum;i++) {
 			deleteEq(node->children[i]);
 		}
 	}
 
-	delete[] node->value;
-	delete node;
+	free(node->value);
+	free(node);
 	node = NULL;
 }
 
