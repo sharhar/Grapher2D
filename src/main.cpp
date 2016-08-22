@@ -2,6 +2,9 @@
 #include <GLFW/glfw3.h>
 #include "math/Equation.h"
 #include <glcorearb.h>
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
 
 using namespace glui;
 
@@ -419,13 +422,13 @@ int main() {
 			Rectangle boundsr = removeGraphButton->getBounds();
 			removeGraphButton->setPos({ boundsr.x, boundsr.y + 60 });
 
-			//deleteGraph(buttons.size() - 1);
+			deleteGraph(buttons.size() - 1);
 			graphs.pop_back();
 
-			//delete buttons[buttons.size()-1];
+			delete buttons[buttons.size()-1];
 			buttons.pop_back();
 
-			//delete textBoxes[textBoxes.size() - 1];
+			delete textBoxes[textBoxes.size() - 1];
 			textBoxes.pop_back();
 			
 	}, 3, theme
