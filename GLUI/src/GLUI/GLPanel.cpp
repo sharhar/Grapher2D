@@ -22,7 +22,7 @@ namespace glui {
 		m_theme = theme;
 		m_prevScroll = 0;
 
-		m_mouseData = (GLPanelMouseData*)malloc(sizeof(GLFuncs));
+		m_mouseData = (GLPanelMouseData*)malloc(sizeof(GLPanelMouseData));
 		m_mouseData->difference = {0, 0};
 		m_mouseData->pos = {-1, -1};
 		m_mouseData->leftDown = false;

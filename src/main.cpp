@@ -238,7 +238,7 @@ int main() {
 	int frameBufferWidth, frameBufferHeight;
 	glfwGetFramebufferSize((GLFWwindow*) win.getGLFWwindow(), &frameBufferWidth, &frameBufferHeight);
 
-	int samples = 4;
+	int samples = 8;
 	GLuint fbo = 0;
 	GLuint colorRenderBuffer = 0;
 	GLuint depthRenderBuffer = 0;
@@ -349,11 +349,11 @@ int main() {
 		if (graphs[index] != NULL) {
 			graphs[index]->e->cleanUp();
 			delete graphs[index]->e;
-			delete graphs[index]->xVar;
-			delete graphs[index]->tVar;
+			free(graphs[index]->xVar);
+			free(graphs[index]->tVar);
 			delete[] graphs[index]->vals;
-			delete graphs[index];
-
+			free(graphs[index]);
+			
 			graphs[index] = NULL;
 		}
 	};
@@ -419,13 +419,13 @@ int main() {
 			Rectangle boundsr = removeGraphButton->getBounds();
 			removeGraphButton->setPos({ boundsr.x, boundsr.y + 60 });
 
-			deleteGraph(buttons.size() - 1);
+			//deleteGraph(buttons.size() - 1);
 			graphs.pop_back();
 
-			delete buttons[buttons.size()-1];
+			//delete buttons[buttons.size()-1];
 			buttons.pop_back();
 
-			delete textBoxes[textBoxes.size() - 1];
+			//delete textBoxes[textBoxes.size() - 1];
 			textBoxes.pop_back();
 			
 	}, 3, theme
