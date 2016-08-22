@@ -392,6 +392,10 @@ int main() {
 	};
 	
 	std::function<void(void)> addGraphButtonCallback = [&]() -> void {
+		if (buttons.size() >= 9) {
+			return;
+		}
+
 		Rectangle boundsa = addGraphButton->getBounds();
 		addGraphButton->setPos({ boundsa.x, boundsa.y - 60 });
 		Rectangle boundsr = removeGraphButton->getBounds();
@@ -417,6 +421,10 @@ int main() {
 
 	removeGraphButton = new Button({ 360/2 + 20, 560, 360 / 2, 50 }, layout, "Remove Graph", { buttonStyle,
 		[&]() -> void {
+			if (buttons.size() == 1) {
+				return;
+			}
+
 			Rectangle boundsa = addGraphButton->getBounds();
 			addGraphButton->setPos({ boundsa.x, boundsa.y + 60 });
 			Rectangle boundsr = removeGraphButton->getBounds();
