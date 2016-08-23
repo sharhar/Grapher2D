@@ -33,6 +33,12 @@ typedef struct Token {
 void** parseExpression(std::vector<Node*> nodes, Equation* e);
 double evalNode(Node* node, Node* prev, Equation* e);
 
+void* Equation::allocNode() {
+	void* result = malloc(sizeof(Node));
+	m_nodes.push_back(result);
+	return result;
+}
+
 void loadDefaults(Equation* e) {
 	Operator* addOp = (Operator*)malloc(sizeof(Operator));
 	addOp->name = '+';
@@ -208,6 +214,7 @@ void loadDefaults(Equation* e) {
 Equation::Equation() {
 	loadDefaults(this);
 	parseError = NULL;
+	m_parsed = false;
 }
 
 void Equation::setString(String string) {
@@ -322,14 +329,14 @@ String* Equation::parse() {
 			double value = std::stod(tempString, &sz);
 			double* d = new double[1];
 			d[0] = value;
-			Node* tempNode = (Node*)malloc(sizeof(Node));
+			Node* tempNode = (Node*)allocNode();
 			tempNode->type = NODE_TYPE_NUM;
 			tempNode->value = new void*[1];
 			tempNode->value[0] = (void*)d;
 			unsortedNodes.push_back(tempNode);
 		}
 		else if (t->type == TK_TYPE_OPP) {
-			Node* tempNode = (Node*)malloc(sizeof(Node));
+			Node* tempNode = (Node*)allocNode();
 			tempNode->type = NODE_TYPE_OPP;
 			tempNode->value = new void*[2];
 			tempNode->value[0] = (void*)&(t->value->buff[0]);
@@ -348,18 +355,18 @@ String* Equation::parse() {
 			unsortedNodes.push_back(tempNode);
 		}
 		else if (t->type == TK_TYPE_FSP) {
-			Node* tempNode = (Node*)malloc(sizeof(Node));
+			Node* tempNode = (Node*)allocNode();
 			tempNode->type = NODE_TYPE_FSP;
 			unsortedNodes.push_back(tempNode);
 		}
 		else if (t->type == TK_TYPE_FCL) {
-			Node* tempNode = (Node*)malloc(sizeof(Node));
+			Node* tempNode = (Node*)allocNode();
 			tempNode->type = NODE_TYPE_FCL;
 			unsortedNodes.push_back(tempNode);
 		}
 		else if (t->type == TK_TYPE_FOP) {
 			if (i == 0) {
-				Node* tempNode = (Node*)malloc(sizeof(Node));
+				Node* tempNode = (Node*)allocNode();
 				tempNode->type = NODE_TYPE_FUN;
 				tempNode->value = new void*[2];
 				tempNode->value[0] = (void*)new String("");
@@ -368,7 +375,7 @@ String* Equation::parse() {
 				unsortedNodes.push_back(tempNode);
 			}
 			else if (stack[i - 1]->type != TK_TYPE_STR) {
-				Node* tempNode = (Node*)malloc(sizeof(Node));
+				Node* tempNode = (Node*)allocNode();
 				tempNode->type = NODE_TYPE_FUN;
 				tempNode->value = new void*[2];
 				tempNode->value[0] = (void*)new String("");
@@ -379,7 +386,7 @@ String* Equation::parse() {
 		}
 		else {
 			if (i == stack.size() - 1) {
-				Node* tempNode = (Node*)malloc(sizeof(Node));
+				Node* tempNode = (Node*)allocNode();
 				tempNode->type = NODE_TYPE_VAR;
 				tempNode->value = new void*[1];
 				tempNode->value[0] = NULL;
@@ -400,7 +407,7 @@ String* Equation::parse() {
 			Token* next = stack[i + 1];
 
 			if (next->type == TK_TYPE_FOP) {
-				Node* tempNode = (Node*)malloc(sizeof(Node));
+				Node* tempNode = (Node*)allocNode();
 				tempNode->type = NODE_TYPE_FUN;
 				tempNode->value = new void*[2];
 				tempNode->value[0] = (void*)t->value;
@@ -419,7 +426,7 @@ String* Equation::parse() {
 				unsortedNodes.push_back(tempNode);
 			}
 			else {
-				Node* tempNode = (Node*)malloc(sizeof(Node));
+				Node* tempNode = (Node*)allocNode();
 				tempNode->type = NODE_TYPE_VAR;
 				tempNode->value = new void*[1];
 				tempNode->value[0] = NULL;
@@ -443,15 +450,17 @@ String* Equation::parse() {
 
 	if (result == NULL) {
 		if (parseError != NULL) {
+			free(result);
 			return parseError;
 		}
 		else {
+			free(result);
 			return new String("Unkown error");
 		}
 	}
 
 	m_rootNode = result[1];
-
+	m_parsed = true;
 	return NULL;
 }
 
@@ -535,7 +544,7 @@ Node* parseSimpleExpression(std::vector<Node*> nodes, Equation* e) {
 
 				if (prev == NULL) {
 					if (op->name == '-') {
-						prev = (Node*)malloc(sizeof(Node));
+						prev = (Node*)e->allocNode();
 						prev->type = NODE_TYPE_ZRO;
 					} else {
 						e->parseError = new String(String("Left side of operator '") + String(op->name) + String("' is blank"));
@@ -615,7 +624,7 @@ void** parseExpression(std::vector<Node*> nodes, Equation* e) {
 
 				Node* funcNode = NULL;
 				
-				funcNode = (Node*)malloc(sizeof(Node));
+				funcNode = (Node*)e->allocNode();
 				long argc = (long)funcNodeArr[0];
 				funcNode->type = NODE_TYPE_FFN;
 				funcNode->value = new void*[1];
@@ -670,14 +679,6 @@ double Equation::eval() {
 }
 
 double evalNode(Node* node, Node* prev, Equation* e) {
-	if (node == nullptr) {
-		if (prev != nullptr && prev->type == NODE_TYPE_OPP && prev->children[0] == node && prev->children[1] != node) {
-			Operator* op = (Operator*)prev->value[1];
-			if (op->name == '-') {
-				return 0;
-			}
-		}
-	}
 	if (node->type == NODE_TYPE_ZRO) {
 		return 0;
 	} else if (node->type == NODE_TYPE_NUM) {
@@ -714,22 +715,8 @@ double evalNode(Node* node, Node* prev, Equation* e) {
 	return -1;
 }
 
-static void deleteEq(Node* node) {
-	if(node == (void*)0xCDCDCDCD) {
-		return;
-	} 
-
-	if (node->childNum > 0) {
-		for (int i = 0; i < node->childNum;i++) {
-			deleteEq(node->children[i]);
-		}
-	}
-
-	free(node->value);
-	free(node);
-	node = NULL;
-}
-
 void Equation::cleanUp() {
-	deleteEq((Node*)m_rootNode);
+	for (void* p:m_nodes) {
+		free(p);
+	}
 }

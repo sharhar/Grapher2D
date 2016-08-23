@@ -27,6 +27,9 @@ private:
 	std::vector<Function*> m_funcs;
 	std::vector<Variable*> m_vars;
 	void* m_rootNode;
+	bool m_parsed;
+
+	std::vector<void*> m_nodes;
 public:
 	Equation();
 
@@ -39,4 +42,5 @@ public:
 	String* parse();
 	double eval();
 	void cleanUp();
+	void* allocNode();
 };
