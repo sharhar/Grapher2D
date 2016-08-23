@@ -2,9 +2,6 @@
 #include <GLFW/glfw3.h>
 #include "math/Equation.h"
 #include <glcorearb.h>
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
 
 using namespace glui;
 
