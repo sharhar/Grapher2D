@@ -26,6 +26,7 @@ private:
 	std::vector<Operator*> m_ops;
 	std::vector<Function*> m_funcs;
 	std::vector<Variable*> m_vars;
+	std::vector<String*> m_strings;
 	void* m_rootNode;
 	bool m_parsed;
 

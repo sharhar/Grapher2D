@@ -34,7 +34,11 @@ void** parseExpression(std::vector<Node*> nodes, Equation* e);
 double evalNode(Node* node, Node* prev, Equation* e);
 
 void* Equation::allocNode() {
-	void* result = malloc(sizeof(Node));
+	Node* result = (Node*)malloc(sizeof(Node));
+	result->childNum = 0;
+	result->children = NULL;
+	result->value = NULL;
+	result->type = 0;
 	m_nodes.push_back(result);
 	return result;
 }
@@ -232,6 +236,7 @@ void Equation::addFunction(Function* func) {
 Variable* Equation::createVariable(String name) {
 	Variable* var = (Variable*)malloc(sizeof(Variable));
 	var->name = new String(name);
+	var->value = 0;
 	
 	m_vars.push_back(var);
 	return var;
@@ -310,6 +315,8 @@ String* Equation::parse() {
 			for (int i = 0; i < t->value->length; i++) {
 				stack.push_back(temp);
 			}
+
+			free(t);
 		}
 		else {
 			stack.push_back(t);
@@ -457,6 +464,11 @@ String* Equation::parse() {
 			free(result);
 			return new String("Unkown error");
 		}
+	}
+
+	for (Token* p:stack) {
+		m_strings.push_back(p->value);
+		free(p);
 	}
 
 	m_rootNode = result[1];
@@ -716,7 +728,37 @@ double evalNode(Node* node, Node* prev, Equation* e) {
 }
 
 void Equation::cleanUp() {
-	for (void* p:m_nodes) {
+	for (void* p : m_nodes) {
+		Node* n = (Node*)p;
+
+		if (n->children != NULL) {
+			delete[] n->children;
+		}
+
+		if (n->value != NULL) {
+			delete[] n->value;
+		}
+
 		free(p);
+	}
+
+	for (Variable* v : m_vars) {
+		delete v->name;
+
+		free(v);
+	}
+
+	for (Operator* o : m_ops) {
+		free(o);
+	}
+
+	for (Function* f : m_funcs) {
+		delete f->name;
+
+		free(f);
+	}
+
+	for (String* s : m_strings) {
+		delete s;
 	}
 }

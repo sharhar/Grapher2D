@@ -349,8 +349,6 @@ int main() {
 		if (graphs[index] != NULL) {
 			graphs[index]->e->cleanUp();
 			delete graphs[index]->e;
-			free(graphs[index]->xVar);
-			free(graphs[index]->tVar);
 			delete[] graphs[index]->vals;
 			free(graphs[index]);
 			
@@ -384,6 +382,7 @@ int main() {
 			std::cout << "Error parsing expression: '" << eq << "'\n";
 			std::cout << "Error: " << *result << "\n";
 
+			delete result;
 			deleteGraph(index);
 		}
 	};
@@ -477,6 +476,10 @@ int main() {
 		}
 
 		win.swap();
+	}
+
+	for (int i = 0; i < graphs.size(); i++) {
+		deleteGraph(i);
 	}
 
 	win.destroy();
