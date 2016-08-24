@@ -57,7 +57,6 @@ void loadDefaults(Equation* e) {
 	mulOp->func = [](double n1, double n2)->double {
 		return n1 * n2;
 	};
-
 	
 	Operator* subOp = (Operator*)malloc(sizeof(Operator));
 	subOp->name = '-';
@@ -308,11 +307,12 @@ String* Equation::parse() {
 	std::vector<Token*> stack;
 	for (Token* t : tempStack) {
 		if ((t->type == TK_TYPE_OPP || t->type == TK_TYPE_FOP || t->type == TK_TYPE_FCL || t->type == TK_TYPE_FSP) && t->value->length > 1) {
-			Token* temp = (Token*)malloc(sizeof(Token));
-			temp->type = t->type;
-			String* value = new String(t->value->buff[0]);
-			temp->value = value;
 			for (int i = 0; i < t->value->length; i++) {
+				Token* temp = (Token*)malloc(sizeof(Token));
+				temp->type = t->type;
+				String* value = new String(t->value->buff[0]);
+				temp->value = value;
+
 				stack.push_back(temp);
 			}
 
