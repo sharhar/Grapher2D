@@ -7,6 +7,7 @@ using namespace glui;
 
 #define VAL_NUM 600
 #define ZOOM_PERCENT 0.05
+
 #define glGenFramebuffers glFuncs->glGenFramebuffersM
 #define glGenRenderbuffers glFuncs->glGenRenderbuffersM
 #define glBindFramebuffer glFuncs->glBindFramebufferM
@@ -95,12 +96,7 @@ void genVals(double* arr, double xl, double xr, Equation* e, Variable* xVar) {
 	double xint = (xr - xl) / (VAL_NUM);
 	for (int i = 0; i < VAL_NUM; i++) {
 		xVar->value = xint*i + xl;
-		try {
-			arr[i] = e->eval();
-		}
-		catch (const std::exception& e) {
-			std::cout << "Equation:  is invalid!\n";
-		}
+		arr[i] = e->eval();
 	}
 }
 
@@ -337,6 +333,8 @@ int main() {
 
 	GLPanel* panel;
 
+	int delindex = -1;
+
 	panel = new GLPanel({ 390, 10, 600, 600 }, { 600, 600 }, layout,
 	[]()->void {
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -477,7 +475,7 @@ int main() {
 		textBox->setEnterFunc([bSize, textBox, setGraph]() -> void { setGraph(textBox->m_text, bSize); });
 
 		Button* button = new Button({ 355, (float)(560 - 60.0f * buttons.size()) + 10, 25, 30 }, layout, "X", { textStyle,
-			[&addGraphButton, &buttons, &deleteGraph, &graphs, &textBoxes, bSize]()->void {
+			[&addGraphButton, &buttons, &deleteGraph, &graphs, &textBoxes, bSize, &delindex]()->void {
 				if (buttons.size() == 1) {
 					deleteGraph(bSize);
 					graphs[bSize] = NULL;
@@ -487,17 +485,7 @@ int main() {
 					return;
 				}
 
-				Rectangle boundsa = addGraphButton->getBounds();
-				addGraphButton->setPos({ boundsa.x, boundsa.y + 60 });
-
-				deleteGraph(bSize);
-				graphs.erase(graphs.begin() + bSize);
-
-				delete buttons[bSize];
-				buttons.erase(buttons.begin() + bSize);
-
-				delete textBoxes[bSize];
-				textBoxes.erase(textBoxes.begin() + bSize);
+				delindex = bSize;
 			}, 
 		2, theme
 		});
@@ -518,6 +506,7 @@ int main() {
 	g_colors[4] = { 0.8f, 0.2f , 0.8f };
 
 	while (win.isOpen()) {
+
 		win.poll();
 		
 		panel->poll();
@@ -534,6 +523,22 @@ int main() {
 
 		for (TextBox* t:textBoxes) {
 			t->poll();
+		}
+
+		if (delindex != -1) {
+			Rectangle bounds = addGraphButton->getBounds();
+			addGraphButton->setPos({ bounds.x, bounds.y + 60 });
+
+			deleteGraph(delindex);
+			graphs.erase(graphs.begin() + delindex);
+
+			delete buttons[delindex];
+			buttons.erase(buttons.begin() + delindex);
+
+			delete textBoxes[delindex];
+			textBoxes.erase(textBoxes.begin() + delindex);
+
+			delindex = -1;
 		}
 
 		Renderer::clear({0.6f, 0.75f, 1});
