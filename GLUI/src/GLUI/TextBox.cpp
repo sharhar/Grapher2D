@@ -19,6 +19,18 @@ namespace glui {
 
 		m_enterFunc = []() -> void {};
 	}
+
+	void TextBox::clearText() {
+		input::keyboard::setTextCallback(NULL);
+		input::keyboard::setEnterFunc(NULL);
+
+		m_text = "";
+		m_cursorPos = 0;
+	}
+
+	TextBox::~TextBox() {
+		delete[] m_prevKeys;
+	}
 	
 	void TextBox::setEnterFunc(std::function<void(void)> enterFunc) {
 		m_enterFunc = enterFunc;

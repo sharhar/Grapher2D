@@ -419,7 +419,6 @@ int main() {
 	}, theme);
 
 	Button* addGraphButton = NULL;
-	Button* removeGraphButton = NULL;
 
 	auto deleteGraph = [&](int index)->void {
 		if (graphs[index] != NULL) {
@@ -470,18 +469,35 @@ int main() {
 
 		Rectangle boundsa = addGraphButton->getBounds();
 		addGraphButton->setPos({ boundsa.x, boundsa.y - 60 });
-		Rectangle boundsr = removeGraphButton->getBounds();
-		removeGraphButton->setPos({ boundsr.x, boundsr.y - 60 });
 
 		int bSize = buttons.size();
 
-		TextBox* textBox = new TextBox({ 10, (float)(560 - 60.0f * buttons.size()) + 10, 290, 30 }, layout, { textStyle , 1, 2, theme });
+		TextBox* textBox = new TextBox({ 10, (float)(560 - 60.0f * buttons.size()) + 10, 335, 30 }, layout, { textStyle , 1, 2, theme });
 
 		textBox->setEnterFunc([bSize, textBox, setGraph]() -> void { setGraph(textBox->m_text, bSize); });
 
-		Button* button = new Button({ 310, (float)(560 - 60.0f * buttons.size()) + 10, 70, 30 }, layout, "Submit", { textStyle,
-			[bSize, textBox, setGraph]()->void {
-				setGraph(textBox->m_text, bSize);
+		Button* button = new Button({ 355, (float)(560 - 60.0f * buttons.size()) + 10, 25, 30 }, layout, "X", { textStyle,
+			[&addGraphButton, &buttons, &deleteGraph, &graphs, &textBoxes, bSize]()->void {
+				if (buttons.size() == 1) {
+					deleteGraph(bSize);
+					graphs[bSize] = NULL;
+
+					textBoxes[bSize]->clearText();
+
+					return;
+				}
+
+				Rectangle boundsa = addGraphButton->getBounds();
+				addGraphButton->setPos({ boundsa.x, boundsa.y + 60 });
+
+				deleteGraph(bSize);
+				graphs.erase(graphs.begin() + bSize);
+
+				delete buttons[bSize];
+				buttons.erase(buttons.begin() + bSize);
+
+				delete textBoxes[bSize];
+				textBoxes.erase(textBoxes.begin() + bSize);
 			}, 
 		2, theme
 		});
@@ -491,30 +507,7 @@ int main() {
 		graphs.push_back(NULL);
 	};
 
-	addGraphButton = new Button({ 10 - 2, 560, 360 / 2, 50 }, layout, "Add Graph", { buttonStyle, addGraphButtonCallback, 3, theme });
-
-	removeGraphButton = new Button({ 360/2 + 20, 560, 360 / 2, 50 }, layout, "Remove Graph", { buttonStyle,
-		[&]() -> void {
-			if (buttons.size() == 1) {
-				return;
-			}
-
-			Rectangle boundsa = addGraphButton->getBounds();
-			addGraphButton->setPos({ boundsa.x, boundsa.y + 60 });
-			Rectangle boundsr = removeGraphButton->getBounds();
-			removeGraphButton->setPos({ boundsr.x, boundsr.y + 60 });
-
-			deleteGraph(buttons.size() - 1);
-			graphs.pop_back();
-
-			delete buttons[buttons.size()-1];
-			buttons.pop_back();
-
-			delete textBoxes[textBoxes.size() - 1];
-			textBoxes.pop_back();
-			
-	}, 3, theme
-	});
+	addGraphButton = new Button({ 10 - 2, 570, 360 / 2, 40 }, layout, "Add Graph", { buttonStyle, addGraphButtonCallback, 3, theme });
 
 	addGraphButtonCallback();
 
@@ -529,7 +522,11 @@ int main() {
 		
 		panel->poll();
 		addGraphButton->poll();
-		removeGraphButton->poll();
+		
+		for (int i = 0; i < buttons.size();i++) {
+			buttons[i]->setPos({ buttons[i]->getBounds().x, (float)(560 - 60.0f * i) + 10 });
+			textBoxes[i]->setPos({ textBoxes[i]->getBounds().x, (float)(560 - 60.0f * i) + 10 });
+		}
 
 		for (Button* b:buttons) {
 			b->poll();
@@ -543,7 +540,6 @@ int main() {
 
 		panel->render();
 		addGraphButton->render();
-		removeGraphButton->render();
 
 		for (Button* b : buttons) {
 			b->render();
