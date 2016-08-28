@@ -184,6 +184,8 @@ public:
 		return buff[index];
 	}
 };
+
+
 namespace {
 	String operator+(const String& s1, const String& s2) {
 		String res;

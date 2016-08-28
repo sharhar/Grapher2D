@@ -386,7 +386,7 @@ int main() {
 			deleteGraph(index);
 		}
 	};
-	
+
 	std::function<void(void)> addGraphButtonCallback = [&]() -> void {
 		if (buttons.size() >= 9) {
 			return;
@@ -401,12 +401,14 @@ int main() {
 
 		TextBox* textBox = new TextBox({ 10, (float)(560 - 60.0f * buttons.size()) + 10, 290, 30 }, layout, { textStyle , 1, 2, theme });
 
+		textBox->setEnterFunc([bSize, textBox, setGraph]() -> void { setGraph(textBox->m_text, bSize); });
+
 		Button* button = new Button({ 310, (float)(560 - 60.0f * buttons.size()) + 10, 70, 30 }, layout, "Submit", { textStyle,
 			[bSize, textBox, setGraph]()->void {
-			setGraph(textBox->m_text, bSize);
-		}, 2, theme
+				setGraph(textBox->m_text, bSize);
+			}, 
+		2, theme
 		});
-
 
 		textBoxes.push_back(textBox);
 		buttons.push_back(button);

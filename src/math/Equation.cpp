@@ -89,81 +89,92 @@ void loadDefaults(Equation* e) {
 
 	Function* funcTan = (Function*)malloc(sizeof(Function));
 	funcTan->name = new String("tan");
-	funcTan->func = [](double* input)->double {
+	funcTan->func = [](int len, double* input)->double {
 		return tan(input[0]);
 	};
 
 	Function* funcSin = (Function*)malloc(sizeof(Function));
 	funcSin->name = new String("sin");
-	funcSin->func = [](double* input)->double {
+	funcSin->func = [](int len, double* input)->double {
 		return sin(input[0]);
 	};
 
 	
 	Function* funcCos = (Function*)malloc(sizeof(Function));
 	funcCos->name = new String("cos");
-	funcCos->func = [](double* input)->double {
+	funcCos->func = [](int len, double* input)->double {
 		return cos(input[0]);
 	};
 
 	Function* funcCot = (Function*)malloc(sizeof(Function));
 	funcCot->name = new String("cot");
-	funcCot->func = [](double* input)->double {
+	funcCot->func = [](int len, double* input)->double {
 		return 1/tan(input[0]);
 	};
 
 	Function* funcCsc = (Function*)malloc(sizeof(Function));
 	funcCsc->name = new String("csc");
-	funcCsc->func = [](double* input)->double {
+	funcCsc->func = [](int len, double* input)->double {
 		return 1/sin(input[0]);
 	};
 
 	Function* funcSec = (Function*)malloc(sizeof(Function));
 	funcSec->name = new String("sec");
-	funcSec->func = [](double* input)->double {
+	funcSec->func = [](int len, double* input)->double {
 		return 1/cos(input[0]);
 	};
 
 	Function* funcaTan = (Function*)malloc(sizeof(Function));
 	funcaTan->name = new String("atan");
-	funcaTan->func = [](double* input)->double {
+	funcaTan->func = [](int len, double* input)->double {
 		return atan(input[0]);
 	};
 
 	Function* funcaSin = (Function*)malloc(sizeof(Function));
 	funcaSin->name = new String("asin");
-	funcaSin->func = [](double* input)->double {
+	funcaSin->func = [](int len, double* input)->double {
 		return asin(input[0]);
 	};
 
 	Function* funcaCos = (Function*)malloc(sizeof(Function));
 	funcaCos->name = new String("acos");
-	funcaCos->func = [](double* input)->double {
+	funcaCos->func = [](int len, double* input)->double {
 		return acos(input[0]);
 	};
 
 	Function* funcaCot = (Function*)malloc(sizeof(Function));
 	funcaCot->name = new String("acot");
-	funcaCot->func = [](double* input)->double {
+	funcaCot->func = [](int len, double* input)->double {
 		return atan(1 / input[0]);
 	};
 
 	Function* funcaCsc = (Function*)malloc(sizeof(Function));
 	funcaCsc->name = new String("acsc");
-	funcaCsc->func = [](double* input)->double {
+	funcaCsc->func = [](int len, double* input)->double {
 		return asin(1 / input[0]);
 	};
 
 	Function* funcaSec = (Function*)malloc(sizeof(Function));
 	funcaSec->name = new String("asec");
-	funcaSec->func = [](double* input)->double {
+	funcaSec->func = [](int len, double* input)->double {
 		return acos(1 / input[0]);
 	};
 
 	Function* funcMax = (Function*)malloc(sizeof(Function));
 	funcMax->name = new String("max");
-	funcMax->func = [](double* input)->double {
+	funcMax->func = [](int len, double* input)->double {
 		if (input[0] >= input[1]) {
+			return input[0];
+		}
+		else {
+			return input[1];
+		}
+	};
+
+	Function* funcMin = (Function*)malloc(sizeof(Function));
+	funcMin->name = new String("min");
+	funcMin->func = [](int len, double* input)->double {
+		if (input[0] <= input[1]) {
 			return input[0];
 		}
 		else {
@@ -173,20 +184,49 @@ void loadDefaults(Equation* e) {
 
 	Function* funcLn = (Function*)malloc(sizeof(Function));
 	funcLn->name = new String("ln");
-	funcLn->func = [](double* input)->double {
+	funcLn->func = [](int len, double* input)->double {
 		return log(input[0]);
 	};
 
 	Function* funcLog = (Function*)malloc(sizeof(Function));
 	funcLog->name = new String("log");
-	funcLog->func = [](double* input)->double {
+	funcLog->func = [](int len, double* input)->double {
 		return log10(input[0]);
 	};
 
 	Function* funcExp = (Function*)malloc(sizeof(Function));
 	funcExp->name = new String("exp");
-	funcExp->func = [](double* input)->double {
+	funcExp->func = [](int len, double* input)->double {
 		return exp(input[0]);
+	};
+
+	Function* funcAbs = (Function*)malloc(sizeof(Function));
+	funcAbs->name = new String("abs");
+	funcAbs->func = [](int len, double* input)->double {
+		return abs(input[0]);
+	};
+
+	Function* funcMean = (Function*)malloc(sizeof(Function));
+	funcMean->name = new String("mean");
+	funcMean->func = [](int len, double* input)->double {
+		double total = 0;
+		for (int i = 0; i < len;i++) {
+			total += input[i];
+		}
+
+		return total / len;
+	};
+
+	Function* funcGamma = (Function*)malloc(sizeof(Function));
+	funcGamma->name = new String("gamma");
+	funcGamma->func = [](int len, double* input)->double {
+		return tgamma(input[0]);
+	};
+
+	Function* funcFact = (Function*)malloc(sizeof(Function));
+	funcFact->name = new String("fact");
+	funcFact->func = [](int len, double* input)->double {
+		return tgamma(input[0] + 1);
 	};
 
 	e->addFunction(funcTan);
@@ -202,16 +242,18 @@ void loadDefaults(Equation* e) {
 	e->addFunction(funcaCsc);
 	e->addFunction(funcaSec);
 	e->addFunction(funcMax);
+	e->addFunction(funcMin);
 	e->addFunction(funcLn);
 	e->addFunction(funcLog);
 	e->addFunction(funcExp);
+	e->addFunction(funcAbs);
+	e->addFunction(funcMean);
+	e->addFunction(funcGamma);
+	e->addFunction(funcFact);
 
-	Variable* eVar = e->createVariable("e");
-	eVar->value = 2.718281828459045;
-	Variable* piVar = e->createVariable("pi");
-	piVar->value = 3.141592653589793;
-	Variable* tauVar = e->createVariable("tau");
-	tauVar->value = 3.141592653589793*2;
+	e->createVariable("e")->value = 2.718281828459045;
+	e->createVariable("pi")->value = 3.141592653589793;
+	e->createVariable("tau")->value = 3.141592653589793 * 2;
 }
 
 Equation::Equation() {
@@ -719,7 +761,7 @@ double evalNode(Node* node, Node* prev, Equation* e) {
 			vals[i] = evalNode(node->children[i], node, e);
 		}
 
-		double result = func->func(vals);
+		double result = func->func(argc, vals);
 		delete[] vals;
 		return result;
 	}

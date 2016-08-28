@@ -12,7 +12,7 @@ typedef struct Operator {
 
 typedef struct Function {
 	String* name;
-	double(*func) (double*);
+	double(*func) (int, double*);
 } Function;
 
 typedef struct Variable {

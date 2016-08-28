@@ -2,6 +2,7 @@
 
 #include <GLUI/Utils.h>
 #include <GLUI/Input.h>
+#include <functional>
 
 namespace glui {
 
@@ -23,13 +24,17 @@ namespace glui {
 		bool m_isActive;
 
 		bool m_renderCursor;
-		double m_time;
+		double m_time; 
+		
+		std::function<void(void)> m_enterFunc;
 
 		unsigned char* m_prevKeys;
 	public:
 		std::string m_text;
 	
 		TextBox(Rectangle bounds, Layout* layout, TextBoxDescriptor desc);
+
+		void setEnterFunc(std::function<void(void)> enterFunc);
 
 		void poll() override;
 		void render() override;
