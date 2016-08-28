@@ -182,10 +182,86 @@ void renderVals(double* arr, double xl, double xr, double yd, double yu, int wid
 	glEnd();
 }
 
+GLFWimage* genIcon() {
+	unsigned char redr = (unsigned char)(0.8f * 255);
+	unsigned char redg = (unsigned char)(0.2f * 255);
+	unsigned char redb = (unsigned char)(0.2f * 255);
+
+	float xs = 32;
+	float ys = 32;
+
+	int* siny = new int[255];
+
+	for (int i = 0; i < 255; i++) {
+		int x = i - 128;
+
+		float y = -sin(x / xs) * ys;
+
+		siny[i] = (int)y;
+	}
+
+	GLFWimage* img = (GLFWimage*)malloc(sizeof(GLFWimage));
+	img->height = 255;
+	img->width = 255;
+
+	img->pixels = new unsigned char[img->width * img->height * 4];
+
+	for (int y = 0; y < img->height; y++) {
+		for (int x = 0; x < img->width; x++) {
+			int index = (x + y * img->width) * 4;
+
+			int xo = 128 - x;
+			int yo = 128 - y;
+
+			double dist = sqrt(xo*xo + yo*yo);
+
+			img->pixels[index + 0] = 255;
+			img->pixels[index + 1] = 255;
+			img->pixels[index + 2] = 255;
+			img->pixels[index + 3] = 255;
+
+			int lineWidth = 9;
+
+			if (y > 128 - lineWidth && y < 128 + lineWidth) {
+				img->pixels[index + 0] = 0;
+				img->pixels[index + 1] = 0;
+				img->pixels[index + 2] = 0;
+				img->pixels[index + 3] = 255;
+			}
+			else if (x > 128 - lineWidth && x < 128 + lineWidth) {
+				img->pixels[index + 0] = 0;
+				img->pixels[index + 1] = 0;
+				img->pixels[index + 2] = 0;
+				img->pixels[index + 3] = 255;
+			}
+
+			if (abs(siny[x] - (y - 128)) < 15) {
+				img->pixels[index + 0] = redr;
+				img->pixels[index + 1] = redg;
+				img->pixels[index + 2] = redb;
+				img->pixels[index + 3] = 255;
+			}
+
+			if (dist >= 110 && dist < 128) {
+				img->pixels[index + 0] = 0;
+				img->pixels[index + 1] = 0;
+				img->pixels[index + 2] = 0;
+				img->pixels[index + 3] = 255;
+			}
+
+			if (dist >= 128) {
+				img->pixels[index + 3] = 0;
+			}
+		}
+	}
+
+	return img;
+}
+
 int main() {
 	GLUI::init();
 
-	Window win("Grapher2D", 1000, 620);
+	Window win("Grapher2D", 1000, 620, false, 1, genIcon());
 	Renderer::init(&win);
 	Layout* layout = new AbsoluteLayout(&win, 1000, 620);
 
@@ -442,11 +518,11 @@ int main() {
 
 	addGraphButtonCallback();
 
-	g_colors[0] = { 0.8f, 0.2f, 0.2f };
-	g_colors[1] = { 0.1f, 0.6f, 0.1f };
-	g_colors[2] = { 0.2f, 0.2f, 0.9f };
+	g_colors[0] = { 0.8f, 0.2f , 0.2f };
+	g_colors[1] = { 0.1f, 0.6f , 0.1f };
+	g_colors[2] = { 0.2f, 0.2f , 0.9f };
 	g_colors[3] = { 0.9f, 0.65f, 0.2f };
-	g_colors[4] = { 0.8f, 0.2f, 0.8f };
+	g_colors[4] = { 0.8f, 0.2f , 0.8f };
 
 	while (win.isOpen()) {
 		win.poll();

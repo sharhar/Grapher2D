@@ -1,6 +1,7 @@
 #pragma once
 
 struct GLFWwindow;
+struct GLFWimage;
 
 namespace glui{
 
@@ -10,7 +11,7 @@ namespace glui{
 		int m_width;
 		int m_height;
 	public:
-		Window(const char* title, int width, int height);
+		Window(const char* title, int width, int height, bool resizeable, int iconNum, GLFWimage* icon);
 		void poll();
 		int getWidth() { return m_width; }
 		int getHeight() { return m_height; }

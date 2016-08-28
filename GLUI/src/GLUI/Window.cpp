@@ -1,5 +1,6 @@
 #include <GLUI/GLUI.h>
 #include <GLUIExt.h>
+#include <iostream>
 
 namespace glui {
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -22,11 +23,15 @@ namespace glui {
 		input::callbacks::mouseScroll(yoffset);
 	}
 
-	Window::Window(const char* title, int width, int height) {
+	Window::Window(const char* title, int width, int height, bool resizeable, int iconNum, GLFWimage* icon) {
 		m_width = width;
 		m_height = height;
 
-		glfwWindowHint(GLFW_SAMPLES, 4);
+		if (resizeable) {
+			glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+		} else {
+			glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+		}
 
 		GLFWwindow* window = glfwCreateWindow(width, height, title, NULL, NULL);
 		glfwMakeContextCurrent(window);
@@ -39,6 +44,10 @@ namespace glui {
 		glfwSetCharCallback(window, textCallBack);
 		glfwSetScrollCallback(window, mouseScrollCallback);
 		m_window = window;
+
+		if (icon != NULL) {
+			glfwSetWindowIcon(window, iconNum, icon);
+		}
 	}
 
 	void Window::poll() {
@@ -46,7 +55,7 @@ namespace glui {
 
 		GLenum err = GL_NO_ERROR;
 		while ((err = glGetError()) != GL_NO_ERROR) {
-			if(err == 1282) {//temprorary solution to GLError: 1282 that doesnt seem to do anything
+			if(err == 1282) {//temprorary solution to GLError: 1282 on mac that doesnt seem to do anything (might have already been fixed)
 				continue;
 			}
 			std::cout << "GLError: " << err << "\n";

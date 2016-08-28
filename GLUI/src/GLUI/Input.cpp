@@ -50,6 +50,10 @@ namespace glui {
 
 		void callbacks::text(unsigned int codepoint) {
 			if (InputData::textString != 0) {
+				if (InputData::textInsertPoint > InputData::textString->size()) {
+					InputData::textInsertPoint = InputData::textString->size();
+				}
+
 				InputData::textString->insert(InputData::textInsertPoint, std::string(1, (char) codepoint));
 			}
 		}
