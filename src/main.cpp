@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include "math/Equation.h"
 #include <glcorearb.h>
+#include <math.h>
 
 using namespace glui;
 

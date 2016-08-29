@@ -203,7 +203,7 @@ void loadDefaults(Equation* e) {
 	Function* funcAbs = (Function*)malloc(sizeof(Function));
 	funcAbs->name = new String("abs");
 	funcAbs->func = [](int len, double* input)->double {
-		return abs(input[0]);
+		return input[0] > 0 ? input[0] : -(input[0]);
 	};
 
 	Function* funcMean = (Function*)malloc(sizeof(Function));
