@@ -17,10 +17,10 @@ using namespace glui;
 #define glFramebufferRenderbuffer glFuncs->glFramebufferRenderbufferM
 #define glBlitFramebuffer glFuncs->glBlitFramebufferM
 
-double g_left = -6;
-double g_right = 6;
-double g_down = -6;
-double g_up = 6;
+double g_left  = -6;
+double g_right =  6;
+double g_down  = -6;
+double g_up    =  6;
 
 int g_windowWidth = 600;
 int g_windowHeight = 600;
@@ -101,8 +101,177 @@ void genVals(double* arr, double xl, double xr, Equation* e, Variable* xVar) {
 	}
 }
 
+void drawGrid(double xl, double xr, double yd, double yu, int width, int height) {
+	double xratio = width/(xr - xl);
+
+	double xlen = xr - xl;
+	double xlog = log10(xlen);
+	double xfloor = floor(xlog);
+	double xmag = pow(10, xfloor);
+
+	if (floor(xlog - 0.25) < xfloor) {
+		xmag /= 2;
+	} 
+
+	if (floor(xlog - 0.5) < xfloor) {
+		xmag /= 2;
+	}
+
+	double xlr = round(xl/xmag)*xmag;
+	double xrr = round(xr/xmag)*xmag;
+
+	if (xl > 0) {
+		xlr = 0;
+	} else if (xr < 0) {
+		xrr = 0;
+	}
+	
+	double xNum = (xrr - xlr)/xmag;
+
+	glColor3f(0.5f, 0.5f, 0.5f);
+	glLineWidth(1.0f);
+
+	glBegin(GL_LINES);
+	for (int i = 0; i < xNum * 2;i++) {
+		double tx = (2*xlr - xl + xmag*i)*xratio;
+
+		if (tx >= xl && tx <= xr) {
+			continue;
+		}
+
+		glVertex2f(tx, 0);
+		glVertex2f(tx, height);
+	}
+
+	glEnd();
+
+
+
+	double yratio = height / (yu - yd);
+
+	double ylen = yu - yd;
+	double ylog = log10(ylen);
+	double yfloor = floor(ylog);
+	double ymag = pow(10, yfloor);
+
+	if (floor(ylog - 0.25) < yfloor) {
+		ymag /= 2;
+	}
+
+	if (floor(ylog - 0.5) < yfloor) {
+		ymag /= 2;
+	}
+
+	double ylr = round(yd / ymag)*ymag;
+	double yrr = round(yu / ymag)*ymag;
+
+
+	if (yd > 0) {
+		ylr = 0;
+	} else if (yu < 0) {
+		yrr = 0;
+	}
+
+	double yNum = (yrr - ylr) / ymag;
+
+	glColor3f(0.5f, 0.5f, 0.5f);
+	glLineWidth(1.0f);
+
+	glBegin(GL_LINES);
+	for (int i = 0; i < yNum * 2; i++) {
+		double ty = (2*ylr - yd + ymag*i)*yratio;
+
+		if (ty >= yd && ty <= yu) {
+			continue;
+		}
+
+		glVertex2f(0,     ty);
+		glVertex2f(width, ty);
+	}
+
+	glEnd();
+}
+
+void drawNums(double xl, double xr, double yd, double yu, int width, int height) {
+	double xratio = width / (xr - xl);
+
+	double xlen = xr - xl;
+	double xlog = log10(xlen);
+	double xfloor = floor(xlog);
+	double xmag = pow(10, xfloor);
+
+	if (floor(xlog - 0.25) < xfloor) {
+		xmag /= 2;
+	}
+
+	if (floor(xlog - 0.5) < xfloor) {
+		xmag /= 2;
+	}
+
+	double xlr = round(xl / xmag)*xmag;
+	double xrr = round(xr / xmag)*xmag;
+
+	if (xl > 0) {
+		xlr = 0;
+	}
+	else if (xr < 0) {
+		xrr = 0;
+	}
+
+	double xNum = (xrr - xlr) / xmag;
+
+
+	for (int i = 0; i < xNum * 2; i++) {
+		double tx = (2 * xlr - xl + xmag*i)*xratio;
+
+		if (tx >= xl && tx <= xr) {
+			continue;
+		}
+
+
+	}
+
+	double yratio = height / (yu - yd);
+
+	double ylen = yu - yd;
+	double ylog = log10(ylen);
+	double yfloor = floor(ylog);
+	double ymag = pow(10, yfloor);
+
+	if (floor(ylog - 0.25) < yfloor) {
+		ymag /= 2;
+	}
+
+	if (floor(ylog - 0.5) < yfloor) {
+		ymag /= 2;
+	}
+
+	double ylr = round(yd / ymag)*ymag;
+	double yrr = round(yu / ymag)*ymag;
+
+
+	if (yd > 0) {
+		ylr = 0;
+	}
+	else if (yu < 0) {
+		yrr = 0;
+	}
+
+	double yNum = (yrr - ylr) / ymag;
+
+	for (int i = 0; i < yNum * 2; i++) {
+		double ty = (2 * ylr - yd + ymag*i)*yratio;
+
+		if (ty >= yd && ty <= yu) {
+			continue;
+		}
+
+
+	}
+}
+
 void renderVals(double* arr, double xl, double xr, double yd, double yu, int width, int height, Color color) {
-	double xint = (width * 1.0f) / (VAL_NUM - 1);
+	double xint = (width) / (VAL_NUM - 1);
 	double axint = (xr - xl) / (VAL_NUM);
 	double yh = (yu - yd);
 
@@ -350,6 +519,7 @@ int main() {
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 		glClear(GL_COLOR_BUFFER_BIT);
+		drawGrid(g_left, g_right, g_down, g_up, 600, 600);
 		drawAxes(600, 600);
 
 		for (int i = 0; i < graphs.size(); i++) {
@@ -362,6 +532,8 @@ int main() {
 			genVals(graphs[i]->vals, g_left, g_right, graphs[i]->e, graphs[i]->xVar);
 			renderVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 600, 600, g_colors[i%g_colorNum]);
 		}
+
+		//drawNums(g_left, g_right, g_down, g_up, 600, 600);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, panel->getFBO());
 

@@ -44,7 +44,7 @@ namespace glui {
 		glfwSetCharCallback(window, textCallBack);
 		glfwSetScrollCallback(window, mouseScrollCallback);
 		m_window = window;
-
+		
 		if (icon != NULL) {
 			glfwSetWindowIcon(window, iconNum, icon);
 		}
