@@ -55,9 +55,6 @@ namespace glui {
 
 		GLenum err = GL_NO_ERROR;
 		while ((err = glGetError()) != GL_NO_ERROR) {
-			if(err == 1282) {//temprorary solution to GLError: 1282 on mac that doesnt seem to do anything (might have already been fixed)
-				continue;
-			}
 			std::cout << "GLError: " << err << "\n";
 		}
 	}
