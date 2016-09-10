@@ -10,13 +10,13 @@ using namespace glui;
 #define VAL_NUM 600
 #define ZOOM_PERCENT 0.05
 
-#define glGenFramebuffers glFuncs->glGenFramebuffersM
-#define glGenRenderbuffers glFuncs->glGenRenderbuffersM
-#define glBindFramebuffer glFuncs->glBindFramebufferM
-#define glBindRenderbuffer glFuncs->glBindRenderbufferM
-#define glRenderbufferStorageMultisample glFuncs->glRenderbufferStorageMultisampleM
-#define glFramebufferRenderbuffer glFuncs->glFramebufferRenderbufferM
-#define glBlitFramebuffer glFuncs->glBlitFramebufferM
+#define glGenFramebuffers__ glFuncs->glGenFramebuffersM
+#define glGenRenderbuffers__ glFuncs->glGenRenderbuffersM
+#define glBindFramebuffer__ glFuncs->glBindFramebufferM
+#define glBindRenderbuffer__ glFuncs->glBindRenderbufferM
+#define glRenderbufferStorageMultisample__ glFuncs->glRenderbufferStorageMultisampleM
+#define glFramebufferRenderbuffer__ glFuncs->glFramebufferRenderbufferM
+#define glBlitFramebuffer__ glFuncs->glBlitFramebufferM
 
 double g_left  = -6;
 double g_right =  6;
@@ -463,13 +463,13 @@ int main() {
 
 	MGLFuncs* glFuncs =  (MGLFuncs*)malloc(sizeof(MGLFuncs));
 
-	glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)glfwGetProcAddress("glGenFramebuffers");
-	glGenRenderbuffers = (PFNGLGENRENDERBUFFERSPROC)glfwGetProcAddress("glGenRenderbuffers");
-	glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC)glfwGetProcAddress("glBindFramebuffer");
-	glBindRenderbuffer = (PFNGLBINDRENDERBUFFERPROC)glfwGetProcAddress("glBindRenderbuffer");
-	glRenderbufferStorageMultisample = (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)glfwGetProcAddress("glRenderbufferStorageMultisample");
-	glFramebufferRenderbuffer = (PFNGLFRAMEBUFFERRENDERBUFFERPROC)glfwGetProcAddress("glFramebufferRenderbuffer");
-	glBlitFramebuffer = (PFNGLBLITFRAMEBUFFERPROC)glfwGetProcAddress("glBlitFramebuffer");
+	glGenFramebuffers__ = (PFNGLGENFRAMEBUFFERSPROC)glfwGetProcAddress("glGenFramebuffers");
+	glGenRenderbuffers__ = (PFNGLGENRENDERBUFFERSPROC)glfwGetProcAddress("glGenRenderbuffers");
+	glBindFramebuffer__ = (PFNGLBINDFRAMEBUFFERPROC)glfwGetProcAddress("glBindFramebuffer");
+	glBindRenderbuffer__ = (PFNGLBINDRENDERBUFFERPROC)glfwGetProcAddress("glBindRenderbuffer");
+	glRenderbufferStorageMultisample__ = (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)glfwGetProcAddress("glRenderbufferStorageMultisample");
+	glFramebufferRenderbuffer__ = (PFNGLFRAMEBUFFERRENDERBUFFERPROC)glfwGetProcAddress("glFramebufferRenderbuffer");
+	glBlitFramebuffer__ = (PFNGLBLITFRAMEBUFFERPROC)glfwGetProcAddress("glBlitFramebuffer");
 
 	int frameBufferWidth, frameBufferHeight;
 	glfwGetFramebufferSize((GLFWwindow*) win.getGLFWwindow(), &frameBufferWidth, &frameBufferHeight);
@@ -479,21 +479,21 @@ int main() {
 	GLuint colorRenderBuffer = 0;
 	GLuint depthRenderBuffer = 0;
 
-	glGenRenderbuffers(1, &colorRenderBuffer);
-	glGenRenderbuffers(1, &depthRenderBuffer);
+	glGenRenderbuffers__(1, &colorRenderBuffer);
+	glGenRenderbuffers__(1, &depthRenderBuffer);
 
-	glGenFramebuffers(1, &fbo);
-	glBindFramebuffer(GL_FRAMEBUFFER ,fbo);
+	glGenFramebuffers__(1, &fbo);
+	glBindFramebuffer__(GL_FRAMEBUFFER ,fbo);
 
-	glBindRenderbuffer(GL_RENDERBUFFER, colorRenderBuffer);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGBA8, frameBufferWidth, frameBufferHeight);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorRenderBuffer);
+	glBindRenderbuffer__(GL_RENDERBUFFER, colorRenderBuffer);
+	glRenderbufferStorageMultisample__(GL_RENDERBUFFER, samples, GL_RGBA8, frameBufferWidth, frameBufferHeight);
+	glFramebufferRenderbuffer__(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorRenderBuffer);
 
-	glBindRenderbuffer(GL_RENDERBUFFER, depthRenderBuffer);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, frameBufferWidth, frameBufferHeight);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBuffer);
+	glBindRenderbuffer__(GL_RENDERBUFFER, depthRenderBuffer);
+	glRenderbufferStorageMultisample__(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, frameBufferWidth, frameBufferHeight);
+	glFramebufferRenderbuffer__(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBuffer);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer__(GL_FRAMEBUFFER, 0);
 
 	GLPanel* panel;
 
@@ -510,7 +510,7 @@ int main() {
 
 	},
 	[&]()->void {
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		glBindFramebuffer__(GL_FRAMEBUFFER, fbo);
 
 		glClear(GL_COLOR_BUFFER_BIT);
 		drawGrid(g_left, g_right, g_down, g_up, 600, 600);
@@ -529,13 +529,13 @@ int main() {
 
 		drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, &color::black);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, panel->getFBO());
+		glBindFramebuffer__(GL_FRAMEBUFFER, panel->getFBO());
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-		glBlitFramebuffer(0, 0, frameBufferWidth, frameBufferHeight, 0, 0, frameBufferWidth, frameBufferHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		glBindFramebuffer(GL_FRAMEBUFFER, panel->getFBO());
+		glBindFramebuffer__(GL_READ_FRAMEBUFFER, fbo);
+		glBlitFramebuffer__(0, 0, frameBufferWidth, frameBufferHeight, 0, 0, frameBufferWidth, frameBufferHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer__(GL_FRAMEBUFFER, panel->getFBO());
 	},
 	[](GLPanelMouseData* data)->void {
 		if ((data->difference.x != 0 || data->difference.y != 0) && data->leftDown) {
