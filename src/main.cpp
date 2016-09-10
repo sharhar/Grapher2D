@@ -127,10 +127,10 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 	glLineWidth(1.0f);
 
 	glBegin(GL_LINES);
-	for (int i = 0; i < xNum * 2;i++) {
+	for (int i = 0; i < xNum;i++) {
 		double tx = (xlr - xl + xmag*i)*xratio;
 
-		if (tx >= xl && tx <= xr) {
+		if (tx  < 0 || tx > width) {
 			continue;
 		}
 
@@ -139,8 +139,6 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 	}
 
 	glEnd();
-
-
 
 	double yratio = height / (yu - yd);
 
@@ -169,7 +167,7 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 	for (int i = 0; i < yNum * 2; i++) {
 		double ty = (ylr - yd + ymag*i)*yratio;
 
-		if (ty >= yd && ty <= yu) {
+		if (ty < 0 || ty > height) {
 			continue;
 		}
 
@@ -206,7 +204,7 @@ void drawNums(double xl, double xr, double yd, double yu, int width, int height,
 
 		double tx = (xlr - xl + xmag*i)*xratio;
 
-		if (tx >= xl && tx <= xr) {
+		if (tx < 0 || tx > width) {
 			continue;
 		}
 
@@ -248,7 +246,7 @@ void drawNums(double xl, double xr, double yd, double yu, int width, int height,
 
 		double ty = (ylr - yd + ymag*i)*yratio;
 
-		if (ty >= yd && ty <= yu) {
+		if (ty < 0 || ty > height) {
 			continue;
 		}
 
