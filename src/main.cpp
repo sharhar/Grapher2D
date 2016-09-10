@@ -491,8 +491,9 @@ int main() {
 
 	glBindRenderbuffer__(GL_RENDERBUFFER, depthRenderBuffer);
 	glRenderbufferStorageMultisample__(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, frameBufferWidth, frameBufferHeight);
-	glFramebufferRenderbuffer__(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBuffer);
-
+	glFramebufferRenderbuffer__(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBuffer)
+	
+	glBindRenderbuffer__(GL_RENDERBUFFER, 0);
 	glBindFramebuffer__(GL_FRAMEBUFFER, 0);
 
 	GLPanel* panel;
@@ -532,9 +533,14 @@ int main() {
 		glBindFramebuffer__(GL_FRAMEBUFFER, panel->getFBO());
 
 		glClear(GL_COLOR_BUFFER_BIT);
-
+		
 		glBindFramebuffer__(GL_READ_FRAMEBUFFER, fbo);
-		glBlitFramebuffer__(0, 0, frameBufferWidth, frameBufferHeight, 0, 0, frameBufferWidth, frameBufferHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glBlitFramebuffer__(0, 0, frameBufferWidth, frameBufferHeight, 
+			              0, 0, frameBufferWidth, frameBufferHeight, 
+			              GL_COLOR_BUFFER_BIT, GL_NEAREST);
+#ifdef __APPLE__
+		glGetError();
+#endif
 		glBindFramebuffer__(GL_FRAMEBUFFER, panel->getFBO());
 	},
 	[](GLPanelMouseData* data)->void {
