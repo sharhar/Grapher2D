@@ -3,6 +3,7 @@
 #include "math/Equation.h"
 #include <glcorearb.h>
 #include <math.h>
+#include <string>
 
 using namespace glui;
 
@@ -119,12 +120,6 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 
 	double xlr = round(xl/xmag)*xmag;
 	double xrr = round(xr/xmag)*xmag;
-
-	if (xl > 0) {
-		xlr = 0;
-	} else if (xr < 0) {
-		xrr = 0;
-	}
 	
 	double xNum = (xrr - xlr)/xmag;
 
@@ -133,7 +128,7 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 
 	glBegin(GL_LINES);
 	for (int i = 0; i < xNum * 2;i++) {
-		double tx = (2*xlr - xl + xmag*i)*xratio;
+		double tx = (xlr - xl + xmag*i)*xratio;
 
 		if (tx >= xl && tx <= xr) {
 			continue;
@@ -165,13 +160,6 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 	double ylr = round(yd / ymag)*ymag;
 	double yrr = round(yu / ymag)*ymag;
 
-
-	if (yd > 0) {
-		ylr = 0;
-	} else if (yu < 0) {
-		yrr = 0;
-	}
-
 	double yNum = (yrr - ylr) / ymag;
 
 	glColor3f(0.5f, 0.5f, 0.5f);
@@ -179,7 +167,7 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 
 	glBegin(GL_LINES);
 	for (int i = 0; i < yNum * 2; i++) {
-		double ty = (2*ylr - yd + ymag*i)*yratio;
+		double ty = (ylr - yd + ymag*i)*yratio;
 
 		if (ty >= yd && ty <= yu) {
 			continue;
@@ -192,7 +180,7 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 	glEnd();
 }
 
-void drawNums(double xl, double xr, double yd, double yu, int width, int height) {
+void drawNums(double xl, double xr, double yd, double yu, int width, int height, Font* font, Color* color) {
 	double xratio = width / (xr - xl);
 
 	double xlen = xr - xl;
@@ -211,24 +199,28 @@ void drawNums(double xl, double xr, double yd, double yu, int width, int height)
 	double xlr = round(xl / xmag)*xmag;
 	double xrr = round(xr / xmag)*xmag;
 
-	if (xl > 0) {
-		xlr = 0;
-	}
-	else if (xr < 0) {
-		xrr = 0;
-	}
-
 	double xNum = (xrr - xlr) / xmag;
 
-
 	for (int i = 0; i < xNum * 2; i++) {
-		double tx = (2 * xlr - xl + xmag*i)*xratio;
+		double xrv = xlr + xmag*i;
+
+		double tx = (xlr - xl + xmag*i)*xratio;
 
 		if (tx >= xl && tx <= xr) {
 			continue;
 		}
 
+		std::string str = std::to_string(xrv);
 
+		while (str.at(str.length() - 1) == '0') {
+			str.pop_back();
+		}
+
+		if (str.at(str.length() - 1) == '.') {
+			str.pop_back();
+		}
+
+		Renderer::drawString(str, tx + 2, 10, 15, font, color);
 	}
 
 	double yratio = height / (yu - yd);
@@ -249,24 +241,28 @@ void drawNums(double xl, double xr, double yd, double yu, int width, int height)
 	double ylr = round(yd / ymag)*ymag;
 	double yrr = round(yu / ymag)*ymag;
 
-
-	if (yd > 0) {
-		ylr = 0;
-	}
-	else if (yu < 0) {
-		yrr = 0;
-	}
-
 	double yNum = (yrr - ylr) / ymag;
 
 	for (int i = 0; i < yNum * 2; i++) {
-		double ty = (2 * ylr - yd + ymag*i)*yratio;
+		double yrv = ylr + ymag*i;
+
+		double ty = (ylr - yd + ymag*i)*yratio;
 
 		if (ty >= yd && ty <= yu) {
 			continue;
 		}
 
+		std::string str = std::to_string(yrv);
 
+		while (str.at(str.length() - 1) == '0') {
+			str.pop_back();
+		}
+
+		if (str.at(str.length() - 1) == '.') {
+			str.pop_back();
+		}
+
+		Renderer::drawString(str, 10, ty + 2, 15, font, color);
 	}
 }
 
@@ -533,7 +529,7 @@ int main() {
 			renderVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 600, 600, g_colors[i%g_colorNum]);
 		}
 
-		//drawNums(g_left, g_right, g_down, g_up, 600, 600);
+		drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, &color::black);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, panel->getFBO());
 
