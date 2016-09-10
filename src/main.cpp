@@ -491,7 +491,7 @@ int main() {
 
 	glBindRenderbuffer__(GL_RENDERBUFFER, depthRenderBuffer);
 	glRenderbufferStorageMultisample__(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, frameBufferWidth, frameBufferHeight);
-	glFramebufferRenderbuffer__(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBuffer)
+	glFramebufferRenderbuffer__(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBuffer);
 	
 	glBindRenderbuffer__(GL_RENDERBUFFER, 0);
 	glBindFramebuffer__(GL_FRAMEBUFFER, 0);
