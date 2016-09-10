@@ -681,8 +681,9 @@ void** parseExpression(std::vector<Node*> nodes, Equation* e) {
 				funcNode = (Node*)e->allocNode();
 				long argc = (long)funcNodeArr[0];
 				funcNode->type = NODE_TYPE_FFN;
-				funcNode->value = new void*[1];
+				funcNode->value = new void*[2];
 				funcNode->value[0] = (void*)curFunc;
+				funcNode->value[1] = new double[argc];
 				funcNode->childNum = argc;
 				funcNode->children = new Node*[argc];
 				
@@ -755,14 +756,14 @@ double evalNode(Node* node, Node* prev, Equation* e) {
 		if (func == NULL) {
 			return evalNode(node->children[0], node, e);
 		}
-		int argc = node->childNum;
-		double* vals = new double[argc];
-		for (int i = 0; i < argc;i++) {
-			vals[i] = evalNode(node->children[i], node, e);
+
+		double* values = (double*) node->value[1];
+
+		for (int i = 0; i < node->childNum;i++) {
+			values[i] = evalNode(node->children[i], node, e);
 		}
 
-		double result = func->func(argc, vals);
-		delete[] vals;
+		double result = func->func(node->childNum, values);
 		return result;
 	}
 
@@ -772,6 +773,10 @@ double evalNode(Node* node, Node* prev, Equation* e) {
 void Equation::cleanUp() {
 	for (void* p : m_nodes) {
 		Node* n = (Node*)p;
+
+		if (n->type == NODE_TYPE_FFN) {
+			delete[] n->value[1];
+		}
 
 		if (n->children != NULL) {
 			delete[] n->children;

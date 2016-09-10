@@ -204,7 +204,7 @@ void drawNums(double xl, double xr, double yd, double yu, int width, int height,
 
 		double tx = (xlr - xl + xmag*i)*xratio;
 
-		if (tx < 0 || tx > width) {
+		if (tx < -15 || tx > width) {
 			continue;
 		}
 
@@ -246,7 +246,7 @@ void drawNums(double xl, double xr, double yd, double yu, int width, int height,
 
 		double ty = (ylr - yd + ymag*i)*yratio;
 
-		if (ty < 0 || ty > height) {
+		if (ty < -15 || ty > height) {
 			continue;
 		}
 
