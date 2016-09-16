@@ -9,6 +9,7 @@ using namespace glui;
 
 #define VAL_NUM 600
 #define ZOOM_PERCENT 0.05
+#define IMPLICIT_SKIP 2
 
 #define glGenFramebuffers__ glFuncs->glGenFramebuffersM
 #define glGenRenderbuffers__ glFuncs->glGenRenderbuffersM
@@ -45,11 +46,16 @@ typedef struct Graph {
 	Variable* xVar;
 	Variable* tVar;
 	Variable* atVar;
+	Variable* yVar;
 	double startTime;
 } Graph;
 
 double abs_c(double n1) {
 	return n1 > 0 ? n1 : -(n1);
+}
+
+int sign_c(double n1) {
+	return n1 > 0 ? 1 : -1;
 }
 
 void drawAxes(int width, int height) {
@@ -100,6 +106,74 @@ void genVals(double* arr, double xl, double xr, Equation* e, Variable* xVar) {
 		xVar->value = xint*i + xl;
 		arr[i] = e->eval();
 	}
+}
+
+void genImplicitVals(double* arr, double xl, double xr, double yd, double yu, Equation* e, Variable* xVar, Variable* yVar) {
+	double xint = (xr - xl) / (VAL_NUM);
+	double yint = (yu - yd) / (VAL_NUM);
+	for (int x = 0; x < VAL_NUM; x+=IMPLICIT_SKIP) {
+		xVar->value = xint*x + xl;
+		for (int y = 0; y < VAL_NUM;y+=IMPLICIT_SKIP) {
+			yVar->value = yint*y + yd;
+			arr[x * VAL_NUM + y] = e->eval();
+		}
+	}
+}
+
+inline void draw4Point(float x, float y) {
+	glVertex2f(x, y);
+	glVertex2f(x + 1, y);
+	glVertex2f(x + 1, y + 1);
+	glVertex2f(x, y + 1);
+}
+
+void renderImplicitVals(double* arr, double xl, double xr, double yd, double yu, int width, int height, Color color) {
+	glColor4f(color.r, color.g, color.b, 1);
+	
+	glBegin(GL_POINTS);
+
+	double tolerace = (xr - xl)/200.0;
+
+	for (int x = 0; x < VAL_NUM; x+=IMPLICIT_SKIP) {
+		for (int y = 0; y < VAL_NUM; y+=IMPLICIT_SKIP) {
+			double num = arr[x * VAL_NUM + y];
+			
+			if (num == 0) {
+				for (int xt = 0; xt < IMPLICIT_SKIP;xt++) {
+					for (int yt = 0; yt < IMPLICIT_SKIP; yt++) {
+						draw4Point(x + xt, y + yt);
+					}
+				}
+
+			} else if (x + IMPLICIT_SKIP < VAL_NUM && sign_c(num) != sign_c(arr[(x + IMPLICIT_SKIP) * VAL_NUM + (y)])) {
+				for (int xt = 0; xt < IMPLICIT_SKIP; xt++) {
+					for (int yt = 0; yt < IMPLICIT_SKIP; yt++) {
+						draw4Point(x + xt, y + yt);
+					}
+				}
+			} else if (x - IMPLICIT_SKIP >= 0 && sign_c(num) != sign_c(arr[(x - IMPLICIT_SKIP) * VAL_NUM + (y)])) {
+				for (int xt = 0; xt < IMPLICIT_SKIP; xt++) {
+					for (int yt = 0; yt < IMPLICIT_SKIP; yt++) {
+						draw4Point(x + xt, y + yt);
+					}
+				}
+			} else if (y + IMPLICIT_SKIP < VAL_NUM && sign_c(num) != sign_c(arr[(x) * VAL_NUM + (y + IMPLICIT_SKIP)])) {
+				for (int xt = 0; xt < IMPLICIT_SKIP; xt++) {
+					for (int yt = 0; yt < IMPLICIT_SKIP; yt++) {
+						draw4Point(x + xt, y + yt);
+					}
+				}
+			} else if (y - IMPLICIT_SKIP >= 0 && sign_c(num) != sign_c(arr[(x) * VAL_NUM + (y - IMPLICIT_SKIP)])) {
+				for (int xt = 0; xt < IMPLICIT_SKIP; xt++) {
+					for (int yt = 0; yt < IMPLICIT_SKIP; yt++) {
+						draw4Point(x + xt, y + yt);
+					}
+				}
+			}
+		}
+	}
+
+	glEnd();
 }
 
 void drawGrid(double xl, double xr, double yd, double yu, int width, int height) {
@@ -524,8 +598,15 @@ int main() {
 
 			graphs[i]->atVar->value = glfwGetTime();
 			graphs[i]->tVar->value = graphs[i]->atVar->value - graphs[i]->startTime;
-			genVals(graphs[i]->vals, g_left, g_right, graphs[i]->e, graphs[i]->xVar);
-			renderVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 600, 600, g_colors[i%g_colorNum]);
+
+			if (graphs[i]->yVar != NULL) {
+				genImplicitVals(graphs[i]->vals, g_left, g_right, g_down, g_up, graphs[i]->e, graphs[i]->xVar, graphs[i]->yVar);
+				renderImplicitVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 600, 600, g_colors[i%g_colorNum]);
+
+			} else {
+				genVals(graphs[i]->vals, g_left, g_right, graphs[i]->e, graphs[i]->xVar);
+				renderVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 600, 600, g_colors[i%g_colorNum]);
+			}
 		}
 
 		drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, &color::black);
@@ -611,16 +692,25 @@ int main() {
 			return;
 		}
 
+		String equ = String((char*)eq.c_str());
+
 		graphs[index] = (Graph*)malloc(sizeof(Graph));
 
 		graphs[index]->e = new Equation();
-		graphs[index]->e->setString(String((char*)eq.c_str()));
+		graphs[index]->e->setString(equ);
 
 		graphs[index]->xVar = graphs[index]->e->createVariable("x");
 		graphs[index]->tVar = graphs[index]->e->createVariable("t");
 		graphs[index]->atVar = graphs[index]->e->createVariable("at");
+		if (equ.find('=') != -1) {
+			graphs[index]->yVar = graphs[index]->e->createVariable("y");
+			graphs[index]->vals = new double[VAL_NUM*VAL_NUM];
+		} else {
+			graphs[index]->yVar = NULL;
+			graphs[index]->vals = new double[VAL_NUM];
+		}
 		graphs[index]->startTime = glfwGetTime();
-		graphs[index]->vals = new double[VAL_NUM];
+		
 
 		String* result = graphs[index]->e->parse();
 

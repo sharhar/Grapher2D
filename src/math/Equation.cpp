@@ -64,7 +64,6 @@ void loadDefaults(Equation* e) {
 	subOp->func = [](double n1, double n2)->double {
 		return n1 - n2;
 	};
-
 	
 	Operator* divOp = (Operator*)malloc(sizeof(Operator));
 	divOp->name = '/';
@@ -77,7 +76,23 @@ void loadDefaults(Equation* e) {
 	powOp->name = '^';
 	powOp->order = 6;
 	powOp->func = [](double n1, double n2)->double {
+		int pi = (int)(n2);
+		if (n2 == (double)(pi)) {
+			double result = n1;
+			for (int i = 1; i < pi;i++) {
+				result *= n1;
+			}
+
+			return result;
+		}
 		return pow(n1, n2);
+	};
+
+	Operator* equOp = (Operator*)malloc(sizeof(Operator));
+	equOp->name = '=';
+	equOp->order = 100;
+	equOp->func = [](double n1, double n2)->double {
+		return n1 - n2;
 	};
 
 	e->addOperator(addOp);
@@ -85,6 +100,7 @@ void loadDefaults(Equation* e) {
 	e->addOperator(subOp);
 	e->addOperator(divOp);
 	e->addOperator(powOp);
+	e->addOperator(equOp);
 
 
 	Function* funcTan = (Function*)malloc(sizeof(Function));
