@@ -31,7 +31,7 @@ typedef struct Token {
 } Token;
 
 void** parseExpression(std::vector<Node*> nodes, Equation* e);
-double evalNode(Node* node, Node* prev, Equation* e);
+double evalNode(Node* node, Equation* e);
 
 void* Equation::allocNode() {
 	Node* result = (Node*)malloc(sizeof(Node));
@@ -745,38 +745,42 @@ void** parseExpression(std::vector<Node*> nodes, Equation* e) {
 
 double Equation::eval() {
 	Node* root = (Node*)m_rootNode;
-	double result = evalNode(root, NULL, this);
+	double result = evalNode(root, this);
 	return result;
 }
 
-double evalNode(Node* node, Node* prev, Equation* e) {
+double evalNode(Node* node, Equation* e) {
 	if (node->type == NODE_TYPE_ZRO) {
 		return 0;
-	} else if (node->type == NODE_TYPE_NUM) {
+	}
+	else if (node->type == NODE_TYPE_NUM) {
 		return ((double*)(node->value[0]))[0];
-	} else if (node->type == NODE_TYPE_VAR) {
+	}
+	else if (node->type == NODE_TYPE_VAR) {
 		Variable* var = (Variable*)node->value[0];
 		return var->value;
-	} else if (node->type == NODE_TYPE_OPP) {
+	}
+	else if (node->type == NODE_TYPE_OPP) {
 		Operator* op = (Operator*)node->value[1];
 		Node* prev = node->children[0];
 		Node* next = node->children[1];
 
-		double prevVal = evalNode(prev, node, e);
-		double nextVal = evalNode(next, node, e);
+		double prevVal = evalNode(prev, e);
+		double nextVal = evalNode(next, e);
 
 		double result = op->func(prevVal, nextVal);
 		return result;
-	} else if (node->type == NODE_TYPE_FFN) {
+	}
+	else if (node->type == NODE_TYPE_FFN) {
 		Function* func = (Function*)node->value[0];
 		if (func == NULL) {
-			return evalNode(node->children[0], node, e);
+			return evalNode(node->children[0], e);
 		}
 
-		double* values = (double*) node->value[1];
+		double* values = (double*)node->value[1];
 
-		for (int i = 0; i < node->childNum;i++) {
-			values[i] = evalNode(node->children[i], node, e);
+		for (int i = 0; i < node->childNum; i++) {
+			values[i] = evalNode(node->children[i], e);
 		}
 
 		double result = func->func(node->childNum, values);

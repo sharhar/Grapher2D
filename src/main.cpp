@@ -4,12 +4,15 @@
 #include <glcorearb.h>
 #include <math.h>
 #include <string>
+#include <thread>
+#include <chrono>
 
 using namespace glui;
 
 #define VAL_NUM 600
 #define ZOOM_PERCENT 0.05
 #define IMPLICIT_SKIP 2
+#define EQ_NUM 4
 
 #define glGenFramebuffers__ glFuncs->glGenFramebuffersM
 #define glGenRenderbuffers__ glFuncs->glGenRenderbuffersM
@@ -40,14 +43,21 @@ typedef struct MGLFuncs {
 	PFNGLBLITFRAMEBUFFERPROC glBlitFramebufferM;
 } MGLFuncs;
 
-typedef struct Graph {
+typedef struct GraphEq {
 	Equation* e;
-	double* vals;
 	Variable* xVar;
 	Variable* tVar;
 	Variable* atVar;
 	Variable* yVar;
+} GraphEq;
+
+typedef struct Graph {
+	GraphEq** eq;
+	int eqNum;
+	double* vals;
 	double startTime;
+	std::thread* th;
+	bool implicit;
 } Graph;
 
 double abs_c(double n1) {
@@ -100,24 +110,43 @@ void drawAxes(int width, int height) {
 	}
 }
 
-void genVals(double* arr, double xl, double xr, Equation* e, Variable* xVar) {
+void threadGenVals(double* arr, double xl, double xr, Graph* g) {
 	double xint = (xr - xl) / (VAL_NUM);
 	for (int i = 0; i < VAL_NUM; i++) {
-		xVar->value = xint*i + xl;
-		arr[i] = e->eval();
+		g->eq[0]->xVar->value = xint*i + xl;
+		arr[i] = g->eq[0]->e->eval();
 	}
 }
 
-void genImplicitVals(double* arr, double xl, double xr, double yd, double yu, Equation* e, Variable* xVar, Variable* yVar) {
+void genVals(double* arr, double xl, double xr, Graph* g) {
+	g->th = new std::thread(threadGenVals, arr, xl, xr, g);
+}
+
+void threadGenImplicitValsSubThread(double* arr, double xl, double xr, double yd, double yu, Graph* g, int index, int start, int stop) {
 	double xint = (xr - xl) / (VAL_NUM);
 	double yint = (yu - yd) / (VAL_NUM);
-	for (int x = 0; x < VAL_NUM; x+=IMPLICIT_SKIP) {
-		xVar->value = xint*x + xl;
-		for (int y = 0; y < VAL_NUM;y+=IMPLICIT_SKIP) {
-			yVar->value = yint*y + yd;
-			arr[x * VAL_NUM + y] = e->eval();
+	for (int x = start; x < stop; x+= IMPLICIT_SKIP) {
+		g->eq[index]->xVar->value = xint*x + xl;
+		for (int y = 0; y < VAL_NUM; y+= IMPLICIT_SKIP) {
+			g->eq[index]->yVar->value = yint*y + yd;
+			arr[x * VAL_NUM + y] = g->eq[index]->e->eval();
 		}
 	}
+}
+
+void threadGenImplicitVals(double* arr, double xl, double xr, double yd, double yu, Graph* g) {
+	std::thread t1(threadGenImplicitValsSubThread, arr, xl, xr, yd, yu, g, 0,   0, 150);
+	std::thread t2(threadGenImplicitValsSubThread, arr, xl, xr, yd, yu, g, 1, 150, 300);
+	std::thread t3(threadGenImplicitValsSubThread, arr, xl, xr, yd, yu, g, 2, 300, 450);
+	std::thread t4(threadGenImplicitValsSubThread, arr, xl, xr, yd, yu, g, 3, 450, 600);
+	t1.join();
+	t2.join();
+	t3.join();
+	t4.join();
+}
+
+void genImplicitVals(double* arr, double xl, double xr, double yd, double yu, Graph* g) {
+	g->th = new std::thread(threadGenImplicitVals, arr, xl, xr, yd, yu, g);
 }
 
 inline void draw4Point(float x, float y) {
@@ -132,10 +161,8 @@ void renderImplicitVals(double* arr, double xl, double xr, double yd, double yu,
 	
 	glBegin(GL_POINTS);
 
-	double tolerace = (xr - xl)/200.0;
-
-	for (int x = 0; x < VAL_NUM; x+=IMPLICIT_SKIP) {
-		for (int y = 0; y < VAL_NUM; y+=IMPLICIT_SKIP) {
+	for (int x = 0; x < VAL_NUM; x+= IMPLICIT_SKIP) {
+		for (int y = 0; y < VAL_NUM; y+= IMPLICIT_SKIP) {
 			double num = arr[x * VAL_NUM + y];
 			
 			if (num == 0) {
@@ -146,24 +173,16 @@ void renderImplicitVals(double* arr, double xl, double xr, double yd, double yu,
 				}
 
 			} else if (x + IMPLICIT_SKIP < VAL_NUM && sign_c(num) != sign_c(arr[(x + IMPLICIT_SKIP) * VAL_NUM + (y)])) {
+				
+				draw4Point(x, y);
+				
 				for (int xt = 0; xt < IMPLICIT_SKIP; xt++) {
 					for (int yt = 0; yt < IMPLICIT_SKIP; yt++) {
 						draw4Point(x + xt, y + yt);
 					}
 				}
-			} else if (x - IMPLICIT_SKIP >= 0 && sign_c(num) != sign_c(arr[(x - IMPLICIT_SKIP) * VAL_NUM + (y)])) {
-				for (int xt = 0; xt < IMPLICIT_SKIP; xt++) {
-					for (int yt = 0; yt < IMPLICIT_SKIP; yt++) {
-						draw4Point(x + xt, y + yt);
-					}
-				}
-			} else if (y + IMPLICIT_SKIP < VAL_NUM && sign_c(num) != sign_c(arr[(x) * VAL_NUM + (y + IMPLICIT_SKIP)])) {
-				for (int xt = 0; xt < IMPLICIT_SKIP; xt++) {
-					for (int yt = 0; yt < IMPLICIT_SKIP; yt++) {
-						draw4Point(x + xt, y + yt);
-					}
-				}
-			} else if (y - IMPLICIT_SKIP >= 0 && sign_c(num) != sign_c(arr[(x) * VAL_NUM + (y - IMPLICIT_SKIP)])) {
+			}else if (y + IMPLICIT_SKIP < VAL_NUM && sign_c(num) != sign_c(arr[(x) * VAL_NUM + (y + IMPLICIT_SKIP)])) {
+				draw4Point(x, y);
 				for (int xt = 0; xt < IMPLICIT_SKIP; xt++) {
 					for (int yt = 0; yt < IMPLICIT_SKIP; yt++) {
 						draw4Point(x + xt, y + yt);
@@ -596,15 +615,42 @@ int main() {
 				continue;
 			}
 
-			graphs[i]->atVar->value = glfwGetTime();
-			graphs[i]->tVar->value = graphs[i]->atVar->value - graphs[i]->startTime;
+			for (int j = 0; j < graphs[i]->eqNum;j++) {
+				graphs[i]->eq[j]->atVar->value = glfwGetTime();
+				graphs[i]->eq[j]->tVar->value = graphs[i]->eq[j]->atVar->value - graphs[i]->startTime;
+			}
+			
+			if (graphs[i]->implicit) {
+				genImplicitVals(graphs[i]->vals, g_left, g_right, g_down, g_up, graphs[i]);
 
-			if (graphs[i]->yVar != NULL) {
-				genImplicitVals(graphs[i]->vals, g_left, g_right, g_down, g_up, graphs[i]->e, graphs[i]->xVar, graphs[i]->yVar);
+			}
+			else {
+				genVals(graphs[i]->vals, g_left, g_right, graphs[i]);
+			}
+		}
+
+		for (int i = 0; i < graphs.size(); i++) {
+			if (graphs[i] == NULL) {
+				continue;
+			}
+
+			if (graphs[i]->th != NULL) {
+				graphs[i]->th->join();
+				delete graphs[i]->th;
+				graphs[i]->th = NULL;
+			}
+		}
+
+		for (int i = 0; i < graphs.size(); i++) {
+			if (graphs[i] == NULL) {
+				continue;
+			}
+
+			if (graphs[i]->implicit) {
 				renderImplicitVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 600, 600, g_colors[i%g_colorNum]);
 
-			} else {
-				genVals(graphs[i]->vals, g_left, g_right, graphs[i]->e, graphs[i]->xVar);
+			}
+			else {
 				renderVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 600, 600, g_colors[i%g_colorNum]);
 			}
 		}
@@ -674,8 +720,19 @@ int main() {
 
 	auto deleteGraph = [&](int index)->void {
 		if (graphs[index] != NULL) {
-			graphs[index]->e->cleanUp();
-			delete graphs[index]->e;
+			for (int i = 0; i < graphs[index]->eqNum;i++) {
+				graphs[index]->eq[i]->e->cleanUp();
+				delete graphs[index]->eq[i]->e;
+			}
+
+			delete[] graphs[index]->eq;
+			
+			if (graphs[index]->th != NULL) {
+				if (graphs[index]->th->joinable()) {
+					graphs[index]->th->join();
+				}
+				delete graphs[index]->th;
+			}
 			delete[] graphs[index]->vals;
 			free(graphs[index]);
 			
@@ -696,23 +753,41 @@ int main() {
 
 		graphs[index] = (Graph*)malloc(sizeof(Graph));
 
-		graphs[index]->e = new Equation();
-		graphs[index]->e->setString(equ);
+		graphs[index]->eq = new GraphEq*[EQ_NUM];
 
-		graphs[index]->xVar = graphs[index]->e->createVariable("x");
-		graphs[index]->tVar = graphs[index]->e->createVariable("t");
-		graphs[index]->atVar = graphs[index]->e->createVariable("at");
+		for (int i = 0; i < EQ_NUM; i++) {
+			graphs[index]->eq[i] = (GraphEq*)malloc(sizeof(GraphEq));
+
+			graphs[index]->eq[i]->e = new Equation();
+			graphs[index]->eq[i]->e->setString(equ);
+
+			graphs[index]->eq[i]->yVar = graphs[index]->eq[i]->e->createVariable("y");
+			graphs[index]->eq[i]->xVar = graphs[index]->eq[i]->e->createVariable("x");
+			graphs[index]->eq[i]->tVar = graphs[index]->eq[i]->e->createVariable("t");
+			graphs[index]->eq[i]->atVar = graphs[index]->eq[i]->e->createVariable("at");
+		}
+
 		if (equ.find('=') != -1) {
-			graphs[index]->yVar = graphs[index]->e->createVariable("y");
-			graphs[index]->vals = new double[VAL_NUM*VAL_NUM];
+			graphs[index]->vals = new double[(VAL_NUM*VAL_NUM)];
+			graphs[index]->implicit = true;
+			
 		} else {
-			graphs[index]->yVar = NULL;
 			graphs[index]->vals = new double[VAL_NUM];
+			graphs[index]->implicit = false;
 		}
 		graphs[index]->startTime = glfwGetTime();
-		
 
-		String* result = graphs[index]->e->parse();
+		graphs[index]->th = NULL;
+
+		String* result = NULL;
+
+		for (int i = 0; i < EQ_NUM; i++) {
+			result = graphs[index]->eq[i]->e->parse();
+
+			if (result != NULL) {
+				break;
+			}
+		}
 
 		if (result != NULL) {
 			std::cout << "Error parsing expression: '" << eq << "'\n";

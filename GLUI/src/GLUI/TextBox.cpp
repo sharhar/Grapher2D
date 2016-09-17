@@ -82,7 +82,7 @@ namespace glui {
 		m_cursorPos += sizeOff;
 		m_prevTextSize = m_text.size();
 
-		if (input::InputData::keys[GLFW_KEY_LEFT] && !m_prevKeys[GLFW_KEY_LEFT] && m_isActive && m_text.size() > 0) {
+		if (input::InputData::keys[GLFW_KEY_LEFT] && !m_prevKeys[GLFW_KEY_LEFT] && m_isActive && m_cursorPos > 0) {
 			m_cursorPos -= 1;
 			m_renderCursor = true;
 			m_time = glfwGetTime();
