@@ -11,7 +11,7 @@ using namespace glui;
 
 #define VAL_NUM 600
 #define ZOOM_PERCENT 0.05
-#define IMPLICIT_SKIP 2
+#define IMPLICIT_SKIP 4
 #define EQ_NUM 4
 
 #define glGenFramebuffers__ glFuncs->glGenFramebuffersM
@@ -29,6 +29,8 @@ double g_up    =  6;
 
 int g_windowWidth = 600;
 int g_windowHeight = 600;
+
+bool g_rendering = false;
 
 int g_colorNum = 5;
 Color* g_colors = new Color[g_colorNum];
@@ -60,12 +62,12 @@ typedef struct Graph {
 	bool implicit;
 } Graph;
 
-double abs_c(double n1) {
+inline double abs_c(double n1) {
 	return n1 > 0 ? n1 : -(n1);
 }
 
-int sign_c(double n1) {
-	return n1 > 0 ? 1 : -1;
+inline int sign_c(double n1) {
+	return n1 >= 0 ? (n1 != 0 ? 1 : 0) : -1;
 }
 
 void drawAxes(int width, int height) {
@@ -134,6 +136,61 @@ void threadGenImplicitValsSubThread(double* arr, double xl, double xr, double yd
 	}
 }
 
+void threadGenImplicitValsSubThreadInterpolate(double* arr, int start, int stop) {
+	for (int x = start; x < stop; x += IMPLICIT_SKIP) {
+		for (int y = 0; y < VAL_NUM; y += IMPLICIT_SKIP) {
+			
+			double m = 0;
+
+			if (y + IMPLICIT_SKIP < VAL_NUM) {
+				double st = arr[x * VAL_NUM + y];
+
+				m = (arr[x* VAL_NUM + y + IMPLICIT_SKIP] - st) / IMPLICIT_SKIP;
+
+				for (int i = 1; i < IMPLICIT_SKIP; i++) {
+					arr[x * VAL_NUM + y + i] = st + m*i;
+				}
+			} else {
+				double st = arr[x * VAL_NUM + y];
+
+				m = (arr[x * VAL_NUM + y] - arr[x * VAL_NUM + y - IMPLICIT_SKIP]) / IMPLICIT_SKIP;
+
+				for (int i = 1; i < IMPLICIT_SKIP && y + i < VAL_NUM; i++) {
+					arr[x * VAL_NUM + y + i] = st + m*i;
+				}
+			}
+		}
+	}
+
+	for (int x = start; x < stop; x += IMPLICIT_SKIP) {
+		if (x + IMPLICIT_SKIP < stop) {
+			int myOff = x*VAL_NUM;
+			int otherOff = (x + IMPLICIT_SKIP)*VAL_NUM;
+
+			for (int y = 0; y < VAL_NUM; y++) {
+				double st = arr[myOff + y];
+				double m = (arr[otherOff + y] - st) / IMPLICIT_SKIP;
+
+				for (int i = 1; i < IMPLICIT_SKIP; i++) {
+						arr[(x + i) * VAL_NUM + y] = st + i*m;
+				}
+			}
+		} else {
+			int myOff = x*VAL_NUM;
+			int otherOff = (x - IMPLICIT_SKIP)*VAL_NUM;
+
+			for (int y = 0; y < VAL_NUM; y++) {
+				double st = arr[myOff + y];
+				double m = (st - arr[otherOff + y]) / IMPLICIT_SKIP;
+
+				for (int i = 1; i < IMPLICIT_SKIP && (x + i) < stop; i++) {
+					arr[(x + i) * VAL_NUM + y] = st + i*m;
+				}
+			}
+		}
+	}
+}
+
 void threadGenImplicitVals(double* arr, double xl, double xr, double yd, double yu, Graph* g) {
 	std::thread t1(threadGenImplicitValsSubThread, arr, xl, xr, yd, yu, g, 0,   0, 150);
 	std::thread t2(threadGenImplicitValsSubThread, arr, xl, xr, yd, yu, g, 1, 150, 300);
@@ -141,53 +198,48 @@ void threadGenImplicitVals(double* arr, double xl, double xr, double yd, double 
 	std::thread t4(threadGenImplicitValsSubThread, arr, xl, xr, yd, yu, g, 3, 450, 600);
 	t1.join();
 	t2.join();
+	std::thread ti1(threadGenImplicitValsSubThreadInterpolate, arr, 0, 150);
 	t3.join();
+	std::thread ti2(threadGenImplicitValsSubThreadInterpolate, arr, 150, 300);
 	t4.join();
+	std::thread ti3(threadGenImplicitValsSubThreadInterpolate, arr, 300, 450);
+	std::thread ti4(threadGenImplicitValsSubThreadInterpolate, arr, 450, 600);
+	ti1.join();
+	ti2.join();
+	ti3.join();
+	ti4.join();
 }
 
 void genImplicitVals(double* arr, double xl, double xr, double yd, double yu, Graph* g) {
 	g->th = new std::thread(threadGenImplicitVals, arr, xl, xr, yd, yu, g);
 }
 
-inline void draw4Point(float x, float y) {
-	glVertex2f(x, y);
-	glVertex2f(x + 1, y);
-	glVertex2f(x + 1, y + 1);
-	glVertex2f(x, y + 1);
-}
-
 void renderImplicitVals(double* arr, double xl, double xr, double yd, double yu, int width, int height, Color color) {
 	glColor4f(color.r, color.g, color.b, 1);
 	
-	glBegin(GL_POINTS);
+	float lineWidthHalf = 1;
 
-	for (int x = 0; x < VAL_NUM; x+= IMPLICIT_SKIP) {
-		for (int y = 0; y < VAL_NUM; y+= IMPLICIT_SKIP) {
+	glBegin(GL_QUADS);
+
+	for (int x = 0; x < VAL_NUM; x++) {
+		for (int y = 0; y < VAL_NUM; y++) {
 			double num = arr[x * VAL_NUM + y];
 			
 			if (num == 0) {
-				for (int xt = 0; xt < IMPLICIT_SKIP;xt++) {
-					for (int yt = 0; yt < IMPLICIT_SKIP; yt++) {
-						draw4Point(x + xt, y + yt);
-					}
-				}
-
-			} else if (x + IMPLICIT_SKIP < VAL_NUM && sign_c(num) != sign_c(arr[(x + IMPLICIT_SKIP) * VAL_NUM + (y)])) {
-				
-				draw4Point(x, y);
-				
-				for (int xt = 0; xt < IMPLICIT_SKIP; xt++) {
-					for (int yt = 0; yt < IMPLICIT_SKIP; yt++) {
-						draw4Point(x + xt, y + yt);
-					}
-				}
-			}else if (y + IMPLICIT_SKIP < VAL_NUM && sign_c(num) != sign_c(arr[(x) * VAL_NUM + (y + IMPLICIT_SKIP)])) {
-				draw4Point(x, y);
-				for (int xt = 0; xt < IMPLICIT_SKIP; xt++) {
-					for (int yt = 0; yt < IMPLICIT_SKIP; yt++) {
-						draw4Point(x + xt, y + yt);
-					}
-				}
+				glVertex2f(x - lineWidthHalf, y - lineWidthHalf);
+				glVertex2f(x + lineWidthHalf, y - lineWidthHalf);
+				glVertex2f(x + lineWidthHalf, y + lineWidthHalf);
+				glVertex2f(x - lineWidthHalf, y + lineWidthHalf);
+			} else if (x + 1 < VAL_NUM && sign_c(num) != sign_c(arr[(x + 1) * VAL_NUM + (y)])) {
+				glVertex2f(x - lineWidthHalf, y - lineWidthHalf);
+				glVertex2f(x + lineWidthHalf, y - lineWidthHalf);
+				glVertex2f(x + lineWidthHalf, y + lineWidthHalf);
+				glVertex2f(x - lineWidthHalf, y + lineWidthHalf);
+			}else if (y + 1 < VAL_NUM && sign_c(num) != sign_c(arr[(x) * VAL_NUM + (y + 1)])) {
+				glVertex2f(x - lineWidthHalf, y - lineWidthHalf);
+				glVertex2f(x + lineWidthHalf, y - lineWidthHalf);
+				glVertex2f(x + lineWidthHalf, y + lineWidthHalf);
+				glVertex2f(x - lineWidthHalf, y + lineWidthHalf);
 			}
 		}
 	}
@@ -610,6 +662,8 @@ int main() {
 		drawGrid(g_left, g_right, g_down, g_up, 600, 600);
 		drawAxes(600, 600);
 
+		g_rendering = true;
+	
 		for (int i = 0; i < graphs.size(); i++) {
 			if (graphs[i] == NULL) {
 				continue;
@@ -641,6 +695,8 @@ int main() {
 			}
 		}
 
+		g_rendering = false;
+
 		for (int i = 0; i < graphs.size(); i++) {
 			if (graphs[i] == NULL) {
 				continue;
@@ -669,6 +725,8 @@ int main() {
 		glGetError();
 #endif
 		glBindFramebuffer__(GL_FRAMEBUFFER, panel->getFBO());
+
+		glFinish();
 	},
 	[](GLPanelMouseData* data)->void {
 		if ((data->difference.x != 0 || data->difference.y != 0) && data->leftDown) {
@@ -757,6 +815,7 @@ int main() {
 
 		for (int i = 0; i < EQ_NUM; i++) {
 			graphs[index]->eq[i] = (GraphEq*)malloc(sizeof(GraphEq));
+			graphs[index]->eqNum = EQ_NUM;
 
 			graphs[index]->eq[i]->e = new Equation();
 			graphs[index]->eq[i]->e->setString(equ);
@@ -844,7 +903,6 @@ int main() {
 	g_colors[4] = { 0.8f, 0.2f , 0.8f };
 
 	while (win.isOpen()) {
-
 		win.poll();
 		
 		panel->poll();
