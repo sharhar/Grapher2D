@@ -40,7 +40,7 @@ namespace glui {
 		void callbacks::key(int key, int state) {
 			InputData::keys[key] = state;
 			if (InputData::textString != NULL && state == GLFW_PRESS) {
-				if (key == GLFW_KEY_BACKSPACE && InputData::textString->size() != 0) {
+				if (key == GLFW_KEY_BACKSPACE && InputData::textInsertPoint != 0) {
 					InputData::textString->replace(InputData::textInsertPoint - 1, 1, "");
 				} else if (key == GLFW_KEY_ENTER && InputData::textBoxEnterFunc != NULL) {
 					(*InputData::textBoxEnterFunc)();

@@ -30,8 +30,6 @@ double g_up    =  6;
 int g_windowWidth = 600;
 int g_windowHeight = 600;
 
-bool g_rendering = false;
-
 int g_colorNum = 5;
 Color* g_colors = new Color[g_colorNum];
 
@@ -60,7 +58,15 @@ typedef struct Graph {
 	double startTime;
 	std::thread* th;
 	bool implicit;
+	bool del;
 } Graph;
+
+typedef struct GraphData {
+	TextBox* textBox;
+	Button* button;
+	Graph* graph;
+	bool del;
+} GraphData;
 
 inline double abs_c(double n1) {
 	return n1 > 0 ? n1 : -(n1);
@@ -208,6 +214,10 @@ void threadGenImplicitVals(double* arr, double xl, double xr, double yd, double 
 	ti2.join();
 	ti3.join();
 	ti4.join();
+
+	for (int i = 0; i < VAL_NUM*VAL_NUM;i++) {
+			arr[i] = (double)sign_c(arr[i]);
+	}
 }
 
 void genImplicitVals(double* arr, double xl, double xr, double yd, double yu, Graph* g) {
@@ -224,18 +234,18 @@ void renderImplicitVals(double* arr, double xl, double xr, double yd, double yu,
 	for (int x = 0; x < VAL_NUM; x++) {
 		for (int y = 0; y < VAL_NUM; y++) {
 			double num = arr[x * VAL_NUM + y];
-			
+
 			if (num == 0) {
 				glVertex2f(x - lineWidthHalf, y - lineWidthHalf);
 				glVertex2f(x + lineWidthHalf, y - lineWidthHalf);
 				glVertex2f(x + lineWidthHalf, y + lineWidthHalf);
 				glVertex2f(x - lineWidthHalf, y + lineWidthHalf);
-			} else if (x + 1 < VAL_NUM && sign_c(num) != sign_c(arr[(x + 1) * VAL_NUM + (y)])) {
+			} else if (x + 1 < VAL_NUM && num != arr[(x + 1) * VAL_NUM + (y)]) {
 				glVertex2f(x - lineWidthHalf, y - lineWidthHalf);
 				glVertex2f(x + lineWidthHalf, y - lineWidthHalf);
 				glVertex2f(x + lineWidthHalf, y + lineWidthHalf);
 				glVertex2f(x - lineWidthHalf, y + lineWidthHalf);
-			}else if (y + 1 < VAL_NUM && sign_c(num) != sign_c(arr[(x) * VAL_NUM + (y + 1)])) {
+			}else if (y + 1 < VAL_NUM && num != arr[(x) * VAL_NUM + (y + 1)]) {
 				glVertex2f(x - lineWidthHalf, y - lineWidthHalf);
 				glVertex2f(x + lineWidthHalf, y - lineWidthHalf);
 				glVertex2f(x + lineWidthHalf, y + lineWidthHalf);
@@ -605,6 +615,7 @@ int main() {
 	std::vector<Button*> buttons;
 	std::vector<TextBox*> textBoxes;
 	std::vector<Graph*> graphs;
+	std::vector<GraphData*> datas;
 
 	MGLFuncs* glFuncs =  (MGLFuncs*)malloc(sizeof(MGLFuncs));
 
@@ -643,8 +654,6 @@ int main() {
 
 	GLPanel* panel;
 
-	int delindex = -1;
-
 	panel = new GLPanel({ 390, 10, 600, 600 }, { 600, 600 }, layout,
 	[]()->void {
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -661,8 +670,6 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		drawGrid(g_left, g_right, g_down, g_up, 600, 600);
 		drawAxes(600, 600);
-
-		g_rendering = true;
 	
 		for (int i = 0; i < graphs.size(); i++) {
 			if (graphs[i] == NULL) {
@@ -694,8 +701,6 @@ int main() {
 				graphs[i]->th = NULL;
 			}
 		}
-
-		g_rendering = false;
 
 		for (int i = 0; i < graphs.size(); i++) {
 			if (graphs[i] == NULL) {
@@ -837,6 +842,7 @@ int main() {
 		graphs[index]->startTime = glfwGetTime();
 
 		graphs[index]->th = NULL;
+		graphs[index]->del = false;
 
 		String* result = NULL;
 
@@ -865,6 +871,8 @@ int main() {
 		Rectangle boundsa = addGraphButton->getBounds();
 		addGraphButton->setPos({ boundsa.x, boundsa.y - 60 });
 
+		GraphData* data = (GraphData*)malloc(sizeof(GraphData));
+
 		int bSize = buttons.size();
 
 		TextBox* textBox = new TextBox({ 10, (float)(560 - 60.0f * buttons.size()) + 10, 335, 30 }, layout, { textStyle , 1, 2, theme });
@@ -872,24 +880,21 @@ int main() {
 		textBox->setEnterFunc([bSize, textBox, setGraph]() -> void { setGraph(textBox->m_text, bSize); });
 
 		Button* button = new Button({ 355, (float)(560 - 60.0f * buttons.size()) + 10, 25, 30 }, layout, "X", { textStyle,
-			[&addGraphButton, &buttons, &deleteGraph, &graphs, &textBoxes, bSize, &delindex]()->void {
-				if (buttons.size() == 1) {
-					deleteGraph(bSize);
-					graphs[bSize] = NULL;
-
-					textBoxes[bSize]->clearText();
-
-					return;
-				}
-
-				delindex = bSize;
+			[&addGraphButton, &buttons, &deleteGraph, &graphs, &textBoxes, data]()->void {
+				data->del = true;
 			}, 
 		2, theme
 		});
 
+		data->button = button;
+		data->textBox = textBox;
+		data->graph = NULL;
+		data->del = false;
+
 		textBoxes.push_back(textBox);
 		buttons.push_back(button);
 		graphs.push_back(NULL);
+		datas.push_back(data);
 	};
 
 	addGraphButton = new Button({ 10 - 2, 570, 360 / 2, 40 }, layout, "Add Graph", { buttonStyle, addGraphButtonCallback, 3, theme });
@@ -921,20 +926,29 @@ int main() {
 			t->poll();
 		}
 
-		if (delindex != -1) {
-			Rectangle bounds = addGraphButton->getBounds();
-			addGraphButton->setPos({ bounds.x, bounds.y + 60 });
+		for (int i = 0; i < graphs.size();i++) {
+			if (datas[i]->del) {
+				Rectangle bounds = addGraphButton->getBounds();
+				addGraphButton->setPos({ bounds.x, bounds.y + 60 });
 
-			deleteGraph(delindex);
-			graphs.erase(graphs.begin() + delindex);
+				deleteGraph(i);
+				graphs.erase(graphs.begin() + i);
 
-			delete buttons[delindex];
-			buttons.erase(buttons.begin() + delindex);
+				delete buttons[i];
+				buttons.erase(buttons.begin() + i);
 
-			delete textBoxes[delindex];
-			textBoxes.erase(textBoxes.begin() + delindex);
+				delete textBoxes[i];
+				textBoxes.erase(textBoxes.begin() + i);
 
-			delindex = -1;
+				free(datas[i]);
+				datas.erase(datas.begin() + i);
+
+				break;
+			}
+		}
+
+		if (graphs.size() < 1) {
+			addGraphButtonCallback();
 		}
 
 		Renderer::clear({0.6f, 0.75f, 1});
