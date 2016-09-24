@@ -641,6 +641,8 @@ int main() {
 	theme.outline = color::black;
 	theme.press = color::darkGrey;
 	theme.text = color::black;
+	theme.popupBackground = { 0.6f * 0.8f, 0.75f * 0.8f, 1};
+	theme.popupText = color::black;
 
 	TextStyle textStyle = { 20, font20 };
 	TextStyle buttonStyle = { 24, font24 };
@@ -860,8 +862,26 @@ int main() {
 		}
 
 		if (result != NULL) {
-			std::cout << "Error parsing expression: '" << eq << "'\n";
-			std::cout << "Error: " << *result << "\n";
+			char** chars = new char*[1];
+			chars[0] = "Ok";
+
+			std::string text = "Error parsing expression: \n" + 
+				std::string(1, '"') + eq + std::string(1, '"') + 
+				"\n\n" + 
+				"Error: " + (*result).getstdstring();
+
+			PopupDescriptor pDesc = {};
+			pDesc.width = 300;
+			pDesc.height = 200;
+			pDesc.title = "Parsing Error!";
+			pDesc.text = text.c_str();
+			pDesc.btnNum = 1;
+			pDesc.btnText = (const char**)chars;
+			pDesc.window = &win;
+			pDesc.bodyTextStyle = textStyle;
+			pDesc.buttonTextStyle = buttonStyle;
+
+			Window::popup(pDesc, theme);
 
 			delete result;
 			deleteGraph(index);

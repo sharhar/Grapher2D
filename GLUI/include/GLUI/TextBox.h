@@ -2,6 +2,7 @@
 
 #include <GLUI/Utils.h>
 #include <GLUI/Input.h>
+#include <GLUI/GLUIObject.h>
 #include <functional>
 
 namespace glui {

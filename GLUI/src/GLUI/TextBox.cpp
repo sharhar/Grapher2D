@@ -109,7 +109,7 @@ namespace glui {
 
 	void TextBox::render() {
 		//Get offset of cursor
-		Character** chars = (Character**)m_desc.style.font->chars;
+		Character** chars = (Character**)m_desc.style.font->chars[m_desc.style.font->current];
 
 		float xOff = 0;
 		float s = m_desc.style.size / m_desc.style.font->size;
