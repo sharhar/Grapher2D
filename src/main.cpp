@@ -573,6 +573,39 @@ GLFWimage* genIcon() {
 	return img;
 }
 
+GLuint genFBO(MGLFuncs* glFuncs, int samples, int width, int height) {
+	glGenFramebuffers__ = (PFNGLGENFRAMEBUFFERSPROC)glfwGetProcAddress("glGenFramebuffers");
+	glGenRenderbuffers__ = (PFNGLGENRENDERBUFFERSPROC)glfwGetProcAddress("glGenRenderbuffers");
+	glBindFramebuffer__ = (PFNGLBINDFRAMEBUFFERPROC)glfwGetProcAddress("glBindFramebuffer");
+	glBindRenderbuffer__ = (PFNGLBINDRENDERBUFFERPROC)glfwGetProcAddress("glBindRenderbuffer");
+	glRenderbufferStorageMultisample__ = (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)glfwGetProcAddress("glRenderbufferStorageMultisample");
+	glFramebufferRenderbuffer__ = (PFNGLFRAMEBUFFERRENDERBUFFERPROC)glfwGetProcAddress("glFramebufferRenderbuffer");
+	glBlitFramebuffer__ = (PFNGLBLITFRAMEBUFFERPROC)glfwGetProcAddress("glBlitFramebuffer");
+
+	GLuint fbo = 0;
+	GLuint colorRenderBuffer = 0;
+	GLuint depthRenderBuffer = 0;
+
+	glGenRenderbuffers__(1, &colorRenderBuffer);
+	glGenRenderbuffers__(1, &depthRenderBuffer);
+
+	glGenFramebuffers__(1, &fbo);
+	glBindFramebuffer__(GL_FRAMEBUFFER, fbo);
+
+	glBindRenderbuffer__(GL_RENDERBUFFER, colorRenderBuffer);
+	glRenderbufferStorageMultisample__(GL_RENDERBUFFER, samples, GL_RGBA8, width, height);
+	glFramebufferRenderbuffer__(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorRenderBuffer);
+
+	glBindRenderbuffer__(GL_RENDERBUFFER, depthRenderBuffer);
+	glRenderbufferStorageMultisample__(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, width, height);
+	glFramebufferRenderbuffer__(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBuffer);
+
+	glBindRenderbuffer__(GL_RENDERBUFFER, 0);
+	glBindFramebuffer__(GL_FRAMEBUFFER, 0);
+
+	return fbo;
+}
+
 int main() {
 	GLUI::init();
 
@@ -617,40 +650,12 @@ int main() {
 	std::vector<Graph*> graphs;
 	std::vector<GraphData*> datas;
 
-	MGLFuncs* glFuncs =  (MGLFuncs*)malloc(sizeof(MGLFuncs));
-
-	glGenFramebuffers__ = (PFNGLGENFRAMEBUFFERSPROC)glfwGetProcAddress("glGenFramebuffers");
-	glGenRenderbuffers__ = (PFNGLGENRENDERBUFFERSPROC)glfwGetProcAddress("glGenRenderbuffers");
-	glBindFramebuffer__ = (PFNGLBINDFRAMEBUFFERPROC)glfwGetProcAddress("glBindFramebuffer");
-	glBindRenderbuffer__ = (PFNGLBINDRENDERBUFFERPROC)glfwGetProcAddress("glBindRenderbuffer");
-	glRenderbufferStorageMultisample__ = (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)glfwGetProcAddress("glRenderbufferStorageMultisample");
-	glFramebufferRenderbuffer__ = (PFNGLFRAMEBUFFERRENDERBUFFERPROC)glfwGetProcAddress("glFramebufferRenderbuffer");
-	glBlitFramebuffer__ = (PFNGLBLITFRAMEBUFFERPROC)glfwGetProcAddress("glBlitFramebuffer");
-
 	int frameBufferWidth, frameBufferHeight;
 	glfwGetFramebufferSize((GLFWwindow*) win.getGLFWwindow(), &frameBufferWidth, &frameBufferHeight);
 
 	int samples = 4;
-	GLuint fbo = 0;
-	GLuint colorRenderBuffer = 0;
-	GLuint depthRenderBuffer = 0;
-
-	glGenRenderbuffers__(1, &colorRenderBuffer);
-	glGenRenderbuffers__(1, &depthRenderBuffer);
-
-	glGenFramebuffers__(1, &fbo);
-	glBindFramebuffer__(GL_FRAMEBUFFER ,fbo);
-
-	glBindRenderbuffer__(GL_RENDERBUFFER, colorRenderBuffer);
-	glRenderbufferStorageMultisample__(GL_RENDERBUFFER, samples, GL_RGBA8, frameBufferWidth, frameBufferHeight);
-	glFramebufferRenderbuffer__(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorRenderBuffer);
-
-	glBindRenderbuffer__(GL_RENDERBUFFER, depthRenderBuffer);
-	glRenderbufferStorageMultisample__(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, frameBufferWidth, frameBufferHeight);
-	glFramebufferRenderbuffer__(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBuffer);
-	
-	glBindRenderbuffer__(GL_RENDERBUFFER, 0);
-	glBindFramebuffer__(GL_FRAMEBUFFER, 0);
+	MGLFuncs* glFuncs = (MGLFuncs*)malloc(sizeof(MGLFuncs));
+	GLuint fbo = genFBO(glFuncs, samples, frameBufferWidth, frameBufferHeight);
 
 	GLPanel* panel;
 
