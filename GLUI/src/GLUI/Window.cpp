@@ -24,12 +24,12 @@ namespace glui {
 		input::callbacks::mouseScroll(yoffset);
 	}
 
-	static void focusCallback(GLFWwindow* window, int focused) {
+	void focusCallback(GLFWwindow* window, int focused) {
 		Window* win = (Window*) glfwGetWindowUserPointer(window);
 		win->m_focused = focused;
 	}
 
-	static void posCallback(GLFWwindow* window, int xpos, int ypos) {
+	void posCallback(GLFWwindow* window, int xpos, int ypos) {
 		Window* win = (Window*)glfwGetWindowUserPointer(window);
 		win->m_xpos = xpos;
 		win->m_ypos = ypos;
@@ -153,7 +153,7 @@ namespace glui {
 						}, 3, theme
 					};
 
-					Rectangle rect = { 10 + (sizex + 10)*i, 10, sizex, 50 };
+					Rectangle rect = { (float) (10 + (sizex + 10)*i), 10, (float)(sizex), 50 };
 
 					Button* button = new Button(rect, layout, std::string(desc.btnText[i]), bDesc);
 
