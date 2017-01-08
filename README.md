@@ -14,3 +14,11 @@ Must have an OpenGL 3.3+ capable graphics card and drivers
 
 ##Compiling
 If you dont want to use the prebuilt binaries from the [project website](http://sharhar.ddns.net/projects.html), then you can build the project yourself. To build the project use cmake to generate the respective build files for your OS (internet connection required to download all the dependecies). Then build. It will build all the dependencies and link them automatically. The Executable will be in the bin folder in the cmake build directory.
+
+##Dependencies
+This project uses a library that I made called GLUI for window management and UI rendering. 
+<br>
+The dependecies of this library are:
+* [GLFW] (http://www.glfw.org/) 3.2
+* [FreeType] (https://www.freetype.org/) 2.6
+* [glcorearb.h] (https://www.opengl.org/registry/api/GL/glcorearb.h)
