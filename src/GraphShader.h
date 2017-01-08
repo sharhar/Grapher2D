@@ -31,7 +31,7 @@ private:
 	GLuint fragmentShader;
 	GraphShaderFuncs* funcs;
 
-	GLint upLoc, downLoc, leftLoc, rightLoc;
+	GLint upLoc, downLoc, leftLoc, rightLoc, tLoc, atLoc;
 
 public:
 	bool compiled;
@@ -40,7 +40,7 @@ public:
 
 	void bind();
 	void unbind();
-	void setUniforms(float up, float down, float left, float right);
+	void setUniforms(float up, float down, float left, float right, float time, float atime);
 	void cleanUp();
 };
 

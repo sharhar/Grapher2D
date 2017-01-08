@@ -71,13 +71,15 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 	std::string fragSource = "";
 
 	fragSource += "#version 330 core\n";
+	fragSource += "uniform float t;\n";
+	fragSource += "uniform float at;\n";
 	fragSource += "in vec2 coord;\n";
 	fragSource += "out vec4 out_color;\n";
 	fragSource += "void main(void) {\n";
 	fragSource += "float x = coord.x;\n";
 	fragSource += "float y = coord.y;\n";
-	fragSource += "float t = " + eq + ";\n";
-	fragSource += "out_color = vec4(sign(t)/2.0 + 0.5, 1.0, 0.0, 1.0);\n";
+	fragSource += "float total = " + eq + ";\n";
+	fragSource += "out_color = vec4(sign(total)/2.0 + 0.5, 1.0, 0.0, 1.0);\n";
 	fragSource += "}\n";
 
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -136,13 +138,17 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 	downLoc = glGetUniformLocation(shaderProgram, "down");
 	leftLoc = glGetUniformLocation(shaderProgram, "left");
 	rightLoc = glGetUniformLocation(shaderProgram, "right");
+	tLoc = glGetUniformLocation(shaderProgram, "t");
+	atLoc = glGetUniformLocation(shaderProgram, "at");
 }
 
-void GraphCalcShader::setUniforms(float up, float down, float left, float right) {
+void GraphCalcShader::setUniforms(float up, float down, float left, float right, float time, float atime) {
 	glUniform1f(upLoc, up);
 	glUniform1f(downLoc, down);
 	glUniform1f(leftLoc, left);
 	glUniform1f(rightLoc, right);
+	glUniform1f(tLoc, time);
+	glUniform1f(atLoc, atime);
 }
 
 void GraphCalcShader::bind() {

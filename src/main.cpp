@@ -450,13 +450,15 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		drawGrid(g_left, g_right, g_down, g_up, 600, 600);
 		drawAxes(600, 600);
-	
+		
+		float time = glfwGetTime();
+
 		for (int i = 0; i < graphs.size(); i++) {
 			if (graphs[i] == NULL) {
 				continue;
 			}
 
-			graphs[i]->glg->render(fbo, g_up, g_down, g_left, g_right);
+			graphs[i]->glg->render(fbo, g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
 		}
 
 		drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, &color::black);
@@ -559,6 +561,8 @@ int main() {
 		
 		equation->createVariable("y");
 		equation->createVariable("x");
+		equation->createVariable("t");
+		equation->createVariable("at");
 		
 		String* result = NULL;
 
@@ -570,6 +574,7 @@ int main() {
 			graphs[index]->del = false;
 
 			graphs[index]->glg = new GLGraph(equation);
+			graphs[index]->startTime = glfwGetTime();
 		} else {
 			char** chars = new char*[1];
 			chars[0] = "Ok";

@@ -72,12 +72,12 @@ GLGraph::GLGraph(Equation* e) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void GLGraph::render(GLuint pfbo, float up, float down, float left, float right) {
+void GLGraph::render(GLuint pfbo, float up, float down, float left, float right, float time, float atime) {
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glViewport(0, 0, 600, 600);
 
 	calcShader->bind();
-	calcShader->setUniforms(up, down,left, right);
+	calcShader->setUniforms(up, down,left, right, time, atime);
 	GraphQuad::bind();
 	glEnableVertexAttribArray(0);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -173,15 +173,14 @@ String getNodeString(Node* node) {
 		arg = arg + values[node->childNum - 1];
 
 		String name = *func->name;
-		
+		String result = "";
+
 		if (name == "ln") {
-			name = "log";
-		}
-		else if (name == "log") {
-			name = "log10";
+			result = "log(" + arg + ")";
+		} else {
+			result = name + "(" + arg + ")";
 		}
 
-		String result = name + "(" + arg + ")";
 		return result;
 	}
 
