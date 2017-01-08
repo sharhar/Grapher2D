@@ -31,6 +31,12 @@ public:
 		cStrncpy(buff, init_val, length);
 	}
 
+	String(std::string init_val) :
+		length(cStrlen((char*)init_val.c_str())),
+		buff(new char[length]) {
+		cStrncpy(buff, (char*)init_val.c_str(), length);
+	}
+
 	String(const String& other) :
 		length(other.length),
 		buff(new char[length]) {

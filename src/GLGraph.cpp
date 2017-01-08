@@ -9,6 +9,25 @@
 #define glFramebufferTexture funcs->glFramebufferTexture
 #define glActiveTexture funcs->glActiveTexture
 
+#define NODE_TYPE_OPP 1
+#define NODE_TYPE_NUM 2
+#define NODE_TYPE_FUN 3
+#define NODE_TYPE_FSP 4
+#define NODE_TYPE_VAR 5
+#define NODE_TYPE_FCL 6
+#define NODE_TYPE_EXP 7
+#define NODE_TYPE_FFN 8
+#define NODE_TYPE_ZRO 9
+
+typedef struct Node {
+	int type;
+	int childNum;
+	Node** children;
+	void** value;
+} Node;
+
+String getNodeString(Node* node);
+
 static GLGraphFuncs* getFuncs() {
 	GLGraphFuncs* funcs = (GLGraphFuncs*)malloc(sizeof(GLGraphFuncs));
 
@@ -22,9 +41,14 @@ static GLGraphFuncs* getFuncs() {
 	return funcs;
 }
 
-GLGraph::GLGraph(std::string eq) {
-	calcShader = new GraphCalcShader(eq);
+GLGraph::GLGraph(Equation* e) {
+	String eqt = getNodeString((Node*)e->getRootNode());
+
+	calcShader = new GraphCalcShader(eqt.getstdstring());
 	renderShader = new GraphRenderShader();
+	renderShader->bind();
+	renderShader->setUniforms(0);
+	renderShader->unbind();
 
 	funcs = getFuncs();
 
@@ -66,9 +90,8 @@ void GLGraph::render(GLuint pfbo, float up, float down, float left, float right)
 	glBindTexture(GL_TEXTURE_2D, dtex);
 
 	glActiveTexture(GL_TEXTURE0);
-
+	
 	renderShader->bind();
-	renderShader->setUniforms(0);
 	GraphQuad::bind();
 	glEnableVertexAttribArray(0);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -77,4 +100,90 @@ void GLGraph::render(GLuint pfbo, float up, float down, float left, float right)
 	renderShader->unbind();
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void GLGraph::cleanUp() {
+	calcShader->cleanUp();
+	renderShader->cleanUp();
+
+	delete calcShader;
+	delete renderShader;
+
+
+}
+
+String getNodeString(Node* node) {
+	if (node->type == NODE_TYPE_ZRO) {
+		return "0";
+	}
+	else if (node->type == NODE_TYPE_NUM) {
+		return String(std::to_string(((double*)(node->value[0]))[0]));
+	}
+	else if (node->type == NODE_TYPE_VAR) {
+		Variable* var = (Variable*)node->value[0];
+		return *var->name;
+	}
+	else if (node->type == NODE_TYPE_OPP) {
+		Operator* op = (Operator*)node->value[1];
+		Node* prev = node->children[0];
+		Node* next = node->children[1];
+
+		String prevVal = getNodeString(prev);
+		String nextVal = getNodeString(next);
+
+		String result;
+
+		if (op->name == '+') {
+			result = "(" + prevVal + ")+(" + nextVal + ")";
+		}
+		else if (op->name == '-') {
+			result = "(" + prevVal + ")-(" + nextVal + ")";
+		}
+		else if (op->name == '*') {
+			result = "(" + prevVal + ")*(" + nextVal + ")";
+		}
+		else if (op->name == '/') {
+			result = "(" + prevVal + ")/(" + nextVal + ")";
+		}
+		else if (op->name == '=') {
+			result = "(" + prevVal + ")-(" + nextVal + ")";
+		}
+		else if (op->name == '^') {
+			result = "pow(" + prevVal + "," + nextVal + ")";
+		}
+		return result;
+	}
+	else if (node->type == NODE_TYPE_FFN) {
+		Function* func = (Function*)node->value[0];
+		if (func == NULL) {
+			return getNodeString(node->children[0]);
+		}
+
+		String* values = new String[node->childNum];
+
+		for (int i = 0; i < node->childNum; i++) {
+			values[i] = getNodeString(node->children[i]);
+		}
+
+		String arg = "";
+		for (int i = 0; i < node->childNum - 1; i++) {
+			arg = arg + values[i] + ",";
+		}
+
+		arg = arg + values[node->childNum - 1];
+
+		String name = *func->name;
+		
+		if (name == "ln") {
+			name = "log";
+		}
+		else if (name == "log") {
+			name = "log10";
+		}
+
+		String result = name + "(" + arg + ")";
+		return result;
+	}
+
+	return "";
 }

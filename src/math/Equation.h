@@ -44,4 +44,5 @@ public:
 	double eval();
 	void cleanUp();
 	void* allocNode();
+	void* getRootNode();
 };

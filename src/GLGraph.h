@@ -2,6 +2,8 @@
 
 #include "GraphShader.h"
 #include "GraphQuad.h"
+#include "math/Equation.h"
+#include "utils/String.h"
 
 struct GLGraphFuncs {
 	PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;
@@ -20,7 +22,8 @@ private:
 	GLuint fbo;
 	GLuint dtex;
 public:
-	GLGraph(std::string eq);
+	GLGraph(Equation* e);
 
 	void render(GLuint pfbo, float up, float down, float left, float right);
+	void cleanUp();
 };

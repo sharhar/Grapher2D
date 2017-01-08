@@ -526,8 +526,14 @@ int main() {
 
 	auto deleteGraph = [&](int index)->void {
 		if (graphs[index] != NULL) {
-			free(graphs[index]);
+			if (graphs[index]->glg != NULL) {
+				graphs[index]->glg->cleanUp();
+				delete graphs[index]->glg;
+				graphs[index]->glg = NULL;
+			}
 			
+			free(graphs[index]);
+
 			graphs[index] = NULL;
 		}
 	};
@@ -541,15 +547,30 @@ int main() {
 			return;
 		}
 
-		graphs[index] = (Graph*)malloc(sizeof(Graph));
+		String equ = String((char*)eq.c_str());
+
+		Equation* equation = new Equation();
 		
-		graphs[index]->del = false;
-
-		graphs[index]->glg = new GLGraph(eq);
-
+		if (equ.find('=') != -1) {
+			equation->setString(equ);
+		}	else {
+			equation->setString("(y)-(" + equ + ")");
+		}
+		
+		equation->createVariable("y");
+		equation->createVariable("x");
+		
 		String* result = NULL;
 
-		if (result != NULL) {
+		result = equation->parse();
+
+		if (result == NULL) {
+			graphs[index] = (Graph*)malloc(sizeof(Graph));
+
+			graphs[index]->del = false;
+
+			graphs[index]->glg = new GLGraph(equation);
+		} else {
 			char** chars = new char*[1];
 			chars[0] = "Ok";
 
@@ -574,6 +595,9 @@ int main() {
 			delete result;
 			deleteGraph(index);
 		}
+
+		equation->cleanUp();
+		delete equation;
 	};
 
 	std::function<void(void)> addGraphButtonCallback = [&]() -> void {

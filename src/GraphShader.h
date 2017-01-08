@@ -14,11 +14,14 @@ struct GraphShaderFuncs {
 	PFNGLATTACHSHADERPROC glAttachShader;
 	PFNGLLINKPROGRAMPROC glLinkProgram;
 	PFNGLVALIDATEPROGRAMPROC glValidateProgram;
-	PFNGLDELETESHADERPROC glDeleteShader;
 	PFNGLBINDATTRIBLOCATIONPROC glBindAttribLocation;
 	PFNGLUSEPROGRAMPROC glUseProgram;
 	PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
 	PFNGLUNIFORM1FPROC glUniform1f;
+	PFNGLUNIFORM1IPROC glUniform1i;
+	PFNGLDETACHSHADERPROC glDetachShader;
+	PFNGLDELETESHADERPROC glDeleteShader;
+	PFNGLDELETEPROGRAMPROC glDeleteProgram;
 };
 
 class GraphCalcShader {
@@ -38,6 +41,7 @@ public:
 	void bind();
 	void unbind();
 	void setUniforms(float up, float down, float left, float right);
+	void cleanUp();
 };
 
 class GraphRenderShader {
@@ -57,4 +61,5 @@ public:
 	void bind();
 	void unbind();
 	void setUniforms(GLuint tex);
+	void cleanUp();
 };

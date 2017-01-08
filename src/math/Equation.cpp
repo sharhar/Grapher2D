@@ -43,6 +43,10 @@ void* Equation::allocNode() {
 	return result;
 }
 
+void* Equation::getRootNode() {
+	return m_rootNode;
+}
+
 void loadDefaults(Equation* e) {
 	Operator* addOp = (Operator*)malloc(sizeof(Operator));
 	addOp->name = '+';

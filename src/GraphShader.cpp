@@ -11,11 +11,14 @@
 #define glAttachShader funcs->glAttachShader
 #define glLinkProgram funcs->glLinkProgram
 #define glValidateProgram funcs->glValidateProgram
-#define glDeleteShader funcs->glDeleteShader
 #define glBindAttribLocation funcs->glBindAttribLocation
 #define glUseProgram funcs->glUseProgram
 #define glGetUniformLocation funcs->glGetUniformLocation
 #define glUniform1f funcs->glUniform1f
+#define glUniform1i funcs->glUniform1i
+#define glDetachShader funcs->glDetachShader
+#define glDeleteShader funcs->glDeleteShader
+#define glDeleteProgram funcs->glDeleteProgram
 
 static GraphShaderFuncs* getFuncs() {
 	GraphShaderFuncs* funcs = (GraphShaderFuncs*)malloc(sizeof(GraphShaderFuncs));
@@ -29,11 +32,14 @@ static GraphShaderFuncs* getFuncs() {
 	glAttachShader = (PFNGLATTACHSHADERPROC)glfwGetProcAddress("glAttachShader");
 	glLinkProgram = (PFNGLLINKPROGRAMPROC)glfwGetProcAddress("glLinkProgram");
 	glValidateProgram = (PFNGLVALIDATEPROGRAMPROC)glfwGetProcAddress("glValidateProgram");
-	glDeleteShader = (PFNGLDELETESHADERPROC)glfwGetProcAddress("glDeleteShader");
 	glBindAttribLocation = (PFNGLBINDATTRIBLOCATIONPROC)glfwGetProcAddress("glBindAttribLocation");
 	glUseProgram = (PFNGLUSEPROGRAMPROC)glfwGetProcAddress("glUseProgram");
 	glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)glfwGetProcAddress("glGetUniformLocation");
 	glUniform1f = (PFNGLUNIFORM1FPROC)glfwGetProcAddress("glUniform1f");
+	glUniform1i = (PFNGLUNIFORM1IPROC)glfwGetProcAddress("glUniform1i");
+	glDetachShader = (PFNGLDETACHSHADERPROC)glfwGetProcAddress("glDetachShader");
+	glDeleteShader = (PFNGLDELETESHADERPROC)glfwGetProcAddress("glDeleteShader");
+	glDeleteProgram = (PFNGLDELETEPROGRAMPROC)glfwGetProcAddress("glDeleteProgram");
 	
 	return funcs;
 }
@@ -258,5 +264,29 @@ void GraphRenderShader::unbind() {
 }
 
 void GraphRenderShader::setUniforms(GLuint tex) {
-	glUniform1f(texLoc, tex);
+	glUniform1i(texLoc, tex);
+}
+
+void GraphRenderShader::cleanUp() {
+	glUseProgram(0);
+
+	glDetachShader(shaderProgram, vertexShader);
+	glDetachShader(shaderProgram, fragmentShader);
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+	glDeleteProgram(shaderProgram);
+
+	free(funcs);
+}
+
+void GraphCalcShader::cleanUp() {
+	glUseProgram(0);
+
+	glDetachShader(shaderProgram, vertexShader);
+	glDetachShader(shaderProgram, fragmentShader);
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+	glDeleteProgram(shaderProgram);
+
+	free(funcs);
 }
