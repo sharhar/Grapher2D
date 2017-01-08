@@ -6,6 +6,7 @@
 #include <string>
 #include <thread>
 #include <chrono>
+#include "GLGraph.h"
 
 using namespace glui;
 
@@ -43,22 +44,10 @@ typedef struct MGLFuncs {
 	PFNGLBLITFRAMEBUFFERPROC glBlitFramebufferM;
 } MGLFuncs;
 
-typedef struct GraphEq {
-	Equation* e;
-	Variable* xVar;
-	Variable* tVar;
-	Variable* atVar;
-	Variable* yVar;
-} GraphEq;
-
 typedef struct Graph {
-	GraphEq** eq;
-	int eqNum;
-	double* vals;
 	double startTime;
-	std::thread* th;
-	bool implicit;
 	bool del;
+	GLGraph* glg;
 } Graph;
 
 typedef struct GraphData {
@@ -116,145 +105,6 @@ void drawAxes(int width, int height) {
 
 		glPopMatrix();
 	}
-}
-
-void threadGenVals(double* arr, double xl, double xr, Graph* g) {
-	double xint = (xr - xl) / (VAL_NUM);
-	for (int i = 0; i < VAL_NUM; i++) {
-		g->eq[0]->xVar->value = xint*i + xl;
-		arr[i] = g->eq[0]->e->eval();
-	}
-}
-
-void genVals(double* arr, double xl, double xr, Graph* g) {
-	g->th = new std::thread(threadGenVals, arr, xl, xr, g);
-}
-
-void threadGenImplicitValsSubThread(double* arr, double xl, double xr, double yd, double yu, Graph* g, int index, int start, int stop) {
-	double xint = (xr - xl) / (VAL_NUM);
-	double yint = (yu - yd) / (VAL_NUM);
-	for (int x = start; x < stop; x+= IMPLICIT_SKIP) {
-		g->eq[index]->xVar->value = xint*x + xl;
-		for (int y = 0; y < VAL_NUM; y+= IMPLICIT_SKIP) {
-			g->eq[index]->yVar->value = yint*y + yd;
-			arr[x * VAL_NUM + y] = g->eq[index]->e->eval();
-		}
-	}
-}
-
-void threadGenImplicitValsSubThreadInterpolate(double* arr, int start, int stop) {
-	for (int x = start; x < stop; x += IMPLICIT_SKIP) {
-		for (int y = 0; y < VAL_NUM; y += IMPLICIT_SKIP) {
-			
-			double m = 0;
-
-			if (y + IMPLICIT_SKIP < VAL_NUM) {
-				double st = arr[x * VAL_NUM + y];
-
-				m = (arr[x* VAL_NUM + y + IMPLICIT_SKIP] - st) / IMPLICIT_SKIP;
-
-				for (int i = 1; i < IMPLICIT_SKIP; i++) {
-					arr[x * VAL_NUM + y + i] = st + m*i;
-				}
-			} else {
-				double st = arr[x * VAL_NUM + y];
-
-				m = (arr[x * VAL_NUM + y] - arr[x * VAL_NUM + y - IMPLICIT_SKIP]) / IMPLICIT_SKIP;
-
-				for (int i = 1; i < IMPLICIT_SKIP && y + i < VAL_NUM; i++) {
-					arr[x * VAL_NUM + y + i] = st + m*i;
-				}
-			}
-		}
-	}
-
-	for (int x = start; x < stop; x += IMPLICIT_SKIP) {
-		if (x + IMPLICIT_SKIP < stop) {
-			int myOff = x*VAL_NUM;
-			int otherOff = (x + IMPLICIT_SKIP)*VAL_NUM;
-
-			for (int y = 0; y < VAL_NUM; y++) {
-				double st = arr[myOff + y];
-				double m = (arr[otherOff + y] - st) / IMPLICIT_SKIP;
-
-				for (int i = 1; i < IMPLICIT_SKIP; i++) {
-						arr[(x + i) * VAL_NUM + y] = st + i*m;
-				}
-			}
-		} else {
-			int myOff = x*VAL_NUM;
-			int otherOff = (x - IMPLICIT_SKIP)*VAL_NUM;
-
-			for (int y = 0; y < VAL_NUM; y++) {
-				double st = arr[myOff + y];
-				double m = (st - arr[otherOff + y]) / IMPLICIT_SKIP;
-
-				for (int i = 1; i < IMPLICIT_SKIP && (x + i) < stop; i++) {
-					arr[(x + i) * VAL_NUM + y] = st + i*m;
-				}
-			}
-		}
-	}
-}
-
-void threadGenImplicitVals(double* arr, double xl, double xr, double yd, double yu, Graph* g) {
-	std::thread t1(threadGenImplicitValsSubThread, arr, xl, xr, yd, yu, g, 0,   0, 150);
-	std::thread t2(threadGenImplicitValsSubThread, arr, xl, xr, yd, yu, g, 1, 150, 300);
-	std::thread t3(threadGenImplicitValsSubThread, arr, xl, xr, yd, yu, g, 2, 300, 450);
-	std::thread t4(threadGenImplicitValsSubThread, arr, xl, xr, yd, yu, g, 3, 450, 600);
-	t1.join();
-	t2.join();
-	std::thread ti1(threadGenImplicitValsSubThreadInterpolate, arr, 0, 150);
-	t3.join();
-	std::thread ti2(threadGenImplicitValsSubThreadInterpolate, arr, 150, 300);
-	t4.join();
-	std::thread ti3(threadGenImplicitValsSubThreadInterpolate, arr, 300, 450);
-	std::thread ti4(threadGenImplicitValsSubThreadInterpolate, arr, 450, 600);
-	ti1.join();
-	ti2.join();
-	ti3.join();
-	ti4.join();
-
-	for (int i = 0; i < VAL_NUM*VAL_NUM;i++) {
-			arr[i] = (double)sign_c(arr[i]);
-	}
-}
-
-void genImplicitVals(double* arr, double xl, double xr, double yd, double yu, Graph* g) {
-	g->th = new std::thread(threadGenImplicitVals, arr, xl, xr, yd, yu, g);
-}
-
-void renderImplicitVals(double* arr, double xl, double xr, double yd, double yu, int width, int height, Color color) {
-	glColor4f(color.r, color.g, color.b, 1);
-	
-	float lineWidthHalf = 1;
-
-	glBegin(GL_QUADS);
-
-	for (int x = 0; x < VAL_NUM; x++) {
-		for (int y = 0; y < VAL_NUM; y++) {
-			double num = arr[x * VAL_NUM + y];
-
-			if (num == 0) {
-				glVertex2f(x - lineWidthHalf, y - lineWidthHalf);
-				glVertex2f(x + lineWidthHalf, y - lineWidthHalf);
-				glVertex2f(x + lineWidthHalf, y + lineWidthHalf);
-				glVertex2f(x - lineWidthHalf, y + lineWidthHalf);
-			} else if (x + 1 < VAL_NUM && num != arr[(x + 1) * VAL_NUM + (y)]) {
-				glVertex2f(x - lineWidthHalf, y - lineWidthHalf);
-				glVertex2f(x + lineWidthHalf, y - lineWidthHalf);
-				glVertex2f(x + lineWidthHalf, y + lineWidthHalf);
-				glVertex2f(x - lineWidthHalf, y + lineWidthHalf);
-			}else if (y + 1 < VAL_NUM && num != arr[(x) * VAL_NUM + (y + 1)]) {
-				glVertex2f(x - lineWidthHalf, y - lineWidthHalf);
-				glVertex2f(x + lineWidthHalf, y - lineWidthHalf);
-				glVertex2f(x + lineWidthHalf, y + lineWidthHalf);
-				glVertex2f(x - lineWidthHalf, y + lineWidthHalf);
-			}
-		}
-	}
-
-	glEnd();
 }
 
 void drawGrid(double xl, double xr, double yd, double yu, int width, int height) {
@@ -417,84 +267,6 @@ void drawNums(double xl, double xr, double yd, double yu, int width, int height,
 
 		Renderer::drawString(str, 10, ty + 2, 15, font, color);
 	}
-}
-
-void renderVals(double* arr, double xl, double xr, double yd, double yu, int width, int height, Color color) {
-	double xint = (width) / (VAL_NUM - 1);
-	double axint = (xr - xl) / (VAL_NUM);
-	double yh = (yu - yd);
-
-	float x1;
-	float y1;
-	float x2;
-	float y2;
-
-	float m;
-
-	float ax1;
-	float ax2;
-	float ay1;
-	float ay2;
-	float ax3;
-	float ax4;
-	float ay3;
-	float ay4;
-
-	glColor3f(color.r, color.g, color.b);
-	glLineWidth(2.5f);
-	glBegin(GL_LINES);
-	for (int i = 1; i < VAL_NUM; i++) {
-		ay1 = arr[i - 1];
-		ay2 = arr[i];
-
-		x1 = xint*(i - 1);
-		x2 = xint*(i);
-
-		y1 = ((ay1 - yd) / yh)*height;
-		y2 = ((ay2 - yd) / yh)*height;
-
-		if (i - 1 > 0 && i + 1 < VAL_NUM) {
-			ax1 = axint*(i - 1) + xl;
-			ax2 = axint*i + xl;
-
-			ay3 = arr[i - 2];
-			ay4 = arr[i + 1];
-
-			ax3 = axint*(i - 2) + xl;
-			ax4 = axint*(i + 1) + xl;
-
-			float m1 = (ay1 - ay3) / (ax1 - ax3);
-			float m2 = (ay2 - ay4) / (ax2 - ax4);
-			float m = (ay1 - ay2) / (ax1 - ax2);
-
-			bool p1 = m1 > 0;
-			bool p2 = m2 > 0;
-			bool p = m > 0;
-
-			if (p1 == p2 && p1 != p && abs_c(m) > 2) {
-				if (p) {
-					glVertex2f(x1, y1);
-					glVertex2f(x1, 0);
-
-					glVertex2f(x2, y2);
-					glVertex2f(x2, height);
-				}
-				else {
-					glVertex2f(x1, y1);
-					glVertex2f(x1, height);
-
-					glVertex2f(x2, y2);
-					glVertex2f(x2, 0);
-				}
-
-				continue;
-			}
-		}
-
-		glVertex2f(x1, y1);
-		glVertex2f(x2, y2);
-	}
-	glEnd();
 }
 
 GLFWimage* genIcon() {
@@ -670,6 +442,7 @@ int main() {
 		glOrtho(0, g_windowWidth, 0, g_windowHeight, -1, 1);
 		glMatrixMode(GL_MODELVIEW);
 
+		glEnable(GL_TEXTURE_2D);
 	},
 	[&]()->void {
 		glBindFramebuffer__(GL_FRAMEBUFFER, fbo);
@@ -683,44 +456,7 @@ int main() {
 				continue;
 			}
 
-			for (int j = 0; j < graphs[i]->eqNum;j++) {
-				graphs[i]->eq[j]->atVar->value = glfwGetTime();
-				graphs[i]->eq[j]->tVar->value = graphs[i]->eq[j]->atVar->value - graphs[i]->startTime;
-			}
-			
-			if (graphs[i]->implicit) {
-				genImplicitVals(graphs[i]->vals, g_left, g_right, g_down, g_up, graphs[i]);
-
-			}
-			else {
-				genVals(graphs[i]->vals, g_left, g_right, graphs[i]);
-			}
-		}
-
-		for (int i = 0; i < graphs.size(); i++) {
-			if (graphs[i] == NULL) {
-				continue;
-			}
-
-			if (graphs[i]->th != NULL) {
-				graphs[i]->th->join();
-				delete graphs[i]->th;
-				graphs[i]->th = NULL;
-			}
-		}
-
-		for (int i = 0; i < graphs.size(); i++) {
-			if (graphs[i] == NULL) {
-				continue;
-			}
-
-			if (graphs[i]->implicit) {
-				renderImplicitVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 600, 600, g_colors[i%g_colorNum]);
-
-			}
-			else {
-				renderVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 600, 600, g_colors[i%g_colorNum]);
-			}
+			graphs[i]->glg->render(fbo, g_up, g_down, g_left, g_right);
 		}
 
 		drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, &color::black);
@@ -790,20 +526,6 @@ int main() {
 
 	auto deleteGraph = [&](int index)->void {
 		if (graphs[index] != NULL) {
-			for (int i = 0; i < graphs[index]->eqNum;i++) {
-				graphs[index]->eq[i]->e->cleanUp();
-				delete graphs[index]->eq[i]->e;
-			}
-
-			delete[] graphs[index]->eq;
-			
-			if (graphs[index]->th != NULL) {
-				if (graphs[index]->th->joinable()) {
-					graphs[index]->th->join();
-				}
-				delete graphs[index]->th;
-			}
-			delete[] graphs[index]->vals;
 			free(graphs[index]);
 			
 			graphs[index] = NULL;
@@ -819,47 +541,13 @@ int main() {
 			return;
 		}
 
-		String equ = String((char*)eq.c_str());
-
 		graphs[index] = (Graph*)malloc(sizeof(Graph));
-
-		graphs[index]->eq = new GraphEq*[EQ_NUM];
-
-		for (int i = 0; i < EQ_NUM; i++) {
-			graphs[index]->eq[i] = (GraphEq*)malloc(sizeof(GraphEq));
-			graphs[index]->eqNum = EQ_NUM;
-
-			graphs[index]->eq[i]->e = new Equation();
-			graphs[index]->eq[i]->e->setString(equ);
-
-			graphs[index]->eq[i]->yVar = graphs[index]->eq[i]->e->createVariable("y");
-			graphs[index]->eq[i]->xVar = graphs[index]->eq[i]->e->createVariable("x");
-			graphs[index]->eq[i]->tVar = graphs[index]->eq[i]->e->createVariable("t");
-			graphs[index]->eq[i]->atVar = graphs[index]->eq[i]->e->createVariable("at");
-		}
-
-		if (equ.find('=') != -1) {
-			graphs[index]->vals = new double[(VAL_NUM*VAL_NUM)];
-			graphs[index]->implicit = true;
-			
-		} else {
-			graphs[index]->vals = new double[VAL_NUM];
-			graphs[index]->implicit = false;
-		}
-		graphs[index]->startTime = glfwGetTime();
-
-		graphs[index]->th = NULL;
+		
 		graphs[index]->del = false;
 
+		graphs[index]->glg = new GLGraph(eq);
+
 		String* result = NULL;
-
-		for (int i = 0; i < EQ_NUM; i++) {
-			result = graphs[index]->eq[i]->e->parse();
-
-			if (result != NULL) {
-				break;
-			}
-		}
 
 		if (result != NULL) {
 			char** chars = new char*[1];
