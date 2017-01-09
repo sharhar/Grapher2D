@@ -24,6 +24,6 @@ private:
 public:
 	GLGraph(Equation* e);
 
-	void render(GLuint pfbo, float up, float down, float left, float right, float time, float atime);
+	void render(GLuint pfbo, glui::Color graphColor, float up, float down, float left, float right, float time, float atime);
 	void cleanUp();
 };

@@ -3,6 +3,7 @@
 #include <string>
 #include <glcorearb.h>
 #include <GLFW/glfw3.h>
+#include <GLUI/GLUI.h>
 
 struct GraphShaderFuncs {
 	PFNGLCREATEPROGRAMPROC glCreateProgram;
@@ -18,6 +19,7 @@ struct GraphShaderFuncs {
 	PFNGLUSEPROGRAMPROC glUseProgram;
 	PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
 	PFNGLUNIFORM1FPROC glUniform1f;
+	PFNGLUNIFORM3FPROC glUniform3f;
 	PFNGLUNIFORM1IPROC glUniform1i;
 	PFNGLDETACHSHADERPROC glDetachShader;
 	PFNGLDELETESHADERPROC glDeleteShader;
@@ -51,7 +53,7 @@ private:
 	GLuint fragmentShader;
 	GraphShaderFuncs* funcs;
 
-	GLint texLoc;
+	GLint texLoc, colorLoc;
 
 public:
 	bool compiled;
@@ -60,6 +62,6 @@ public:
 
 	void bind();
 	void unbind();
-	void setUniforms(GLuint tex);
+	void setUniforms(GLuint tex, glui::Color graphColor);
 	void cleanUp();
 };

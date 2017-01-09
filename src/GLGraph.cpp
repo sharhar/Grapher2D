@@ -46,9 +46,6 @@ GLGraph::GLGraph(Equation* e) {
 
 	calcShader = new GraphCalcShader(eqt.getstdstring());
 	renderShader = new GraphRenderShader();
-	renderShader->bind();
-	renderShader->setUniforms(0);
-	renderShader->unbind();
 
 	funcs = getFuncs();
 
@@ -60,8 +57,8 @@ GLGraph::GLGraph(Equation* e) {
 
 	glGenTextures(1, &dtex);
 	glBindTexture(GL_TEXTURE_2D, dtex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 600, 600,
-		0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 600, 600,
+		0, GL_RGBA, GL_FLOAT, NULL);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -72,7 +69,7 @@ GLGraph::GLGraph(Equation* e) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void GLGraph::render(GLuint pfbo, float up, float down, float left, float right, float time, float atime) {
+void GLGraph::render(GLuint pfbo, glui::Color graphColor, float up, float down, float left, float right, float time, float atime) {
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glViewport(0, 0, 600, 600);
 
@@ -85,6 +82,7 @@ void GLGraph::render(GLuint pfbo, float up, float down, float left, float right,
 	GraphQuad::unbind();
 	calcShader->unbind();
 
+	//*
 	glBindFramebuffer(GL_FRAMEBUFFER, pfbo);
 
 	glBindTexture(GL_TEXTURE_2D, dtex);
@@ -92,6 +90,7 @@ void GLGraph::render(GLuint pfbo, float up, float down, float left, float right,
 	glActiveTexture(GL_TEXTURE0);
 	
 	renderShader->bind();
+	renderShader->setUniforms(0, graphColor);
 	GraphQuad::bind();
 	glEnableVertexAttribArray(0);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -100,6 +99,7 @@ void GLGraph::render(GLuint pfbo, float up, float down, float left, float right,
 	renderShader->unbind();
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
+	//*/
 }
 
 void GLGraph::cleanUp() {
@@ -177,6 +177,20 @@ String getNodeString(Node* node) {
 
 		if (name == "ln") {
 			result = "log(" + arg + ")";
+		} else if (name == "log") {
+			result = "(log(" + arg + ")/log(10))";
+		} else if (name == "cot") {
+			result = "(1/tan(" + arg + "))";
+		} else if (name == "csc") {
+			result = "(1/sin(" + arg + "))";
+		} else if (name == "sec") {
+			result = "(1/cos(" + arg + "))";
+		} else if (name == "acot") {
+			result = "atan(1/(" + arg + "))";
+		} else if (name == "acsc") {
+			result = "asin(1/(" + arg + "))";
+		} else if (name == "asec") {
+			result = "acos(1/(" + arg + "))";
 		} else {
 			result = name + "(" + arg + ")";
 		}

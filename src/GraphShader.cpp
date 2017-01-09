@@ -15,6 +15,7 @@
 #define glUseProgram funcs->glUseProgram
 #define glGetUniformLocation funcs->glGetUniformLocation
 #define glUniform1f funcs->glUniform1f
+#define glUniform3f funcs->glUniform3f
 #define glUniform1i funcs->glUniform1i
 #define glDetachShader funcs->glDetachShader
 #define glDeleteShader funcs->glDeleteShader
@@ -36,6 +37,7 @@ static GraphShaderFuncs* getFuncs() {
 	glUseProgram = (PFNGLUSEPROGRAMPROC)glfwGetProcAddress("glUseProgram");
 	glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)glfwGetProcAddress("glGetUniformLocation");
 	glUniform1f = (PFNGLUNIFORM1FPROC)glfwGetProcAddress("glUniform1f");
+	glUniform3f = (PFNGLUNIFORM3FPROC)glfwGetProcAddress("glUniform3f");
 	glUniform1i = (PFNGLUNIFORM1IPROC)glfwGetProcAddress("glUniform1i");
 	glDetachShader = (PFNGLDETACHSHADERPROC)glfwGetProcAddress("glDetachShader");
 	glDeleteShader = (PFNGLDELETESHADERPROC)glfwGetProcAddress("glDeleteShader");
@@ -73,13 +75,27 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 	fragSource += "#version 330 core\n";
 	fragSource += "uniform float t;\n";
 	fragSource += "uniform float at;\n";
+
+	fragSource += "const float e = 2.718281828459045;\n";
+	fragSource += "const float pi = 3.141592653589793;\n";
+	fragSource += "const float tau = 3.141592653589793 * 2;\n";
+
+	//const float myfloat = 10.0;
+
+	//fragSource += "float packColor(vec4 color) {return ((color.a*2 -1 ) / 256.0 + (color.r*2 - 1) + (color.g*2 - 1) + (color.b*2 - 1) * 256.0) * 256.0;}\n";
+	//fragSource += "vec4 unpackColor(float f) {";
+	//fragSource += "vec4 color;";
+	//fragSource += "color.b = floor(f / 256.0); color.g = floor((f - color.b * 256.0)); color.r = floor((f - color.b * 256.0 - color.g)*256.0); color.a = floor((f - color.b * 256.0 - color.g - color.r / 256.0)*256.0*256.0);";
+	//fragSource += "color = color / 256.0;\n";
+	//fragSource += "return color / 2 + 0.5;}\n";
+
 	fragSource += "in vec2 coord;\n";
 	fragSource += "out vec4 out_color;\n";
 	fragSource += "void main(void) {\n";
 	fragSource += "float x = coord.x;\n";
 	fragSource += "float y = coord.y;\n";
 	fragSource += "float total = " + eq + ";\n";
-	fragSource += "out_color = vec4(sign(total)/2.0 + 0.5, 1.0, 0.0, 1.0);\n";
+	fragSource += "out_color = vec4(sign(total)/2 + 0.5, 0.0, 0.0, 1.0);\n";
 	fragSource += "}\n";
 
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -176,6 +192,7 @@ GraphRenderShader::GraphRenderShader() {
 
 	fragSource += "#version 330 core\n";
 	fragSource += "uniform sampler2D tex;\n";
+	fragSource += "uniform vec3 g_color;\n";
 	fragSource += "in vec2 coord;\n";
 	fragSource += "out vec4 out_color;\n";
 	fragSource += "void main(void) {\n";
@@ -198,7 +215,7 @@ GraphRenderShader::GraphRenderShader() {
 	fragSource += "float d = (texture(tex, vec2(coord.x, coord.y - pxw)).x-0.5)*2;\n";
 
 	fragSource += "if(c == 0 || (coord.x + pxw <= 1.0 && c != r) || (coord.y + pxw <= 1.0 && c != u) ||";
-	fragSource += "	(coord.x - pxw >= 0.0 && c != l) || (coord.y - pxw >= 0.0 && c != d)) {out_color = vec4(0.8, 0.2, 0.2, 1.0); ci = 1;break;}\n";
+	fragSource += "	(coord.x - pxw >= 0.0 && c != l) || (coord.y - pxw >= 0.0 && c != d)) {out_color = vec4(g_color.xyz, 1.0); ci = 1; break;}\n";
 
 	fragSource += "}\n";
 
@@ -259,6 +276,7 @@ GraphRenderShader::GraphRenderShader() {
 	glValidateProgram(shaderProgram);
 
 	texLoc = glGetUniformLocation(shaderProgram, "tex");
+	colorLoc = glGetUniformLocation(shaderProgram, "g_color");
 }
 
 void GraphRenderShader::bind() {
@@ -269,8 +287,9 @@ void GraphRenderShader::unbind() {
 	glUseProgram(0);
 }
 
-void GraphRenderShader::setUniforms(GLuint tex) {
+void GraphRenderShader::setUniforms(GLuint tex, glui::Color graphColor) {
 	glUniform1i(texLoc, tex);
+	glUniform3f(colorLoc, graphColor.r, graphColor.g, graphColor.b);
 }
 
 void GraphRenderShader::cleanUp() {

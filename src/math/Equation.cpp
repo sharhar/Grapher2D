@@ -226,27 +226,10 @@ void loadDefaults(Equation* e) {
 		return input[0] > 0 ? input[0] : -(input[0]);
 	};
 
-	Function* funcMean = (Function*)malloc(sizeof(Function));
-	funcMean->name = new String("mean");
-	funcMean->func = [](int len, double* input)->double {
-		double total = 0;
-		for (int i = 0; i < len;i++) {
-			total += input[i];
-		}
-
-		return total / len;
-	};
-
-	Function* funcGamma = (Function*)malloc(sizeof(Function));
-	funcGamma->name = new String("gamma");
-	funcGamma->func = [](int len, double* input)->double {
-		return tgamma(input[0]);
-	};
-
-	Function* funcFact = (Function*)malloc(sizeof(Function));
-	funcFact->name = new String("fact");
-	funcFact->func = [](int len, double* input)->double {
-		return tgamma(input[0] + 1);
+	Function* funcMod = (Function*)malloc(sizeof(Function));
+	funcMod->name = new String("mod");
+	funcMod->func = [](int len, double* input)->double {
+		return modf(input[0], &input[1]);
 	};
 
 	e->addFunction(funcTan);
@@ -262,14 +245,12 @@ void loadDefaults(Equation* e) {
 	e->addFunction(funcaCsc);
 	e->addFunction(funcaSec);
 	e->addFunction(funcMax);
+	e->addFunction(funcMod);
 	e->addFunction(funcMin);
 	e->addFunction(funcLn);
 	e->addFunction(funcLog);
 	e->addFunction(funcExp);
 	e->addFunction(funcAbs);
-	e->addFunction(funcMean);
-	e->addFunction(funcGamma);
-	e->addFunction(funcFact);
 
 	e->createVariable("e")->value = 2.718281828459045;
 	e->createVariable("pi")->value = 3.141592653589793;
