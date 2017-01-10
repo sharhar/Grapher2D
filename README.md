@@ -13,7 +13,7 @@ Enter the equations into the textboxes and press the enter key to graph them. Yo
 Must have an OpenGL 3.3+ capable graphics card and drivers
 
 ##Compiling
-If you dont want to use the prebuilt binaries from the [project website](http://sharhar.ddns.net/projects.html), then you can build the project yourself. To build the project use cmake to generate the respective build files for your OS (internet connection required to download all the dependecies). Then build. It will build all the dependencies and link them automatically. The Executable will be in the bin folder in the cmake build directory.
+If you dont want to use the prebuilt binaries from the [project website](http://sharhar.github.io/projects.html), then you can build the project yourself. To build the project use cmake to generate the respective build files for your OS (internet connection required to download all the dependecies). Then build. It will build all the dependencies and link them automatically. The Executable will be in the bin folder in the cmake build directory.
 
 ##Dependencies
 All dependencies are downloaded by Cmake when build files are generated.<br>
