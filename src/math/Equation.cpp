@@ -108,80 +108,80 @@ void loadDefaults(Equation* e) {
 
 
 	Function* funcTan = (Function*)malloc(sizeof(Function));
-	funcTan->name = new String("tan");
+	funcTan->name = new String((char*)"tan");
 	funcTan->func = [](int len, double* input)->double {
 		return tan(input[0]);
 	};
 
 	Function* funcSin = (Function*)malloc(sizeof(Function));
-	funcSin->name = new String("sin");
+	funcSin->name = new String((char*)"sin");
 	funcSin->func = [](int len, double* input)->double {
 		return sin(input[0]);
 	};
 
 	
 	Function* funcCos = (Function*)malloc(sizeof(Function));
-	funcCos->name = new String("cos");
+	funcCos->name = new String((char*)"cos");
 	funcCos->func = [](int len, double* input)->double {
 		return cos(input[0]);
 	};
 
 	Function* funcCot = (Function*)malloc(sizeof(Function));
-	funcCot->name = new String("cot");
+	funcCot->name = new String((char*)"cot");
 	funcCot->func = [](int len, double* input)->double {
 		return 1/tan(input[0]);
 	};
 
 	Function* funcCsc = (Function*)malloc(sizeof(Function));
-	funcCsc->name = new String("csc");
+	funcCsc->name = new String((char*)"csc");
 	funcCsc->func = [](int len, double* input)->double {
 		return 1/sin(input[0]);
 	};
 
 	Function* funcSec = (Function*)malloc(sizeof(Function));
-	funcSec->name = new String("sec");
+	funcSec->name = new String((char*)"sec");
 	funcSec->func = [](int len, double* input)->double {
 		return 1/cos(input[0]);
 	};
 
 	Function* funcaTan = (Function*)malloc(sizeof(Function));
-	funcaTan->name = new String("atan");
+	funcaTan->name = new String((char*)"atan");
 	funcaTan->func = [](int len, double* input)->double {
 		return atan(input[0]);
 	};
 
 	Function* funcaSin = (Function*)malloc(sizeof(Function));
-	funcaSin->name = new String("asin");
+	funcaSin->name = new String((char*)"asin");
 	funcaSin->func = [](int len, double* input)->double {
 		return asin(input[0]);
 	};
 
 	Function* funcaCos = (Function*)malloc(sizeof(Function));
-	funcaCos->name = new String("acos");
+	funcaCos->name = new String((char*)"acos");
 	funcaCos->func = [](int len, double* input)->double {
 		return acos(input[0]);
 	};
 
 	Function* funcaCot = (Function*)malloc(sizeof(Function));
-	funcaCot->name = new String("acot");
+	funcaCot->name = new String((char*)"acot");
 	funcaCot->func = [](int len, double* input)->double {
 		return atan(1 / input[0]);
 	};
 
 	Function* funcaCsc = (Function*)malloc(sizeof(Function));
-	funcaCsc->name = new String("acsc");
+	funcaCsc->name = new String((char*)"acsc");
 	funcaCsc->func = [](int len, double* input)->double {
 		return asin(1 / input[0]);
 	};
 
 	Function* funcaSec = (Function*)malloc(sizeof(Function));
-	funcaSec->name = new String("asec");
+	funcaSec->name = new String((char*)"asec");
 	funcaSec->func = [](int len, double* input)->double {
 		return acos(1 / input[0]);
 	};
 
 	Function* funcMax = (Function*)malloc(sizeof(Function));
-	funcMax->name = new String("max");
+	funcMax->name = new String((char*)"max");
 	funcMax->func = [](int len, double* input)->double {
 		if (input[0] >= input[1]) {
 			return input[0];
@@ -192,7 +192,7 @@ void loadDefaults(Equation* e) {
 	};
 
 	Function* funcMin = (Function*)malloc(sizeof(Function));
-	funcMin->name = new String("min");
+	funcMin->name = new String((char*)"min");
 	funcMin->func = [](int len, double* input)->double {
 		if (input[0] <= input[1]) {
 			return input[0];
@@ -203,31 +203,31 @@ void loadDefaults(Equation* e) {
 	};
 
 	Function* funcLn = (Function*)malloc(sizeof(Function));
-	funcLn->name = new String("ln");
+	funcLn->name = new String((char*)"ln");
 	funcLn->func = [](int len, double* input)->double {
 		return log(input[0]);
 	};
 
 	Function* funcLog = (Function*)malloc(sizeof(Function));
-	funcLog->name = new String("log");
+	funcLog->name = new String((char*)"log");
 	funcLog->func = [](int len, double* input)->double {
 		return log10(input[0]);
 	};
 
 	Function* funcExp = (Function*)malloc(sizeof(Function));
-	funcExp->name = new String("exp");
+	funcExp->name = new String((char*)"exp");
 	funcExp->func = [](int len, double* input)->double {
 		return exp(input[0]);
 	};
 
 	Function* funcAbs = (Function*)malloc(sizeof(Function));
-	funcAbs->name = new String("abs");
+	funcAbs->name = new String((char*)"abs");
 	funcAbs->func = [](int len, double* input)->double {
 		return input[0] > 0 ? input[0] : -(input[0]);
 	};
 
 	Function* funcMod = (Function*)malloc(sizeof(Function));
-	funcMod->name = new String("mod");
+	funcMod->name = new String((char*)"mod");
 	funcMod->func = [](int len, double* input)->double {
 		return modf(input[0], &input[1]);
 	};
@@ -419,7 +419,7 @@ String* Equation::parse() {
 				Node* tempNode = (Node*)allocNode();
 				tempNode->type = NODE_TYPE_FUN;
 				tempNode->value = new void*[2];
-				tempNode->value[0] = (void*)new String("");
+				tempNode->value[0] = (void*)new String((char*)"");
 				tempNode->value[1] = NULL;
 
 				unsortedNodes.push_back(tempNode);
@@ -428,7 +428,7 @@ String* Equation::parse() {
 				Node* tempNode = (Node*)allocNode();
 				tempNode->type = NODE_TYPE_FUN;
 				tempNode->value = new void*[2];
-				tempNode->value[0] = (void*)new String("");
+				tempNode->value[0] = (void*)new String((char*)"");
 				tempNode->value[1] = NULL;
 
 				unsortedNodes.push_back(tempNode);
@@ -505,7 +505,7 @@ String* Equation::parse() {
 		}
 		else {
 			free(result);
-			return new String("Unkown error");
+			return new String((char*)"Unkown error");
 		}
 	}
 
@@ -602,7 +602,7 @@ Node* parseSimpleExpression(std::vector<Node*> nodes, Equation* e) {
 						prev = (Node*)e->allocNode();
 						prev->type = NODE_TYPE_ZRO;
 					} else {
-						e->parseError = new String(String("Left side of operator '") + String(op->name) + String("' is blank"));
+						e->parseError = new String(String((char*)"Left side of operator '") + String(op->name) + String((char*)"' is blank"));
 						return NULL;
 					}
 				}
@@ -626,7 +626,7 @@ Node* parseSimpleExpression(std::vector<Node*> nodes, Equation* e) {
 				Node* next = parseSimpleExpression(temp2, e);
 
 				if (next == NULL) {
-					e->parseError = new String(String("Right side of operator '") + String(op->name) + String("' is blank"));
+					e->parseError = new String(String((char*)"Right side of operator '") + String(op->name) + String((char*)"' is blank"));
 					return NULL;
 				}
 
@@ -698,7 +698,7 @@ void** parseExpression(std::vector<Node*> nodes, Equation* e) {
 	}
 
 	if (level != 0) {
-		e->parseError = new String("Parentheses error");
+		e->parseError = new String((char*)"Parentheses error");
 		return NULL;
 	}
 	

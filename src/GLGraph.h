@@ -5,6 +5,7 @@
 #include "math/Equation.h"
 #include "utils/String.h"
 
+/*
 struct GLGraphFuncs {
 	PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;
 	PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray;
@@ -13,12 +14,12 @@ struct GLGraphFuncs {
 	PFNGLFRAMEBUFFERTEXTUREPROC glFramebufferTexture;
 	PFNGLACTIVETEXTUREPROC glActiveTexture;
 };
-
+*/
 class GLGraph {
 private:
 	GraphCalcShader* calcShader;
 	GraphRenderShader* renderShader;
-	GLGraphFuncs* funcs;
+	//GLGraphFuncs* funcs;
 	GLuint fbo;
 	GLuint dtex;
 public:

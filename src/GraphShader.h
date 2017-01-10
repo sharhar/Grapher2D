@@ -1,10 +1,12 @@
-#pragma once
+#ifndef GRAPH_SHADER_H
+#define GRAPH_SHADER_H
 
 #include <string>
 #include <glcorearb.h>
 #include <GLFW/glfw3.h>
 #include <GLUI/GLUI.h>
 
+/*
 struct GraphShaderFuncs {
 	PFNGLCREATEPROGRAMPROC glCreateProgram;
 	PFNGLCREATESHADERPROC glCreateShader;
@@ -25,13 +27,13 @@ struct GraphShaderFuncs {
 	PFNGLDELETESHADERPROC glDeleteShader;
 	PFNGLDELETEPROGRAMPROC glDeleteProgram;
 };
-
+*/
 class GraphCalcShader {
 private:
 	GLuint shaderProgram;
 	GLuint vertexShader;
 	GLuint fragmentShader;
-	GraphShaderFuncs* funcs;
+	//GraphShaderFuncs* funcs;
 
 	GLint upLoc, downLoc, leftLoc, rightLoc, tLoc, atLoc;
 
@@ -51,7 +53,7 @@ private:
 	GLuint shaderProgram;
 	GLuint vertexShader;
 	GLuint fragmentShader;
-	GraphShaderFuncs* funcs;
+	//GraphShaderFuncs* funcs;
 
 	GLint texLoc, colorLoc;
 
@@ -65,3 +67,5 @@ public:
 	void setUniforms(GLuint tex, glui::Color graphColor);
 	void cleanUp();
 };
+
+#endif

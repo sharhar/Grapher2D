@@ -2,12 +2,12 @@
 
 #include <iostream>
 
-#define glEnableVertexAttribArray funcs->glEnableVertexAttribArray
-#define glDisableVertexAttribArray funcs->glDisableVertexAttribArray
-#define glGenFramebuffers funcs->glGenFramebuffers
-#define glBindFramebuffer funcs->glBindFramebuffer
-#define glFramebufferTexture funcs->glFramebufferTexture
-#define glActiveTexture funcs->glActiveTexture
+#define glEnableVertexAttribArray //funcs->glEnableVertexAttribArray
+#define glDisableVertexAttribArray //funcs->glDisableVertexAttribArray
+#define glGenFramebuffers //funcs->glGenFramebuffers
+#define glBindFramebuffer //funcs->glBindFramebuffer
+#define glFramebufferTexture //funcs->glFramebufferTexture
+#define glActiveTexture //funcs->glActiveTexture
 
 #define NODE_TYPE_OPP 1
 #define NODE_TYPE_NUM 2
@@ -28,6 +28,7 @@ typedef struct Node {
 
 String getNodeString(Node* node);
 
+/*
 static GLGraphFuncs* getFuncs() {
 	GLGraphFuncs* funcs = (GLGraphFuncs*)malloc(sizeof(GLGraphFuncs));
 
@@ -40,14 +41,14 @@ static GLGraphFuncs* getFuncs() {
 
 	return funcs;
 }
-
+*/
 GLGraph::GLGraph(Equation* e) {
 	String eqt = getNodeString((Node*)e->getRootNode());
 
 	calcShader = new GraphCalcShader(eqt.getstdstring());
 	renderShader = new GraphRenderShader();
 
-	funcs = getFuncs();
+	//funcs = getFuncs();
 
 	GraphQuad::init();
 
@@ -99,7 +100,7 @@ void GLGraph::render(GLuint pfbo, glui::Color graphColor, float up, float down, 
 	renderShader->unbind();
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
-	//*/
+	
 }
 
 void GLGraph::cleanUp() {

@@ -2,25 +2,26 @@
 #include <vector>
 #include <iostream>
 
-#define glCreateProgram funcs->glCreateProgram
-#define glCreateShader funcs->glCreateShader
-#define glShaderSource funcs->glShaderSource
-#define glCompileShader funcs->glCompileShader
-#define glGetShaderiv funcs->glGetShaderiv
-#define glGetShaderInfoLog funcs->glGetShaderInfoLog
-#define glAttachShader funcs->glAttachShader
-#define glLinkProgram funcs->glLinkProgram
-#define glValidateProgram funcs->glValidateProgram
-#define glBindAttribLocation funcs->glBindAttribLocation
-#define glUseProgram funcs->glUseProgram
-#define glGetUniformLocation funcs->glGetUniformLocation
-#define glUniform1f funcs->glUniform1f
-#define glUniform3f funcs->glUniform3f
-#define glUniform1i funcs->glUniform1i
-#define glDetachShader funcs->glDetachShader
-#define glDeleteShader funcs->glDeleteShader
-#define glDeleteProgram funcs->glDeleteProgram
+#define glCreateProgram //funcs->glCreateProgram
+#define glCreateShader //funcs->glCreateShader
+#define glShaderSource //funcs->glShaderSource
+#define glCompileShader //funcs->glCompileShader
+#define glGetShaderiv //funcs->glGetShaderiv
+#define glGetShaderInfoLog //funcs->glGetShaderInfoLog
+#define glAttachShader //funcs->glAttachShader
+#define glLinkProgram //funcs->glLinkProgram
+#define glValidateProgram //funcs->glValidateProgram
+#define glBindAttribLocation //funcs->glBindAttribLocation
+#define glUseProgram //funcs->glUseProgram
+#define glGetUniformLocation //funcs->glGetUniformLocation
+#define glUniform1f //funcs->glUniform1f
+#define glUniform3f //funcs->glUniform3f
+#define glUniform1i //funcs->glUniform1i
+#define glDetachShader //funcs->glDetachShader
+#define glDeleteShader //funcs->glDeleteShader
+#define glDeleteProgram //funcs->glDeleteProgram
 
+/*
 static GraphShaderFuncs* getFuncs() {
 	GraphShaderFuncs* funcs = (GraphShaderFuncs*)malloc(sizeof(GraphShaderFuncs));
 
@@ -45,9 +46,9 @@ static GraphShaderFuncs* getFuncs() {
 	
 	return funcs;
 }
-
+*/
 GraphCalcShader::GraphCalcShader(std::string eq) {
-	funcs = getFuncs();
+	//funcs = getFuncs();
 
 	std::string vertSource = "";
 
@@ -98,8 +99,8 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 	fragSource += "out_color = vec4(sign(total)/2 + 0.5, 0.0, 0.0, 1.0);\n";
 	fragSource += "}\n";
 
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	//vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	//fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	GLchar* shadersource = (GLchar*)vertSource.c_str();	
 	glShaderSource(vertexShader, 1, &shadersource, 0);
 	shadersource = (GLchar*)fragSource.c_str();
@@ -140,7 +141,7 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 		return;
 	}
 
-	shaderProgram = glCreateProgram();
+	//shaderProgram = glCreateProgram();
 
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
@@ -150,12 +151,12 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 	glLinkProgram(shaderProgram);
 	glValidateProgram(shaderProgram);
 
-	upLoc = glGetUniformLocation(shaderProgram, "up");
-	downLoc = glGetUniformLocation(shaderProgram, "down");
-	leftLoc = glGetUniformLocation(shaderProgram, "left");
-	rightLoc = glGetUniformLocation(shaderProgram, "right");
-	tLoc = glGetUniformLocation(shaderProgram, "t");
-	atLoc = glGetUniformLocation(shaderProgram, "at");
+	//upLoc = glGetUniformLocation(shaderProgram, "up");
+	//downLoc = glGetUniformLocation(shaderProgram, "down");
+	//leftLoc = glGetUniformLocation(shaderProgram, "left");
+	//rightLoc = glGetUniformLocation(shaderProgram, "right");
+	//tLoc = glGetUniformLocation(shaderProgram, "t");
+	//atLoc = glGetUniformLocation(shaderProgram, "at");
 }
 
 void GraphCalcShader::setUniforms(float up, float down, float left, float right, float time, float atime) {
@@ -176,7 +177,7 @@ void GraphCalcShader::unbind() {
 }
 
 GraphRenderShader::GraphRenderShader() {
-	funcs = getFuncs();
+	//funcs = getFuncs();
 
 	std::string vertSource = "";
 
@@ -223,8 +224,8 @@ GraphRenderShader::GraphRenderShader() {
 
 	fragSource += "}\n";
 
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	//vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	//fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	GLchar* shadersource = (GLchar*)vertSource.c_str();
 	glShaderSource(vertexShader, 1, &shadersource, 0);
 	shadersource = (GLchar*)fragSource.c_str();
@@ -265,7 +266,7 @@ GraphRenderShader::GraphRenderShader() {
 		return;
 	}
 
-	shaderProgram = glCreateProgram();
+	//shaderProgram = glCreateProgram();
 
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
@@ -275,8 +276,8 @@ GraphRenderShader::GraphRenderShader() {
 	glLinkProgram(shaderProgram);
 	glValidateProgram(shaderProgram);
 
-	texLoc = glGetUniformLocation(shaderProgram, "tex");
-	colorLoc = glGetUniformLocation(shaderProgram, "g_color");
+	//texLoc = glGetUniformLocation(shaderProgram, "tex");
+	//colorLoc = glGetUniformLocation(shaderProgram, "g_color");
 }
 
 void GraphRenderShader::bind() {
@@ -301,7 +302,7 @@ void GraphRenderShader::cleanUp() {
 	glDeleteShader(fragmentShader);
 	glDeleteProgram(shaderProgram);
 
-	free(funcs);
+	//free(funcs);
 }
 
 void GraphCalcShader::cleanUp() {
@@ -313,5 +314,5 @@ void GraphCalcShader::cleanUp() {
 	glDeleteShader(fragmentShader);
 	glDeleteProgram(shaderProgram);
 
-	free(funcs);
+	//free(funcs);
 }

@@ -4,6 +4,7 @@
 #include <glcorearb.h>
 #include <GLFW/glfw3.h>
 
+/*
 struct GraphQuadFuncs {
 	PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;
 	PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
@@ -14,12 +15,12 @@ struct GraphQuadFuncs {
 	PFNGLDELETEBUFFERSPROC glDeleteBuffers;
 	PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;
 };
-
+*/
 class GraphQuad {
 public:
 	static GLuint vao;
 	static GLuint vbuffer;
-	static GraphQuadFuncs* funcs;
+	//static GraphQuadFuncs* funcs;
 
 	static void init();
 

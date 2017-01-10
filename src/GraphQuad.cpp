@@ -1,18 +1,20 @@
 #include "GraphQuad.h"
+#include <iostream>
 
-GraphQuadFuncs* GraphQuad::funcs = 0;
+//GraphQuadFuncs* GraphQuad::funcs = 0;
 GLuint GraphQuad::vao = 0;
 GLuint GraphQuad::vbuffer = 0;
 
-#define glGenVertexArrays funcs->glGenVertexArrays
-#define glBindVertexArray funcs->glBindVertexArray
-#define glGenBuffers funcs->glGenBuffers
-#define glBindBuffer funcs->glBindBuffer
-#define glBufferData funcs->glBufferData
-#define glVertexAttribPointer funcs->glVertexAttribPointer
-#define glDeleteBuffers funcs->glDeleteBuffers
-#define glDeleteVertexArrays funcs->glDeleteVertexArrays
+#define glGenVertexArrays //funcs->glGenVertexArrays
+#define glBindVertexArray //funcs->glBindVertexArray
+#define glGenBuffers //funcs->glGenBuffers
+#define glBindBuffer //funcs->glBindBuffer
+#define glBufferData //funcs->glBufferData
+#define glVertexAttribPointer //funcs->glVertexAttribPointer
+#define glDeleteBuffers //funcs->glDeleteBuffers
+#define glDeleteVertexArrays //funcs->glDeleteVertexArrays
 
+/*
 static GraphQuadFuncs* getFuncs() {
 	GraphQuadFuncs* funcs = (GraphQuadFuncs*)malloc(sizeof(GraphQuadFuncs));
 
@@ -27,9 +29,10 @@ static GraphQuadFuncs* getFuncs() {
 
 	return funcs;
 }
+*/
 
 void GraphQuad::init() {
-	funcs = getFuncs();
+	//funcs = getFuncs();
 
 	GLfloat* verts = (GLfloat*)malloc(sizeof(GLfloat)*6*2);
 
