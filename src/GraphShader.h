@@ -1,39 +1,16 @@
 #ifndef GRAPH_SHADER_H
 #define GRAPH_SHADER_H
 
+#include <gl/glew.h>
 #include <string>
-#include <glcorearb.h>
 #include <GLFW/glfw3.h>
 #include <GLUI/GLUI.h>
 
-/*
-struct GraphShaderFuncs {
-	PFNGLCREATEPROGRAMPROC glCreateProgram;
-	PFNGLCREATESHADERPROC glCreateShader;
-	PFNGLSHADERSOURCEPROC glShaderSource;
-	PFNGLCOMPILESHADERPROC glCompileShader;
-	PFNGLGETSHADERIVPROC glGetShaderiv;
-	PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog;
-	PFNGLATTACHSHADERPROC glAttachShader;
-	PFNGLLINKPROGRAMPROC glLinkProgram;
-	PFNGLVALIDATEPROGRAMPROC glValidateProgram;
-	PFNGLBINDATTRIBLOCATIONPROC glBindAttribLocation;
-	PFNGLUSEPROGRAMPROC glUseProgram;
-	PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
-	PFNGLUNIFORM1FPROC glUniform1f;
-	PFNGLUNIFORM3FPROC glUniform3f;
-	PFNGLUNIFORM1IPROC glUniform1i;
-	PFNGLDETACHSHADERPROC glDetachShader;
-	PFNGLDELETESHADERPROC glDeleteShader;
-	PFNGLDELETEPROGRAMPROC glDeleteProgram;
-};
-*/
 class GraphCalcShader {
 private:
 	GLuint shaderProgram;
 	GLuint vertexShader;
 	GLuint fragmentShader;
-	//GraphShaderFuncs* funcs;
 
 	GLint upLoc, downLoc, leftLoc, rightLoc, tLoc, atLoc;
 

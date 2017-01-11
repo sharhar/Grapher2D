@@ -5,6 +5,7 @@ file(GLOB_RECURSE GRAPHER_H *.h)
 
 include_directories(
 	"${CMAKE_SOURCE_DIR}/GLUI/ext/glcorearb"
+	"${GLEW_INCLUDE_DIR}"
 )
 
 if(APPLE)
@@ -34,6 +35,5 @@ endif()
 target_link_libraries (Grapher2D LINK_PUBLIC ${OPENGL_LIBRARIES})
 target_link_libraries (Grapher2D LINK_PUBLIC GLUI)
 target_link_libraries (Grapher2D glfw ${GLFW_LIBRARIES})
-target_include_directories(Grapher2D PUBLIC ${GLEW_INCLUDE_DIR})
 target_link_libraries(Grapher2D LINK_PUBLIC ${GLEW_LIBRARY})
 target_link_libraries (Grapher2D LINK_PUBLIC freetype)

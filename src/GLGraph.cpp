@@ -2,13 +2,6 @@
 
 #include <iostream>
 
-#define glEnableVertexAttribArray //funcs->glEnableVertexAttribArray
-#define glDisableVertexAttribArray //funcs->glDisableVertexAttribArray
-#define glGenFramebuffers //funcs->glGenFramebuffers
-#define glBindFramebuffer //funcs->glBindFramebuffer
-#define glFramebufferTexture //funcs->glFramebufferTexture
-#define glActiveTexture //funcs->glActiveTexture
-
 #define NODE_TYPE_OPP 1
 #define NODE_TYPE_NUM 2
 #define NODE_TYPE_FUN 3
@@ -28,20 +21,6 @@ typedef struct Node {
 
 String getNodeString(Node* node);
 
-/*
-static GLGraphFuncs* getFuncs() {
-	GLGraphFuncs* funcs = (GLGraphFuncs*)malloc(sizeof(GLGraphFuncs));
-
-	glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)glfwGetProcAddress("glEnableVertexAttribArray");
-	glDisableVertexAttribArray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC)glfwGetProcAddress("glDisableVertexAttribArray");
-	glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)glfwGetProcAddress("glGenFramebuffers");
-	glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC)glfwGetProcAddress("glBindFramebuffer");
-	glFramebufferTexture = (PFNGLFRAMEBUFFERTEXTUREPROC)glfwGetProcAddress("glFramebufferTexture");
-	glActiveTexture = (PFNGLACTIVETEXTUREPROC)glfwGetProcAddress("glActiveTexture");
-
-	return funcs;
-}
-*/
 GLGraph::GLGraph(Equation* e) {
 	String eqt = getNodeString((Node*)e->getRootNode());
 

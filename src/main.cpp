@@ -1,13 +1,12 @@
+#include <gl/glew.h>
 #include <GLUI/GLUI.h>
 #include <GLFW/glfw3.h>
 #include "math/Equation.h"
-#include <glcorearb.h>
 #include <math.h>
 #include <string>
 #include <thread>
 #include <chrono>
 #include "GLGraph.h"
-#include <GL/glew.h>
 
 using namespace glui;
 
@@ -15,14 +14,6 @@ using namespace glui;
 #define ZOOM_PERCENT 0.05
 #define IMPLICIT_SKIP 4
 #define EQ_NUM 4
-
-#define glGenFramebuffers__ glFuncs->glGenFramebuffersM
-#define glGenRenderbuffers__ glFuncs->glGenRenderbuffersM
-#define glBindFramebuffer__ glFuncs->glBindFramebufferM
-#define glBindRenderbuffer__ glFuncs->glBindRenderbufferM
-#define glRenderbufferStorageMultisample__ glFuncs->glRenderbufferStorageMultisampleM
-#define glFramebufferRenderbuffer__ glFuncs->glFramebufferRenderbufferM
-#define glBlitFramebuffer__ glFuncs->glBlitFramebufferM
 
 double g_left  = -6;
 double g_right =  6;
@@ -347,34 +338,26 @@ GLFWimage* genIcon() {
 }
 
 GLuint genFBO(MGLFuncs* glFuncs, int samples, int width, int height) {
-	glGenFramebuffers__ = (PFNGLGENFRAMEBUFFERSPROC)glfwGetProcAddress("glGenFramebuffers");
-	glGenRenderbuffers__ = (PFNGLGENRENDERBUFFERSPROC)glfwGetProcAddress("glGenRenderbuffers");
-	glBindFramebuffer__ = (PFNGLBINDFRAMEBUFFERPROC)glfwGetProcAddress("glBindFramebuffer");
-	glBindRenderbuffer__ = (PFNGLBINDRENDERBUFFERPROC)glfwGetProcAddress("glBindRenderbuffer");
-	glRenderbufferStorageMultisample__ = (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)glfwGetProcAddress("glRenderbufferStorageMultisample");
-	glFramebufferRenderbuffer__ = (PFNGLFRAMEBUFFERRENDERBUFFERPROC)glfwGetProcAddress("glFramebufferRenderbuffer");
-	glBlitFramebuffer__ = (PFNGLBLITFRAMEBUFFERPROC)glfwGetProcAddress("glBlitFramebuffer");
-
 	GLuint fbo = 0;
 	GLuint colorRenderBuffer = 0;
 	GLuint depthRenderBuffer = 0;
 
-	glGenRenderbuffers__(1, &colorRenderBuffer);
-	glGenRenderbuffers__(1, &depthRenderBuffer);
+	glGenRenderbuffers(1, &colorRenderBuffer);
+	glGenRenderbuffers(1, &depthRenderBuffer);
 
-	glGenFramebuffers__(1, &fbo);
-	glBindFramebuffer__(GL_FRAMEBUFFER, fbo);
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-	glBindRenderbuffer__(GL_RENDERBUFFER, colorRenderBuffer);
-	glRenderbufferStorageMultisample__(GL_RENDERBUFFER, samples, GL_RGBA8, width, height);
-	glFramebufferRenderbuffer__(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorRenderBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, colorRenderBuffer);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGBA8, width, height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorRenderBuffer);
 
-	glBindRenderbuffer__(GL_RENDERBUFFER, depthRenderBuffer);
-	glRenderbufferStorageMultisample__(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, width, height);
-	glFramebufferRenderbuffer__(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, depthRenderBuffer);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, width, height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBuffer);
 
-	glBindRenderbuffer__(GL_RENDERBUFFER, 0);
-	glBindFramebuffer__(GL_FRAMEBUFFER, 0);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	return fbo;
 }
@@ -383,6 +366,15 @@ int main() {
 	GLUI::init();
 
 	Window win("Grapher2D", 1000, 620, false, 1, genIcon());
+	
+	GLenum initResult = glewInit();
+	if (initResult != GLEW_OK) {
+		std::cout << "GLEW didn't work!\n";
+		system("PAUSE");
+		return -1;
+	}
+
+
 	Renderer::init(&win);
 	Layout* layout = new AbsoluteLayout(&win, 1000, 620);
 
@@ -446,7 +438,7 @@ int main() {
 		glEnable(GL_TEXTURE_2D);
 	},
 	[&]()->void {
-		glBindFramebuffer__(GL_FRAMEBUFFER, fbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 		glClear(GL_COLOR_BUFFER_BIT);
 		drawGrid(g_left, g_right, g_down, g_up, 600, 600);
@@ -464,18 +456,18 @@ int main() {
 
 		drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, &color::black);
 
-		glBindFramebuffer__(GL_FRAMEBUFFER, panel->getFBO());
+		glBindFramebuffer(GL_FRAMEBUFFER, panel->getFBO());
 
 		glClear(GL_COLOR_BUFFER_BIT);
 		
-		glBindFramebuffer__(GL_READ_FRAMEBUFFER, fbo);
-		glBlitFramebuffer__(0, 0, frameBufferWidth, frameBufferHeight, 
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+		glBlitFramebuffer(0, 0, frameBufferWidth, frameBufferHeight, 
 			              0, 0, frameBufferWidth, frameBufferHeight, 
 			              GL_COLOR_BUFFER_BIT, GL_NEAREST);
 #ifdef __APPLE__
 		glGetError();
 #endif
-		glBindFramebuffer__(GL_FRAMEBUFFER, panel->getFBO());
+		glBindFramebuffer(GL_FRAMEBUFFER, panel->getFBO());
 
 		glFinish();
 	},

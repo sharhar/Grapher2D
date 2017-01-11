@@ -2,20 +2,7 @@ cmake_minimum_required(VERSION 2.8.11)
 
 set(EXT_EXTRACT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext")
 
-function(download_library name url)
-	if(NOT EXISTS "${EXT_EXTRACT_DIR}/${name}")
-		if(NOT EXISTS "${EXT_EXTRACT_DIR}/${name}.tar.gz")
-			message(STATUS "Downloading ${EXT_EXTRACT_DIR}/${name} from ${url}")
-			file(DOWNLOAD "${url}" ${EXT_EXTRACT_DIR}/${name}.tar.gz TIMEOUT 10)
-		endif()
-		
-		file(MAKE_DIRECTORY ${EXT_EXTRACT_DIR}/${name})
-		
-		execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${name}.tar.gz WORKING_DIRECTORY ${EXT_EXTRACT_DIR})
-	endif()
-	
-	message(STATUS "Found ${name} in source directory")
-endfunction()
+
 
 project(GLUI)
 
@@ -24,10 +11,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 option(GLUI_BUILD_TEST "Build the GLUI-Test project" ON)
-
-set(GLEW_SOURCE_VERSION "2.0.0")
-set(GLEW_SOURCE_NAME "glew-${GLEW_SOURCE_VERSION}")
-set(GLEW_URL "https://kent.dl.sourceforge.net/project/glew/glew/${GLEW_SOURCE_VERSION}/${GLEW_SOURCE_NAME}.tgz")
 
 set(GLFW_SOURCE_NAME "glfw-3.2")
 set(GLFW_URL "http://downloads.sourceforge.net/project/glfw/glfw/3.2/${GLFW_SOURCE_NAME}.tar.gz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fglfw%2Ffiles%2Fglfw%2F3.2%2F&ts=1470492725&use_mirror=heanet")
@@ -108,17 +91,6 @@ else()
 	message(STATUS "GLFW found.")
 endif()
 
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/${GLEW_SOURCE_NAME})
-	download_library(${GLEW_SOURCE_NAME} ${GLEW_URL})
-	add_subdirectory(${EXT_EXTRACT_DIR}/${GLEW_SOURCE_NAME}/build/cmake)
-		
-	set(GLEW_LIBRARY glew_s)
-	
-	add_definitions(-DGLEW_STATIC)
-		
-	set(GLEW_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/${GLEW_SOURCE_NAME}/include)
-endif()
-
 if(NOT EXISTS ${FT_SOURCE_DIR})
 	message(STATUS "FreeType source not found. Fixing..")
 	#First we check if the .tar.gz is downloaded. There may be chance it is already downloaded and not extracted
@@ -157,7 +129,6 @@ include_directories(
 	"${FT_SOURCE_DIR}/include"
 	"${FT_SOURCE_DIR}/freetype-2.6/devel"
 	"${EXT_EXTRACT_DIR}/glcorearb"
-	"${GLEW_INCLUDE_DIR}"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 

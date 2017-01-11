@@ -2,54 +2,8 @@
 #include <vector>
 #include <iostream>
 
-#define glCreateProgram //funcs->glCreateProgram
-#define glCreateShader //funcs->glCreateShader
-#define glShaderSource //funcs->glShaderSource
-#define glCompileShader //funcs->glCompileShader
-#define glGetShaderiv //funcs->glGetShaderiv
-#define glGetShaderInfoLog //funcs->glGetShaderInfoLog
-#define glAttachShader //funcs->glAttachShader
-#define glLinkProgram //funcs->glLinkProgram
-#define glValidateProgram //funcs->glValidateProgram
-#define glBindAttribLocation //funcs->glBindAttribLocation
-#define glUseProgram //funcs->glUseProgram
-#define glGetUniformLocation //funcs->glGetUniformLocation
-#define glUniform1f //funcs->glUniform1f
-#define glUniform3f //funcs->glUniform3f
-#define glUniform1i //funcs->glUniform1i
-#define glDetachShader //funcs->glDetachShader
-#define glDeleteShader //funcs->glDeleteShader
-#define glDeleteProgram //funcs->glDeleteProgram
-
-/*
-static GraphShaderFuncs* getFuncs() {
-	GraphShaderFuncs* funcs = (GraphShaderFuncs*)malloc(sizeof(GraphShaderFuncs));
-
-	glCreateProgram = (PFNGLCREATEPROGRAMPROC)glfwGetProcAddress("glCreateProgram");
-	glCreateShader = (PFNGLCREATESHADERPROC)glfwGetProcAddress("glCreateShader");
-	glShaderSource = (PFNGLSHADERSOURCEPROC)glfwGetProcAddress("glShaderSource");
-	glCompileShader = (PFNGLCOMPILESHADERPROC)glfwGetProcAddress("glCompileShader");
-	glGetShaderiv = (PFNGLGETSHADERIVPROC)glfwGetProcAddress("glGetShaderiv");
-	glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC)glfwGetProcAddress("glGetShaderInfoLog");
-	glAttachShader = (PFNGLATTACHSHADERPROC)glfwGetProcAddress("glAttachShader");
-	glLinkProgram = (PFNGLLINKPROGRAMPROC)glfwGetProcAddress("glLinkProgram");
-	glValidateProgram = (PFNGLVALIDATEPROGRAMPROC)glfwGetProcAddress("glValidateProgram");
-	glBindAttribLocation = (PFNGLBINDATTRIBLOCATIONPROC)glfwGetProcAddress("glBindAttribLocation");
-	glUseProgram = (PFNGLUSEPROGRAMPROC)glfwGetProcAddress("glUseProgram");
-	glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)glfwGetProcAddress("glGetUniformLocation");
-	glUniform1f = (PFNGLUNIFORM1FPROC)glfwGetProcAddress("glUniform1f");
-	glUniform3f = (PFNGLUNIFORM3FPROC)glfwGetProcAddress("glUniform3f");
-	glUniform1i = (PFNGLUNIFORM1IPROC)glfwGetProcAddress("glUniform1i");
-	glDetachShader = (PFNGLDETACHSHADERPROC)glfwGetProcAddress("glDetachShader");
-	glDeleteShader = (PFNGLDELETESHADERPROC)glfwGetProcAddress("glDeleteShader");
-	glDeleteProgram = (PFNGLDELETEPROGRAMPROC)glfwGetProcAddress("glDeleteProgram");
-	
-	return funcs;
-}
-*/
 GraphCalcShader::GraphCalcShader(std::string eq) {
-	//funcs = getFuncs();
-
+	
 	std::string vertSource = "";
 
 	vertSource += "#version 330 core\n";
@@ -99,8 +53,8 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 	fragSource += "out_color = vec4(sign(total)/2 + 0.5, 0.0, 0.0, 1.0);\n";
 	fragSource += "}\n";
 
-	//vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	//fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	GLchar* shadersource = (GLchar*)vertSource.c_str();	
 	glShaderSource(vertexShader, 1, &shadersource, 0);
 	shadersource = (GLchar*)fragSource.c_str();
@@ -141,7 +95,7 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 		return;
 	}
 
-	//shaderProgram = glCreateProgram();
+	shaderProgram = glCreateProgram();
 
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
@@ -151,12 +105,12 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 	glLinkProgram(shaderProgram);
 	glValidateProgram(shaderProgram);
 
-	//upLoc = glGetUniformLocation(shaderProgram, "up");
-	//downLoc = glGetUniformLocation(shaderProgram, "down");
-	//leftLoc = glGetUniformLocation(shaderProgram, "left");
-	//rightLoc = glGetUniformLocation(shaderProgram, "right");
-	//tLoc = glGetUniformLocation(shaderProgram, "t");
-	//atLoc = glGetUniformLocation(shaderProgram, "at");
+	upLoc = glGetUniformLocation(shaderProgram, "up");
+	downLoc = glGetUniformLocation(shaderProgram, "down");
+	leftLoc = glGetUniformLocation(shaderProgram, "left");
+	rightLoc = glGetUniformLocation(shaderProgram, "right");
+	tLoc = glGetUniformLocation(shaderProgram, "t");
+	atLoc = glGetUniformLocation(shaderProgram, "at");
 }
 
 void GraphCalcShader::setUniforms(float up, float down, float left, float right, float time, float atime) {
@@ -177,8 +131,6 @@ void GraphCalcShader::unbind() {
 }
 
 GraphRenderShader::GraphRenderShader() {
-	//funcs = getFuncs();
-
 	std::string vertSource = "";
 
 	vertSource += "#version 330 core\n";
@@ -224,8 +176,8 @@ GraphRenderShader::GraphRenderShader() {
 
 	fragSource += "}\n";
 
-	//vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	//fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	GLchar* shadersource = (GLchar*)vertSource.c_str();
 	glShaderSource(vertexShader, 1, &shadersource, 0);
 	shadersource = (GLchar*)fragSource.c_str();
@@ -266,7 +218,7 @@ GraphRenderShader::GraphRenderShader() {
 		return;
 	}
 
-	//shaderProgram = glCreateProgram();
+	shaderProgram = glCreateProgram();
 
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
@@ -276,8 +228,8 @@ GraphRenderShader::GraphRenderShader() {
 	glLinkProgram(shaderProgram);
 	glValidateProgram(shaderProgram);
 
-	//texLoc = glGetUniformLocation(shaderProgram, "tex");
-	//colorLoc = glGetUniformLocation(shaderProgram, "g_color");
+	texLoc = glGetUniformLocation(shaderProgram, "tex");
+	colorLoc = glGetUniformLocation(shaderProgram, "g_color");
 }
 
 void GraphRenderShader::bind() {
