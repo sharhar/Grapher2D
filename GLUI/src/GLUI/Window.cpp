@@ -80,7 +80,7 @@ namespace glui {
 
 		GLenum err = GL_NO_ERROR;
 		while ((err = glGetError()) != GL_NO_ERROR) {
-			std::cout << "GLError: " << err << "\n";
+			//std::cout << "GLError: " << err << "\n";
 		}
 	}
 

@@ -6,7 +6,7 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 	
 	std::string vertSource = "";
 
-	vertSource += "#version 330 core\n";
+	vertSource += "#version 420 core\n";
 	vertSource += "in vec2 position;\n";
 	vertSource += "out vec2 coord;\n";
 	vertSource += "uniform float up;\n";
@@ -27,22 +27,15 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 
 	std::string fragSource = "";
 
-	fragSource += "#version 330 core\n";
+	fragSource += "#version 420 core\n";
 	fragSource += "uniform float t;\n";
 	fragSource += "uniform float at;\n";
+
+	fragSource += "layout (rg32f) uniform image2D data;\n";
 
 	fragSource += "const float e = 2.718281828459045;\n";
 	fragSource += "const float pi = 3.141592653589793;\n";
 	fragSource += "const float tau = 3.141592653589793 * 2;\n";
-
-	//const float myfloat = 10.0;
-
-	//fragSource += "float packColor(vec4 color) {return ((color.a*2 -1 ) / 256.0 + (color.r*2 - 1) + (color.g*2 - 1) + (color.b*2 - 1) * 256.0) * 256.0;}\n";
-	//fragSource += "vec4 unpackColor(float f) {";
-	//fragSource += "vec4 color;";
-	//fragSource += "color.b = floor(f / 256.0); color.g = floor((f - color.b * 256.0)); color.r = floor((f - color.b * 256.0 - color.g)*256.0); color.a = floor((f - color.b * 256.0 - color.g - color.r / 256.0)*256.0*256.0);";
-	//fragSource += "color = color / 256.0;\n";
-	//fragSource += "return color / 2 + 0.5;}\n";
 
 	fragSource += "in vec2 coord;\n";
 	fragSource += "out vec4 out_color;\n";
@@ -50,7 +43,8 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 	fragSource += "float x = coord.x;\n";
 	fragSource += "float y = coord.y;\n";
 	fragSource += "float total = " + eq + ";\n";
-	fragSource += "out_color = vec4(sign(total)/2 + 0.5, 0.0, 0.0, 1.0);\n";
+	fragSource += "imageStore(data, ivec2(gl_FragCoord.xy), vec4(total, sign(total), 0.0, 0.0));\n";
+	fragSource += "out_color = vec4(0.0, 0.0, 0.0, 0.0);\n";
 	fragSource += "}\n";
 
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -133,7 +127,7 @@ void GraphCalcShader::unbind() {
 GraphRenderShader::GraphRenderShader() {
 	std::string vertSource = "";
 
-	vertSource += "#version 330 core\n";
+	vertSource += "#version 420 core\n";
 	vertSource += "out vec2 coord;\n";
 	vertSource += "in vec2 position;\n";
 	vertSource += "void main(void) {\n";
@@ -143,32 +137,31 @@ GraphRenderShader::GraphRenderShader() {
 
 	std::string fragSource = "";
 
-	fragSource += "#version 330 core\n";
+	fragSource += "#version 420 core\n";
 	fragSource += "uniform sampler2D tex;\n";
 	fragSource += "uniform vec3 g_color;\n";
+
+	fragSource += "layout (rg32f) uniform image2D data;\n";
+
 	fragSource += "in vec2 coord;\n";
 	fragSource += "out vec4 out_color;\n";
 	fragSource += "void main(void) {\n";
 
-	fragSource += "int width = 2;\n";
+	fragSource += "vec4 c = imageLoad(data, ivec2(gl_FragCoord.xy));\n";
 
-	fragSource += "float pxwb = 1.0/600.0;\n";
-	fragSource += "vec4 ct = texture(tex, coord);\n";
-	fragSource += "float c = (ct.x-0.5)*2;\n";
+	fragSource += "int width = 2;\n";
 
 	fragSource += "int ci = 0;";
 
 	fragSource += "for(int i = 1; i <= width; i++) {\n";
 
-	fragSource += "float pxw = pxwb*i;\n";
+	fragSource += "float r = imageLoad(data, ivec2(gl_FragCoord.x + i, gl_FragCoord.y)).y;\n";
+	fragSource += "float u = imageLoad(data, ivec2(gl_FragCoord.x, gl_FragCoord.y + i)).y;\n";
+	fragSource += "float l = imageLoad(data, ivec2(gl_FragCoord.x - i, gl_FragCoord.y)).y;\n";
+	fragSource += "float d = imageLoad(data, ivec2(gl_FragCoord.x, gl_FragCoord.y - i)).y;\n";
 
-	fragSource += "float r = (texture(tex, vec2(coord.x + pxw, coord.y)).x-0.5)*2;\n";
-	fragSource += "float u = (texture(tex, vec2(coord.x, coord.y + pxw)).x-0.5)*2;\n";
-	fragSource += "float l = (texture(tex, vec2(coord.x - pxw, coord.y)).x-0.5)*2;\n";
-	fragSource += "float d = (texture(tex, vec2(coord.x, coord.y - pxw)).x-0.5)*2;\n";
-
-	fragSource += "if(c == 0 || (coord.x + pxw <= 1.0 && c != r) || (coord.y + pxw <= 1.0 && c != u) ||";
-	fragSource += "	(coord.x - pxw >= 0.0 && c != l) || (coord.y - pxw >= 0.0 && c != d)) {out_color = vec4(g_color.xyz, 1.0); ci = 1; break;}\n";
+	fragSource += "if(c.y == 0 || (gl_FragCoord.x + i <= 600 && c.y != r) || (gl_FragCoord.y + i <= 600 && c.y != u) ||";
+	fragSource += "	(gl_FragCoord.x - i >= 0 && c.y != l) || (gl_FragCoord.y + i >= 0 && c.y != d)) {out_color = vec4(g_color.xyz, 1.0); ci = 1; break;}\n";
 
 	fragSource += "}\n";
 

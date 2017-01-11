@@ -27,31 +27,16 @@ GLGraph::GLGraph(Equation* e) {
 	calcShader = new GraphCalcShader(eqt.getstdstring());
 	renderShader = new GraphRenderShader();
 
-	//funcs = getFuncs();
-
 	GraphQuad::init();
-
-	glGenFramebuffers(1, &fbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
 	glGenTextures(1, &dtex);
 	glBindTexture(GL_TEXTURE_2D, dtex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 600, 600,
-		0, GL_RGBA, GL_FLOAT, NULL);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, dtex, 0);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG32F, 600, 600);
 	glBindTexture(GL_TEXTURE_2D, 0);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void GLGraph::render(GLuint pfbo, glui::Color graphColor, float up, float down, float left, float right, float time, float atime) {
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-	glViewport(0, 0, 600, 600);
+	glBindImageTexture(0, dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
 
 	calcShader->bind();
 	calcShader->setUniforms(up, down,left, right, time, atime);
@@ -62,13 +47,8 @@ void GLGraph::render(GLuint pfbo, glui::Color graphColor, float up, float down, 
 	GraphQuad::unbind();
 	calcShader->unbind();
 
-	//*
-	glBindFramebuffer(GL_FRAMEBUFFER, pfbo);
+	glFlush();
 
-	glBindTexture(GL_TEXTURE_2D, dtex);
-
-	glActiveTexture(GL_TEXTURE0);
-	
 	renderShader->bind();
 	renderShader->setUniforms(0, graphColor);
 	GraphQuad::bind();
@@ -77,9 +57,6 @@ void GLGraph::render(GLuint pfbo, glui::Color graphColor, float up, float down, 
 	glDisableVertexAttribArray(0);
 	GraphQuad::unbind();
 	renderShader->unbind();
-	
-	glBindTexture(GL_TEXTURE_2D, 0);
-	
 }
 
 void GLGraph::cleanUp() {

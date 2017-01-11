@@ -10,7 +10,6 @@ class GLGraph {
 private:
 	GraphCalcShader* calcShader;
 	GraphRenderShader* renderShader;
-	GLuint fbo;
 	GLuint dtex;
 public:
 	GLGraph(Equation* e);
