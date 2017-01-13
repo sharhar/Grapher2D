@@ -1,7 +1,6 @@
-#ifndef GRAPH_SHADER_H
-#define GRAPH_SHADER_H
+#pragma once
 
-#include <gl/glew.h>
+#include <GL/glew.h>
 #include <string>
 #include <GLFW/glfw3.h>
 #include <GLUI/GLUI.h>
@@ -44,5 +43,3 @@ public:
 	void setUniforms(GLuint tex, glui::Color graphColor);
 	void cleanUp();
 };
-
-#endif

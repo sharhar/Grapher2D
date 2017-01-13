@@ -1,4 +1,4 @@
-#include <gl/glew.h>
+#include <GL/glew.h>
 #include <GLUI/GLUI.h>
 #include <GLFW/glfw3.h>
 #include "math/Equation.h"
