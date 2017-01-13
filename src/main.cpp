@@ -24,17 +24,9 @@ int g_windowWidth = 600;
 int g_windowHeight = 600;
 
 int g_colorNum = 5;
+GLuint g_gtex;
+GLuint g_fbo;
 Color* g_colors = new Color[g_colorNum];
-
-typedef struct MGLFuncs {
-	PFNGLGENFRAMEBUFFERSPROC glGenFramebuffersM;
-	PFNGLGENRENDERBUFFERSPROC glGenRenderbuffersM;
-	PFNGLBINDFRAMEBUFFERPROC glBindFramebufferM;
-	PFNGLBINDRENDERBUFFERPROC glBindRenderbufferM;
-	PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC glRenderbufferStorageMultisampleM;
-	PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbufferM;
-	PFNGLBLITFRAMEBUFFERPROC glBlitFramebufferM;
-} MGLFuncs;
 
 typedef struct Graph {
 	double startTime;
@@ -69,7 +61,7 @@ void drawAxes(int width, int height) {
 		glTranslatef(xoff, 0, 0);
 
 		glColor3f(0.0f, 0.0f, 0.0f);
-		glLineWidth(2.0f);
+		glLineWidth(4.0f);
 		glBegin(GL_LINES);
 		glVertex2f(0, 0);
 		glVertex2f(0, height);
@@ -89,7 +81,7 @@ void drawAxes(int width, int height) {
 		glTranslatef(0, yoff, 0);
 
 		glColor3f(0.0f, 0.0f, 0.0f);
-		glLineWidth(2.0f);
+		glLineWidth(4.0f);
 		glBegin(GL_LINES);
 		glVertex2f(0, 0);
 		glVertex2f(width, 0);
@@ -124,7 +116,7 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 	glLineWidth(1.0f);
 
 	glBegin(GL_LINES);
-	for (int i = 0; i < xNum;i++) {
+	for (int i = 0; i < xNum+1;i++) {
 		double tx = (xlr - xl + xmag*i)*xratio;
 
 		if (tx  < 0 || tx > width) {
@@ -337,31 +329,6 @@ GLFWimage* genIcon() {
 	return img;
 }
 
-GLuint genFBO(MGLFuncs* glFuncs, int samples, int width, int height) {
-	GLuint fbo = 0;
-	GLuint colorRenderBuffer = 0;
-	GLuint depthRenderBuffer = 0;
-
-	glGenRenderbuffers(1, &colorRenderBuffer);
-	glGenRenderbuffers(1, &depthRenderBuffer);
-
-	glGenFramebuffers(1, &fbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-	glBindRenderbuffer(GL_RENDERBUFFER, colorRenderBuffer);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGBA8, width, height);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorRenderBuffer);
-
-	glBindRenderbuffer(GL_RENDERBUFFER, depthRenderBuffer);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, width, height);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBuffer);
-
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	return fbo;
-}
-
 int main() {
 	GLUI::init();
 
@@ -373,7 +340,6 @@ int main() {
 		system("PAUSE");
 		return -1;
 	}
-
 
 	Renderer::init(&win);
 	Layout* layout = new AbsoluteLayout(&win, 1000, 620);
@@ -420,9 +386,22 @@ int main() {
 	int frameBufferWidth, frameBufferHeight;
 	glfwGetFramebufferSize((GLFWwindow*) win.getGLFWwindow(), &frameBufferWidth, &frameBufferHeight);
 
-	int samples = 4;
-	MGLFuncs* glFuncs = (MGLFuncs*)malloc(sizeof(MGLFuncs));
-	GLuint fbo = genFBO(glFuncs, samples, frameBufferWidth, frameBufferHeight);
+	glGenFramebuffers(1, &g_fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+	glGenTextures(1, &g_gtex);
+	glBindTexture(GL_TEXTURE_2D, g_gtex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1200, 1200,
+		0, GL_RGBA, GL_FLOAT, NULL);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, g_gtex, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	GLPanel* panel;
 
@@ -438,8 +417,9 @@ int main() {
 		glEnable(GL_TEXTURE_2D);
 	},
 	[&]()->void {
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
+		glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
+		glViewport(0, 0, 1200, 1200);
+		glClearColor(1.0, 1.0, 1.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
 		drawGrid(g_left, g_right, g_down, g_up, 600, 600);
 		drawAxes(600, 600);
@@ -451,24 +431,29 @@ int main() {
 				continue;
 			}
 
-			graphs[i]->glg->render(fbo, g_colors[i % 5], g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
+			graphs[i]->glg->render(g_colors[i % 5], g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
 		}
 
 		drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, &color::black);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, panel->getFBO());
-
+		glViewport(0, 0, 600, 600);
 		glClear(GL_COLOR_BUFFER_BIT);
-		
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-		glBlitFramebuffer(0, 0, frameBufferWidth, frameBufferHeight, 
-			              0, 0, frameBufferWidth, frameBufferHeight, 
-			              GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+		glBindTexture(GL_TEXTURE_2D, g_gtex);
+		glColor3f(1.0, 1.0, 1.0);
+
+		glBegin(GL_QUADS);
+		glTexCoord2d(0.0, 1.0); glVertex2f(0, 600);
+		glTexCoord2d(1.0, 1.0); glVertex2f(600, 600);
+		glTexCoord2d(1.0, 0.0); glVertex2f(600, 0);
+		glTexCoord2d(0.0, 0.0); glVertex2f(0, 0);
+		glEnd();
+
+		glBindTexture(GL_TEXTURE_2D, 0);
 #ifdef __APPLE__
 		glGetError();
 #endif
-		glBindFramebuffer(GL_FRAMEBUFFER, panel->getFBO());
-
 		glFinish();
 	},
 	[](GLPanelMouseData* data)->void {

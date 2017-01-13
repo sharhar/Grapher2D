@@ -44,7 +44,7 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 	fragSource += "float y = coord.y;\n";
 	fragSource += "float total = " + eq + ";\n";
 	fragSource += "imageStore(data, ivec2(gl_FragCoord.xy), vec4(total, sign(total), 0.0, 0.0));\n";
-	fragSource += "out_color = vec4(0.0, 0.0, 0.0, 0.0);\n";
+	fragSource += "discard;\n";
 	fragSource += "}\n";
 
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -149,7 +149,7 @@ GraphRenderShader::GraphRenderShader() {
 
 	fragSource += "vec4 c = imageLoad(data, ivec2(gl_FragCoord.xy));\n";
 
-	fragSource += "int width = 2;\n";
+	fragSource += "int width = 4;\n";
 
 	fragSource += "int ci = 0;";
 
@@ -160,7 +160,7 @@ GraphRenderShader::GraphRenderShader() {
 	fragSource += "float l = imageLoad(data, ivec2(gl_FragCoord.x - i, gl_FragCoord.y)).y;\n";
 	fragSource += "float d = imageLoad(data, ivec2(gl_FragCoord.x, gl_FragCoord.y - i)).y;\n";
 
-	fragSource += "if(c.y == 0 || (gl_FragCoord.x + i <= 600 && c.y != r) || (gl_FragCoord.y + i <= 600 && c.y != u) ||";
+	fragSource += "if(c.y == 0 || (gl_FragCoord.x + i <= 1200 && c.y != r) || (gl_FragCoord.y + i <= 1200 && c.y != u) ||";
 	fragSource += "	(gl_FragCoord.x - i >= 0 && c.y != l) || (gl_FragCoord.y + i >= 0 && c.y != d)) {out_color = vec4(g_color.xyz, 1.0); ci = 1; break;}\n";
 
 	fragSource += "}\n";

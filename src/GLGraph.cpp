@@ -31,11 +31,11 @@ GLGraph::GLGraph(Equation* e) {
 
 	glGenTextures(1, &dtex);
 	glBindTexture(GL_TEXTURE_2D, dtex);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG32F, 600, 600);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG32F, 1200, 1200);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void GLGraph::render(GLuint pfbo, glui::Color graphColor, float up, float down, float left, float right, float time, float atime) {
+void GLGraph::render(glui::Color graphColor, float up, float down, float left, float right, float time, float atime) {
 	glBindImageTexture(0, dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
 
 	calcShader->bind();
