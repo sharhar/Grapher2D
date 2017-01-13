@@ -161,7 +161,7 @@ GraphRenderShader::GraphRenderShader() {
 	fragSource += "float d = imageLoad(data, ivec2(gl_FragCoord.x, gl_FragCoord.y - i)).y;\n";
 
 	fragSource += "if(c.y == 0 || (gl_FragCoord.x + i <= 1200 && c.y != r) || (gl_FragCoord.y + i <= 1200 && c.y != u) ||";
-	fragSource += "	(gl_FragCoord.x - i >= 0 && c.y != l) || (gl_FragCoord.y + i >= 0 && c.y != d)) {out_color = vec4(g_color.xyz, 1.0); ci = 1; break;}\n";
+	fragSource += "	(gl_FragCoord.x - i >= 0 && c.y != l) || (gl_FragCoord.y - i >= 0 && c.y != d)) {out_color = vec4(g_color.xyz, 1.0); ci = 1; break;}\n";
 
 	fragSource += "}\n";
 

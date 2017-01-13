@@ -451,10 +451,6 @@ int main() {
 		glEnd();
 
 		glBindTexture(GL_TEXTURE_2D, 0);
-#ifdef __APPLE__
-		glGetError();
-#endif
-		glFinish();
 	},
 	[](GLPanelMouseData* data)->void {
 		if ((data->difference.x != 0 || data->difference.y != 0) && data->leftDown) {
