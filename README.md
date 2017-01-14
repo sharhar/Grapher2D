@@ -1,6 +1,9 @@
 # Grapher2D
 A 2d graphing calculator.
 
+#Cloning
+Use the `--recursive` flag when cloning the repo to copy the GLUI submodule with the rest of the repo.
+
 ##Features
 1. Graphs functions using opengl.
 2. Has a 't' variable that mesures the amount of seconds since the function was submited to the grapher and a 'at' variable that mesures the amount of seconds since launch. They can be used to create moving functions.
