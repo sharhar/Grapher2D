@@ -432,7 +432,17 @@ int main() {
 				continue;
 			}
 
-			graphs[i]->glg->render(g_colors[i % 5], g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
+			graphs[i]->glg->calc(g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
+		}
+
+		glFlush();
+
+		for (int i = 0; i < graphs.size(); i++) {
+			if (graphs[i] == NULL) {
+				continue;
+			}
+
+			graphs[i]->glg->render(g_colors[i % 5]);
 		}
 
 		drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, &color::black);

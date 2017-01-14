@@ -35,19 +35,21 @@ GLGraph::GLGraph(Equation* e) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void GLGraph::render(glui::Color graphColor, float up, float down, float left, float right, float time, float atime) {
+void GLGraph::calc(float up, float down, float left, float right, float time, float atime) {
 	glBindImageTexture(0, dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
 
 	calcShader->bind();
-	calcShader->setUniforms(up, down,left, right, time, atime);
+	calcShader->setUniforms(up, down, left, right, time, atime);
 	GraphQuad::bind();
 	glEnableVertexAttribArray(0);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glDisableVertexAttribArray(0);
 	GraphQuad::unbind();
 	calcShader->unbind();
+}
 
-	glFlush();
+void GLGraph::render(glui::Color graphColor) {
+	glBindImageTexture(0, dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
 
 	renderShader->bind();
 	renderShader->setUniforms(0, graphColor);

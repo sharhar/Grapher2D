@@ -14,6 +14,7 @@ private:
 public:
 	GLGraph(Equation* e);
 
-	void render(glui::Color graphColor, float up, float down, float left, float right, float time, float atime);
+	void calc(float up, float down, float left, float right, float time, float atime);
+	void render(glui::Color graphColor);
 	void cleanUp();
 };
