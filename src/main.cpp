@@ -12,8 +12,6 @@ using namespace glui;
 
 #define VAL_NUM 600
 #define ZOOM_PERCENT 0.05
-#define IMPLICIT_SKIP 4
-#define EQ_NUM 4
 
 double g_left  = -6;
 double g_right =  6;
@@ -44,10 +42,6 @@ typedef struct GraphData {
 
 inline double abs_c(double n1) {
 	return n1 > 0 ? n1 : -(n1);
-}
-
-inline int sign_c(double n1) {
-	return n1 >= 0 ? (n1 != 0 ? 1 : 0) : -1;
 }
 
 void drawAxes(int width, int height) {
@@ -337,8 +331,7 @@ int main() {
 	
 	GLenum initResult = glewInit();
 	if (initResult != GLEW_OK) {
-		std::cout << "GLEW didn't work!\n";
-		system("PAUSE");
+		std::cout << "GLEW could not initialize!\n";
 		return -1;
 	}
 
@@ -349,9 +342,7 @@ int main() {
 
 	if (!font24->inited()) {
 		win.destroy();
-#if defined(_WIN32) || defined (_WIN64)
-		system("PAUSE");
-#endif
+		std::cout << "Could not load arial.tff!\n";
 		return -1;
 	}
 
@@ -359,9 +350,7 @@ int main() {
 
 	if (!font20->inited()) {
 		win.destroy();
-#if defined(_WIN32) || defined (_WIN64)
-		system("PAUSE");
-#endif
+		std::cout << "Could not load arial.tff!\n";
 		return -1;
 	}
 
