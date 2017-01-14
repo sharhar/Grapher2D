@@ -24,9 +24,10 @@ int g_windowWidth = 600;
 int g_windowHeight = 600;
 
 int g_colorNum = 5;
+Color* g_colors = new Color[g_colorNum];
+
 GLuint g_gtex;
 GLuint g_fbo;
-Color* g_colors = new Color[g_colorNum];
 
 typedef struct Graph {
 	double startTime;
