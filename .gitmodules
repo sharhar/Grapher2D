@@ -1,3 +1,3 @@
 [submodule "GLUI"]
 	path = GLUI
-	url = git@github.com:sharhar/GLUI.git
+	url = https://github.com/sharhar/GLUI.git
