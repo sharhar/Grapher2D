@@ -1,7 +1,7 @@
 # Grapher2D
 A 2d graphing calculator.
 
-#Cloning
+##Cloning
 Use the `--recursive` flag when cloning the repo to copy the GLUI submodule with the rest of the repo.
 
 ##Features
