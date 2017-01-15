@@ -24,20 +24,37 @@ public:
 	void cleanUp();
 };
 
+class GraphEdgeShader {
+private:
+	GLuint shaderProgram;
+	GLuint vertexShader;
+	GLuint fragmentShader;
+
+	GLint dataLoc, edgeLoc;
+public:
+	bool compiled;
+
+	GraphEdgeShader();
+
+	void bind();
+	void unbind();
+	void cleanUp();
+};
+
 class GraphRenderShader {
 private:
 	GLuint shaderProgram;
 	GLuint vertexShader;
 	GLuint fragmentShader;
 
-	GLint texLoc, colorLoc;
+	GLint colorLoc, edgeLoc;
 public:
 	bool compiled;
 
 	GraphRenderShader();
 
 	void bind();
+	void setUniforms(glui::Color graphColor);
 	void unbind();
-	void setUniforms(GLuint tex, glui::Color graphColor);
 	void cleanUp();
 };

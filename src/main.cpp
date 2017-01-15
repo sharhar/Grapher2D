@@ -431,8 +431,19 @@ int main() {
 				continue;
 			}
 
+			graphs[i]->glg->renderEdge();
+		}
+
+		glFlush();
+
+		for (int i = 0; i < graphs.size(); i++) {
+			if (graphs[i] == NULL) {
+				continue;
+			}
+
 			graphs[i]->glg->render(g_colors[i % 5]);
 		}
+
 
 		drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, &color::black);
 

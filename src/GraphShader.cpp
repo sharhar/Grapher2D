@@ -124,7 +124,17 @@ void GraphCalcShader::unbind() {
 	glUseProgram(0);
 }
 
-GraphRenderShader::GraphRenderShader() {
+void GraphCalcShader::cleanUp() {
+	glUseProgram(0);
+
+	glDetachShader(shaderProgram, vertexShader);
+	glDetachShader(shaderProgram, fragmentShader);
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+	glDeleteProgram(shaderProgram);
+}
+
+GraphEdgeShader::GraphEdgeShader() {
 	std::string vertSource = "";
 
 	vertSource += "#version 420 core\n";
@@ -138,10 +148,9 @@ GraphRenderShader::GraphRenderShader() {
 	std::string fragSource = "";
 
 	fragSource += "#version 420 core\n";
-	fragSource += "uniform sampler2D tex;\n";
-	fragSource += "uniform vec3 g_color;\n";
 
 	fragSource += "layout (rgba32f) uniform image2D data;\n";
+	fragSource += "layout (rg32f) uniform image2D edge;\n";
 
 	fragSource += "in vec2 coord;\n";
 	fragSource += "out vec4 out_color;\n";
@@ -259,20 +268,126 @@ GraphRenderShader::GraphRenderShader() {
 	fragSource += "}";
 
 	fragSource += "void main(void) {\n";
+	fragSource += "if(isColored(ivec2(gl_FragCoord.xy))) {imageStore(edge, ivec2(gl_FragCoord.xy), vec4(1.0, 0.0, 0.0, 0.0));}";
+	fragSource += "else {imageStore(edge, ivec2(gl_FragCoord.xy), vec4(0.0, 0.0, 0.0, 0.0));}";
+	fragSource += "discard;";
+	fragSource += "}\n";
 
-	fragSource += "int width = 4;\n";
+	vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	GLchar* shadersource = (GLchar*)vertSource.c_str();
+	glShaderSource(vertexShader, 1, &shadersource, 0);
+	shadersource = (GLchar*)fragSource.c_str();
+	glShaderSource(fragmentShader, 1, &shadersource, 0);
 
-	fragSource += "if(isColored(ivec2(gl_FragCoord.xy))) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	glCompileShader(vertexShader);
 
-	fragSource += "if(isColored(ivec2(gl_FragCoord.x + 1, gl_FragCoord.y))) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	fragSource += "if(isColored(ivec2(gl_FragCoord.x - 1, gl_FragCoord.y))) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	fragSource += "if(isColored(ivec2(gl_FragCoord.x, gl_FragCoord.y + 1))) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	fragSource += "if(isColored(ivec2(gl_FragCoord.x, gl_FragCoord.y - 1))) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	GLint compiled = 0;
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &compiled);
+	if (compiled == GL_FALSE) {
+		GLint maxLength = 0;
+		glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &maxLength);
 
-	fragSource += "if(isColored(ivec2(gl_FragCoord.x + 2, gl_FragCoord.y))) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	fragSource += "if(isColored(ivec2(gl_FragCoord.x - 2, gl_FragCoord.y))) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	fragSource += "if(isColored(ivec2(gl_FragCoord.x, gl_FragCoord.y + 2))) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	fragSource += "if(isColored(ivec2(gl_FragCoord.x, gl_FragCoord.y - 2))) {out_color = vec4(g_color.xyz, 1.0); return;}";
+		GLchar* message = (GLchar*)malloc(sizeof(GLchar)*maxLength);
+		glGetShaderInfoLog(vertexShader, maxLength, &maxLength, message);
+
+		std::cout << "Vertex Shader failed to compile:\n";
+		std::cout << message << "\n";
+
+		glDeleteShader(vertexShader);
+		return;
+	}
+
+	glCompileShader(fragmentShader);
+
+	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compiled);
+	if (compiled == GL_FALSE) {
+		GLint maxLength = 0;
+		glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &maxLength);
+
+		GLchar* message = (GLchar*)malloc(sizeof(GLchar)*maxLength);
+		glGetShaderInfoLog(fragmentShader, maxLength, &maxLength, message);
+
+		std::cout << "Fragment Shader failed to compile:\n";
+		std::cout << message << "\n";
+
+		glDeleteShader(fragmentShader);
+		return;
+	}
+
+	shaderProgram = glCreateProgram();
+
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+
+	glBindAttribLocation(shaderProgram, 0, "position");
+
+	glLinkProgram(shaderProgram);
+	glValidateProgram(shaderProgram);
+
+	dataLoc = glGetUniformLocation(shaderProgram, "data");
+	edgeLoc = glGetUniformLocation(shaderProgram, "edge");
+
+	bind();
+
+	glUniform1i(dataLoc, 0);
+	glUniform1i(edgeLoc, 1);
+
+	unbind();
+}
+
+void GraphEdgeShader::bind() {
+	glUseProgram(shaderProgram);
+}
+
+void GraphEdgeShader::unbind() {
+	glUseProgram(0);
+}
+
+void GraphEdgeShader::cleanUp() {
+	glUseProgram(0);
+
+	glDetachShader(shaderProgram, vertexShader);
+	glDetachShader(shaderProgram, fragmentShader);
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+	glDeleteProgram(shaderProgram);
+}
+
+GraphRenderShader::GraphRenderShader() {
+	std::string vertSource = "";
+
+	vertSource += "#version 420 core\n";
+	vertSource += "out vec2 coord;\n";
+	vertSource += "in vec2 position;\n";
+	vertSource += "void main(void) {\n";
+	vertSource += "gl_Position = vec4(position.xy, 0, 1);\n";
+	vertSource += "coord = position/2.0 + 0.5;\n";
+	vertSource += "}\n";
+
+	std::string fragSource = "";
+
+	fragSource += "#version 420 core\n";
+
+	fragSource += "layout (rg32f) uniform image2D edge;\n";
+	fragSource += "uniform vec3 g_color;\n";
+
+	fragSource += "in vec2 coord;\n";
+	fragSource += "out vec4 out_color;\n";
+
+	fragSource += "void main(void) {\n";
+
+	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+
+	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x + 1, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x - 1, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y + 1)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y - 1)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+
+	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x + 2, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x - 2, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y + 2)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y - 2)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
 
 	fragSource += "discard;";
 	fragSource += "}\n";
@@ -329,8 +444,16 @@ GraphRenderShader::GraphRenderShader() {
 	glLinkProgram(shaderProgram);
 	glValidateProgram(shaderProgram);
 
-	texLoc = glGetUniformLocation(shaderProgram, "tex");
+	edgeLoc = glGetUniformLocation(shaderProgram, "edge");
 	colorLoc = glGetUniformLocation(shaderProgram, "g_color");
+
+	bind();
+	glUniform1i(edgeLoc, 0);
+	unbind();
+}
+
+void GraphRenderShader::setUniforms(glui::Color graphColor) {
+	glUniform3f(colorLoc, graphColor.r, graphColor.g, graphColor.b);
 }
 
 void GraphRenderShader::bind() {
@@ -339,11 +462,6 @@ void GraphRenderShader::bind() {
 
 void GraphRenderShader::unbind() {
 	glUseProgram(0);
-}
-
-void GraphRenderShader::setUniforms(GLuint tex, glui::Color graphColor) {
-	glUniform1i(texLoc, tex);
-	glUniform3f(colorLoc, graphColor.r, graphColor.g, graphColor.b);
 }
 
 void GraphRenderShader::cleanUp() {
@@ -356,12 +474,3 @@ void GraphRenderShader::cleanUp() {
 	glDeleteProgram(shaderProgram);
 }
 
-void GraphCalcShader::cleanUp() {
-	glUseProgram(0);
-
-	glDetachShader(shaderProgram, vertexShader);
-	glDetachShader(shaderProgram, fragmentShader);
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-	glDeleteProgram(shaderProgram);
-}
