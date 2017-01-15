@@ -25,10 +25,6 @@ GLGraph::GLGraph(Equation* e) {
 	String eqt = getNodeString((Node*)e->getRootNode());
 
 	calcShader = new GraphCalcShader(eqt.getstdstring());
-	edgeShader = new GraphEdgeShader();
-	renderShader = new GraphRenderShader();
-
-	GraphQuad::init();
 
 	glGenTextures(1, &dtex);
 	glBindTexture(GL_TEXTURE_2D, dtex);
@@ -46,46 +42,13 @@ void GLGraph::calc(float up, float down, float left, float right, float time, fl
 
 	calcShader->bind();
 	calcShader->setUniforms(up, down, left, right, time, atime);
-	GraphQuad::bind();
-	glEnableVertexAttribArray(0);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
-	glDisableVertexAttribArray(0);
-	GraphQuad::unbind();
 	calcShader->unbind();
-}
-
-void GLGraph::renderEdge() {
-	glBindImageTexture(0, dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-	glBindImageTexture(1, etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
-
-	edgeShader->bind();
-	GraphQuad::bind();
-	glEnableVertexAttribArray(0);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-	glDisableVertexAttribArray(0);
-	GraphQuad::unbind();
-	edgeShader->unbind();
-}
-
-void GLGraph::render(glui::Color graphColor) {
-	glBindImageTexture(0, etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
-
-	renderShader->bind();
-	renderShader->setUniforms(graphColor);
-	GraphQuad::bind();
-	glEnableVertexAttribArray(0);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-	glDisableVertexAttribArray(0);
-	GraphQuad::unbind();
-	renderShader->unbind();
 }
 
 void GLGraph::cleanUp() {
 	calcShader->cleanUp();
-	edgeShader->cleanUp();
-
 	delete calcShader;
-	delete edgeShader;
 }
 
 String getNodeString(Node* node) {

@@ -393,6 +393,11 @@ int main() {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	GraphQuad::init();
+
+	GraphEdgeShader* edgeShader = new GraphEdgeShader();
+	GraphRenderShader* renderShader = new GraphRenderShader();
+
 	GLPanel* panel;
 
 	panel = new GLPanel({ 390, 10, 600, 600 }, { 600, 600 }, layout,
@@ -416,6 +421,9 @@ int main() {
 		
 		float time = glfwGetTime();
 
+		GraphQuad::bind();
+		glEnableVertexAttribArray(0);
+
 		for (int i = 0; i < graphs.size(); i++) {
 			if (graphs[i] == NULL) {
 				continue;
@@ -426,24 +434,34 @@ int main() {
 
 		glFlush();
 
+		edgeShader->bind();
 		for (int i = 0; i < graphs.size(); i++) {
 			if (graphs[i] == NULL) {
 				continue;
 			}
 
-			graphs[i]->glg->renderEdge();
+			glBindImageTexture(0, graphs[i]->glg->dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+			glBindImageTexture(1, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
+		edgeShader->unbind();
 
 		glFlush();
 
+		renderShader->bind();
 		for (int i = 0; i < graphs.size(); i++) {
 			if (graphs[i] == NULL) {
 				continue;
 			}
 
-			graphs[i]->glg->render(g_colors[i % 5]);
+			renderShader->setUniforms(g_colors[i % 5]);
+			glBindImageTexture(0, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
+		renderShader->unbind();
 
+		glDisableVertexAttribArray(0);
+		GraphQuad::unbind();
 
 		drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, &color::black);
 
@@ -697,6 +715,9 @@ int main() {
 	for (int i = 0; i < graphs.size(); i++) {
 		deleteGraph(i);
 	}
+
+	edgeShader->cleanUp();
+	renderShader->cleanUp();
 
 	win.destroy();
 
