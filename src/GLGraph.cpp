@@ -48,11 +48,11 @@ void GLGraph::calc(float up, float down, float left, float right, float time, fl
 	calcShader->unbind();
 }
 
-void GLGraph::render(glui::Color graphColor, float xs, float ys) {
+void GLGraph::render(glui::Color graphColor) {
 	glBindImageTexture(0, dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
 	renderShader->bind();
-	renderShader->setUniforms(0, graphColor, xs, ys);
+	renderShader->setUniforms(0, graphColor);
 	GraphQuad::bind();
 	glEnableVertexAttribArray(0);
 	glDrawArrays(GL_TRIANGLES, 0, 6);

@@ -43,7 +43,7 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 	fragSource += "float x = coord.x;\n";
 	fragSource += "float y = coord.y;\n";
 	fragSource += "float total = " + eq + ";\n";
-	fragSource += "imageStore(data, ivec2(gl_FragCoord.xy), vec4(total, sign(total), 0.0, 0.0));\n";
+	fragSource += "imageStore(data, ivec2(gl_FragCoord.xy), vec4(total, sign(total), x, y));\n";
 	fragSource += "discard;\n";
 	fragSource += "}\n";
 
@@ -140,54 +140,141 @@ GraphRenderShader::GraphRenderShader() {
 	fragSource += "#version 420 core\n";
 	fragSource += "uniform sampler2D tex;\n";
 	fragSource += "uniform vec3 g_color;\n";
-	fragSource += "uniform float xs;\n";
-	fragSource += "uniform float ys;\n";
 
 	fragSource += "layout (rgba32f) uniform image2D data;\n";
 
 	fragSource += "in vec2 coord;\n";
 	fragSource += "out vec4 out_color;\n";
-	fragSource += "void main(void) {\n";
 
-	fragSource += "vec4 c = imageLoad(data, ivec2(gl_FragCoord.xy));\n";
+	fragSource += "bool isColored(ivec2 coord) {";
+
+	fragSource += "vec4 c = imageLoad(data, coord);\n";
+	
+	fragSource += "vec4 r = imageLoad(data, ivec2(coord.x + 1, coord.y));\n";
+	fragSource += "vec4 u = imageLoad(data, ivec2(coord.x, coord.y + 1));\n";
+	fragSource += "vec4 l = imageLoad(data, ivec2(coord.x - 1, coord.y));\n";
+	fragSource += "vec4 d = imageLoad(data, ivec2(coord.x, coord.y - 1));\n";
+
+	fragSource += "vec4 r2 = imageLoad(data, ivec2(coord.x + 2, coord.y));\n";
+	fragSource += "vec4 u2 = imageLoad(data, ivec2(coord.x, coord.y + 2));\n";
+	fragSource += "vec4 l2 = imageLoad(data, ivec2(coord.x - 2, coord.y));\n";
+	fragSource += "vec4 d2 = imageLoad(data, ivec2(coord.x, coord.y - 2));\n";
+
+	fragSource += "float mm = 10;";
+
+	//Up Pixel
+	fragSource += "if(coord.y + 2 <= 1200 && coord.y - 1 >= 0) {";
+
+	fragSource += "float m1 = (c.x - d.x)/(c.z - d.z);";
+	fragSource += "float m2 = (u2.x - u.x)/(u2.z - u.z);";
+	fragSource += "float m = (u.x - c.x)/(u.z - c.z);";
+
+	fragSource += "bool p1 = m1 > 0;";
+	fragSource += "bool p2 = m2 > 0;";
+	fragSource += "bool p = m > 0;";
+
+	fragSource += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
+
+	fragSource += "if(u.y != c.y && !sk) {";
+	fragSource += "return true;\n";
+	fragSource += "}\n";
+
+	fragSource += "if(u.y == c.y && sk) {";
+	fragSource += "return true;\n";
+	fragSource += "}\n";
+
+	fragSource += "}\n";
+
+	//Down Pixel
+	fragSource += "if(coord.y + 1 <= 1200 && coord.y - 2 >= 0) {";
+
+	fragSource += "float m1 = (d.x - d2.x)/(d.z - d2.z);";
+	fragSource += "float m2 = (u.x - c.x)/(u.z - c.z);";
+	fragSource += "float m = (c.x - d.x)/(c.z - d.z);";
+
+	fragSource += "bool p1 = m1 > 0;";
+	fragSource += "bool p2 = m2 > 0;";
+	fragSource += "bool p = m > 0;";
+
+	fragSource += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
+
+	fragSource += "if(c.y != d.y && !sk) {";
+	fragSource += "return true;\n";
+	fragSource += "}\n";
+
+	fragSource += "if(c.y == d.y && sk) {";
+	fragSource += "return true;\n";
+	fragSource += "}\n";
+
+	fragSource += "}\n";
+
+	//Right Pixel
+	fragSource += "if(coord.x + 2 <= 1200 && coord.x - 1 >= 0) {";
+
+	fragSource += "float m1 = (c.x - l.x)/(c.z - l.z);";
+	fragSource += "float m2 = (r2.x - r.x)/(r2.z - r.z);";
+	fragSource += "float m = (r.x - c.x)/(r.z - c.z);";
+
+	fragSource += "bool p1 = m1 > 0;";
+	fragSource += "bool p2 = m2 > 0;";
+	fragSource += "bool p = m > 0;";
+
+	fragSource += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
+
+	fragSource += "if(r.y != c.y && !sk) {";
+	fragSource += "return true;\n";
+	fragSource += "}\n";
+
+	fragSource += "if(r.y == c.y && sk) {";
+	fragSource += "return true;\n";
+	fragSource += "}\n";
+
+	fragSource += "}\n";
+
+	//Left Pixel
+	fragSource += "if(coord.x + 1 <= 1200 && coord.x - 2 >= 0) {";
+
+	fragSource += "float m1 = (l.x - l2.x)/(l.z - l2.z);";
+	fragSource += "float m2 = (r.x - c.x)/(r.z - c.z);";
+	fragSource += "float m = (c.x - l.x)/(c.z - l.z);";
+
+	fragSource += "bool p1 = m1 > 0;";
+	fragSource += "bool p2 = m2 > 0;";
+	fragSource += "bool p = m > 0;";
+
+	fragSource += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
+
+	fragSource += "if(c.y != l.y && !sk) {";
+	fragSource += "return true;\n";
+	fragSource += "}\n";
+
+	fragSource += "if(c.y == l.y && sk) {";
+	fragSource += "return true;\n";
+	fragSource += "}\n";
+
+	fragSource += "}\n";
+
+	fragSource += "return false;";
+
+	fragSource += "}";
+
+	fragSource += "void main(void) {\n";
 
 	fragSource += "int width = 4;\n";
 
-	fragSource += "int ci = 0;";
+	fragSource += "if(isColored(ivec2(gl_FragCoord.xy))) {out_color = vec4(g_color.xyz, 1.0); return;}";
 
-	fragSource += "for(int i = 1; i <= width; i++) {\n";
+	fragSource += "if(isColored(ivec2(gl_FragCoord.x + 1, gl_FragCoord.y))) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	fragSource += "if(isColored(ivec2(gl_FragCoord.x - 1, gl_FragCoord.y))) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	fragSource += "if(isColored(ivec2(gl_FragCoord.x, gl_FragCoord.y + 1))) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	fragSource += "if(isColored(ivec2(gl_FragCoord.x, gl_FragCoord.y - 1))) {out_color = vec4(g_color.xyz, 1.0); return;}";
 
-	fragSource += "vec4 r = imageLoad(data, ivec2(gl_FragCoord.x + i, gl_FragCoord.y));\n";
-	fragSource += "vec4 u = imageLoad(data, ivec2(gl_FragCoord.x, gl_FragCoord.y + i));\n";
-	fragSource += "vec4 l = imageLoad(data, ivec2(gl_FragCoord.x - i, gl_FragCoord.y));\n";
-	fragSource += "vec4 d = imageLoad(data, ivec2(gl_FragCoord.x, gl_FragCoord.y - i));\n";
-	
-	fragSource += "if(gl_FragCoord.y - i >= 0 && c.y != d.y) {";
-	fragSource += "if(abs(c.x) < 1 && abs(d.x) < 1) {";
-	fragSource += "out_color = vec4(g_color.xyz, 1.0); ci = 1; break;";
-	fragSource += "}\n";
-	fragSource += "}\n";
-	
-	fragSource += "if(gl_FragCoord.x - i >= 0 && c.y != l.y) {";
-	fragSource += "if(abs(c.x) < 1 && abs(l.x) < 1) {";
-	fragSource += "out_color = vec4(g_color.xyz, 1.0); ci = 1; break;";
-	fragSource += "}\n";
-	fragSource += "}\n";
+	fragSource += "if(isColored(ivec2(gl_FragCoord.x + 2, gl_FragCoord.y))) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	fragSource += "if(isColored(ivec2(gl_FragCoord.x - 2, gl_FragCoord.y))) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	fragSource += "if(isColored(ivec2(gl_FragCoord.x, gl_FragCoord.y + 2))) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	fragSource += "if(isColored(ivec2(gl_FragCoord.x, gl_FragCoord.y - 2))) {out_color = vec4(g_color.xyz, 1.0); return;}";
 
-	fragSource += "if(gl_FragCoord.y + i <= 1200 && c.y != u.y) {";
-	fragSource += "if(abs(c.x) < 1 && abs(u.x) < 1) {";
-	fragSource += "out_color = vec4(g_color.xyz, 1.0); ci = 1; break;";
-	fragSource += "}\n";
-	fragSource += "}\n";
-	
-	fragSource += "if(gl_FragCoord.x + i <= 1200 && c.y != r.y) {";
-	fragSource += "if(abs(c.x) < 1 && abs(r.x) < 1) {";
-	fragSource += "out_color = vec4(g_color.xyz, 1.0); ci = 1; break;";
-	fragSource += "}\n";
-	fragSource += "}\n";
-
-	fragSource += "}\n";
-	fragSource += "if(ci == 0) {out_color = vec4(0.0, 0.0, 0.0, 0.0);}";
+	fragSource += "discard;";
 	fragSource += "}\n";
 
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -244,8 +331,6 @@ GraphRenderShader::GraphRenderShader() {
 
 	texLoc = glGetUniformLocation(shaderProgram, "tex");
 	colorLoc = glGetUniformLocation(shaderProgram, "g_color");
-	xsLoc = glGetUniformLocation(shaderProgram, "xs");
-	ysLoc = glGetUniformLocation(shaderProgram, "ys");
 }
 
 void GraphRenderShader::bind() {
@@ -256,11 +341,9 @@ void GraphRenderShader::unbind() {
 	glUseProgram(0);
 }
 
-void GraphRenderShader::setUniforms(GLuint tex, glui::Color graphColor, float xs, float ys) {
+void GraphRenderShader::setUniforms(GLuint tex, glui::Color graphColor) {
 	glUniform1i(texLoc, tex);
 	glUniform3f(colorLoc, graphColor.r, graphColor.g, graphColor.b);
-	glUniform1f(xsLoc, xs);
-	glUniform1f(ysLoc, ys);
 }
 
 void GraphRenderShader::cleanUp() {

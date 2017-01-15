@@ -30,7 +30,7 @@ private:
 	GLuint vertexShader;
 	GLuint fragmentShader;
 
-	GLint texLoc, colorLoc, xsLoc, ysLoc;
+	GLint texLoc, colorLoc;
 public:
 	bool compiled;
 
@@ -38,6 +38,6 @@ public:
 
 	void bind();
 	void unbind();
-	void setUniforms(GLuint tex, glui::Color graphColor, float xs, float ys);
+	void setUniforms(GLuint tex, glui::Color graphColor);
 	void cleanUp();
 };
