@@ -431,7 +431,7 @@ int main() {
 				continue;
 			}
 
-			graphs[i]->glg->render(g_colors[i % 5]);
+			graphs[i]->glg->render(g_colors[i % 5], 600/(g_right - g_left), 600/(g_up - g_down));
 		}
 
 		drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, &color::black);

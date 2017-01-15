@@ -2,7 +2,6 @@
 
 #include <GL/glew.h>
 #include <string>
-#include <glcorearb.h>
 #include <GLFW/glfw3.h>
 
 class GraphQuad {

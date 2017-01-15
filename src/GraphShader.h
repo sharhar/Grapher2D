@@ -29,10 +29,8 @@ private:
 	GLuint shaderProgram;
 	GLuint vertexShader;
 	GLuint fragmentShader;
-	//GraphShaderFuncs* funcs;
 
-	GLint texLoc, colorLoc;
-
+	GLint texLoc, colorLoc, xsLoc, ysLoc;
 public:
 	bool compiled;
 
@@ -40,6 +38,6 @@ public:
 
 	void bind();
 	void unbind();
-	void setUniforms(GLuint tex, glui::Color graphColor);
+	void setUniforms(GLuint tex, glui::Color graphColor, float xs, float ys);
 	void cleanUp();
 };

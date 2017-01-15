@@ -31,12 +31,12 @@ GLGraph::GLGraph(Equation* e) {
 
 	glGenTextures(1, &dtex);
 	glBindTexture(GL_TEXTURE_2D, dtex);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG32F, 1200, 1200);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, 1200, 1200);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void GLGraph::calc(float up, float down, float left, float right, float time, float atime) {
-	glBindImageTexture(0, dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
+	glBindImageTexture(0, dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
 	calcShader->bind();
 	calcShader->setUniforms(up, down, left, right, time, atime);
@@ -48,11 +48,11 @@ void GLGraph::calc(float up, float down, float left, float right, float time, fl
 	calcShader->unbind();
 }
 
-void GLGraph::render(glui::Color graphColor) {
-	glBindImageTexture(0, dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
+void GLGraph::render(glui::Color graphColor, float xs, float ys) {
+	glBindImageTexture(0, dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
 	renderShader->bind();
-	renderShader->setUniforms(0, graphColor);
+	renderShader->setUniforms(0, graphColor, xs, ys);
 	GraphQuad::bind();
 	glEnableVertexAttribArray(0);
 	glDrawArrays(GL_TRIANGLES, 0, 6);

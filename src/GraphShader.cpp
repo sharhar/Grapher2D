@@ -31,7 +31,7 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 	fragSource += "uniform float t;\n";
 	fragSource += "uniform float at;\n";
 
-	fragSource += "layout (rg32f) uniform image2D data;\n";
+	fragSource += "layout (rgba32f) uniform image2D data;\n";
 
 	fragSource += "const float e = 2.718281828459045;\n";
 	fragSource += "const float pi = 3.141592653589793;\n";
@@ -140,8 +140,10 @@ GraphRenderShader::GraphRenderShader() {
 	fragSource += "#version 420 core\n";
 	fragSource += "uniform sampler2D tex;\n";
 	fragSource += "uniform vec3 g_color;\n";
+	fragSource += "uniform float xs;\n";
+	fragSource += "uniform float ys;\n";
 
-	fragSource += "layout (rg32f) uniform image2D data;\n";
+	fragSource += "layout (rgba32f) uniform image2D data;\n";
 
 	fragSource += "in vec2 coord;\n";
 	fragSource += "out vec4 out_color;\n";
@@ -155,18 +157,37 @@ GraphRenderShader::GraphRenderShader() {
 
 	fragSource += "for(int i = 1; i <= width; i++) {\n";
 
-	fragSource += "float r = imageLoad(data, ivec2(gl_FragCoord.x + i, gl_FragCoord.y)).y;\n";
-	fragSource += "float u = imageLoad(data, ivec2(gl_FragCoord.x, gl_FragCoord.y + i)).y;\n";
-	fragSource += "float l = imageLoad(data, ivec2(gl_FragCoord.x - i, gl_FragCoord.y)).y;\n";
-	fragSource += "float d = imageLoad(data, ivec2(gl_FragCoord.x, gl_FragCoord.y - i)).y;\n";
-
-	fragSource += "if(c.y == 0 || (gl_FragCoord.x + i <= 1200 && c.y != r) || (gl_FragCoord.y + i <= 1200 && c.y != u) ||";
-	fragSource += "	(gl_FragCoord.x - i >= 0 && c.y != l) || (gl_FragCoord.y - i >= 0 && c.y != d)) {out_color = vec4(g_color.xyz, 1.0); ci = 1; break;}\n";
-
+	fragSource += "vec4 r = imageLoad(data, ivec2(gl_FragCoord.x + i, gl_FragCoord.y));\n";
+	fragSource += "vec4 u = imageLoad(data, ivec2(gl_FragCoord.x, gl_FragCoord.y + i));\n";
+	fragSource += "vec4 l = imageLoad(data, ivec2(gl_FragCoord.x - i, gl_FragCoord.y));\n";
+	fragSource += "vec4 d = imageLoad(data, ivec2(gl_FragCoord.x, gl_FragCoord.y - i));\n";
+	
+	fragSource += "if(gl_FragCoord.y - i >= 0 && c.y != d.y) {";
+	fragSource += "if(abs(c.x) < 1 && abs(d.x) < 1) {";
+	fragSource += "out_color = vec4(g_color.xyz, 1.0); ci = 1; break;";
+	fragSource += "}\n";
+	fragSource += "}\n";
+	
+	fragSource += "if(gl_FragCoord.x - i >= 0 && c.y != l.y) {";
+	fragSource += "if(abs(c.x) < 1 && abs(l.x) < 1) {";
+	fragSource += "out_color = vec4(g_color.xyz, 1.0); ci = 1; break;";
+	fragSource += "}\n";
 	fragSource += "}\n";
 
-	fragSource += "if(ci == 0) {out_color = vec4(0.0, 0.0, 0.0, 0.0);}";
+	fragSource += "if(gl_FragCoord.y + i <= 1200 && c.y != u.y) {";
+	fragSource += "if(abs(c.x) < 1 && abs(u.x) < 1) {";
+	fragSource += "out_color = vec4(g_color.xyz, 1.0); ci = 1; break;";
+	fragSource += "}\n";
+	fragSource += "}\n";
+	
+	fragSource += "if(gl_FragCoord.x + i <= 1200 && c.y != r.y) {";
+	fragSource += "if(abs(c.x) < 1 && abs(r.x) < 1) {";
+	fragSource += "out_color = vec4(g_color.xyz, 1.0); ci = 1; break;";
+	fragSource += "}\n";
+	fragSource += "}\n";
 
+	fragSource += "}\n";
+	fragSource += "if(ci == 0) {out_color = vec4(0.0, 0.0, 0.0, 0.0);}";
 	fragSource += "}\n";
 
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -223,6 +244,8 @@ GraphRenderShader::GraphRenderShader() {
 
 	texLoc = glGetUniformLocation(shaderProgram, "tex");
 	colorLoc = glGetUniformLocation(shaderProgram, "g_color");
+	xsLoc = glGetUniformLocation(shaderProgram, "xs");
+	ysLoc = glGetUniformLocation(shaderProgram, "ys");
 }
 
 void GraphRenderShader::bind() {
@@ -233,9 +256,11 @@ void GraphRenderShader::unbind() {
 	glUseProgram(0);
 }
 
-void GraphRenderShader::setUniforms(GLuint tex, glui::Color graphColor) {
+void GraphRenderShader::setUniforms(GLuint tex, glui::Color graphColor, float xs, float ys) {
 	glUniform1i(texLoc, tex);
 	glUniform3f(colorLoc, graphColor.r, graphColor.g, graphColor.b);
+	glUniform1f(xsLoc, xs);
+	glUniform1f(ysLoc, ys);
 }
 
 void GraphRenderShader::cleanUp() {
@@ -246,8 +271,6 @@ void GraphRenderShader::cleanUp() {
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 	glDeleteProgram(shaderProgram);
-
-	//free(funcs);
 }
 
 void GraphCalcShader::cleanUp() {
@@ -258,6 +281,4 @@ void GraphCalcShader::cleanUp() {
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 	glDeleteProgram(shaderProgram);
-
-	//free(funcs);
 }
