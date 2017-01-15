@@ -232,6 +232,18 @@ void loadDefaults(Equation* e) {
 		return modf(input[0], &input[1]);
 	};
 
+	Function* funcPow = (Function*)malloc(sizeof(Function));
+	funcPow->name = new String((char*)"pow");
+	funcPow->func = [](int len, double* input)->double {
+		return pow(input[0], input[1]);
+	};
+
+	Function* funcSqrt = (Function*)malloc(sizeof(Function));
+	funcSqrt->name = new String((char*)"sqrt");
+	funcSqrt->func = [](int len, double* input)->double {
+		return sqrt(input[0]);
+	};
+
 	e->addFunction(funcTan);
 	e->addFunction(funcSin);
 	e->addFunction(funcCos);
@@ -251,6 +263,8 @@ void loadDefaults(Equation* e) {
 	e->addFunction(funcLog);
 	e->addFunction(funcExp);
 	e->addFunction(funcAbs);
+	e->addFunction(funcPow);
+	e->addFunction(funcSqrt);
 
 	e->createVariable("e")->value = 2.718281828459045;
 	e->createVariable("pi")->value = 3.141592653589793;
