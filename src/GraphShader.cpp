@@ -44,6 +44,7 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 	fragSource += "float y = coord.y;\n";
 	fragSource += "float total = " + eq + ";\n";
 	fragSource += "imageStore(data, ivec2(gl_FragCoord.xy), vec4(total, sign(total), x, y));\n";
+	//fragSource += "out_color = vec4((total-100.0)/200.0 + 0.5, sign(total), 0.0, 1.0);";
 	fragSource += "discard;\n";
 	fragSource += "}\n";
 
@@ -170,6 +171,7 @@ GraphEdgeShader::GraphEdgeShader() {
 	fragSource += "vec4 d2 = imageLoad(data, ivec2(coord.x, coord.y - 2));\n";
 
 	fragSource += "float mm = 10;";
+	fragSource += "float mm2 = 100000;";
 
 	//Up Pixel
 	fragSource += "if(coord.y + 2 <= 1200 && coord.y - 1 >= 0) {";
@@ -188,7 +190,9 @@ GraphEdgeShader::GraphEdgeShader() {
 	fragSource += "return true;\n";
 	fragSource += "}\n";
 
-	fragSource += "if(u.y == c.y && sk) {";
+	fragSource += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2;";
+
+	fragSource += "if(u.y == c.y && sk2) {";
 	fragSource += "return true;\n";
 	fragSource += "}\n";
 
@@ -211,7 +215,9 @@ GraphEdgeShader::GraphEdgeShader() {
 	fragSource += "return true;\n";
 	fragSource += "}\n";
 
-	fragSource += "if(c.y == d.y && sk) {";
+	fragSource += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2;";
+
+	fragSource += "if(c.y == d.y && sk2) {";
 	fragSource += "return true;\n";
 	fragSource += "}\n";
 
@@ -234,7 +240,9 @@ GraphEdgeShader::GraphEdgeShader() {
 	fragSource += "return true;\n";
 	fragSource += "}\n";
 
-	fragSource += "if(r.y == c.y && sk) {";
+	fragSource += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2;";
+
+	fragSource += "if(r.y == c.y && sk2) {";
 	fragSource += "return true;\n";
 	fragSource += "}\n";
 
@@ -257,18 +265,21 @@ GraphEdgeShader::GraphEdgeShader() {
 	fragSource += "return true;\n";
 	fragSource += "}\n";
 
-	fragSource += "if(c.y == l.y && sk) {";
+	fragSource += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2;";
+
+	fragSource += "if(c.y == l.y && sk2) {";
 	fragSource += "return true;\n";
 	fragSource += "}\n";
 
 	fragSource += "}\n";
 
-	fragSource += "return false;";
+	fragSource += "return false;\n";
 
 	fragSource += "}";
 
 	fragSource += "void main(void) {\n";
-	fragSource += "if(isColored(ivec2(gl_FragCoord.xy))) {imageStore(edge, ivec2(gl_FragCoord.xy), vec4(1.0, 0.0, 0.0, 0.0));}";
+
+	fragSource += "if(isColored(ivec2(gl_FragCoord.xy))) {imageStore(edge, ivec2(gl_FragCoord.xy), vec4(1.0, 0.0, 0.0, 0.0)); }";
 	fragSource += "else {imageStore(edge, ivec2(gl_FragCoord.xy), vec4(0.0, 0.0, 0.0, 0.0));}";
 	fragSource += "discard;";
 	fragSource += "}\n";
@@ -448,7 +459,7 @@ GraphRenderShader::GraphRenderShader() {
 	colorLoc = glGetUniformLocation(shaderProgram, "g_color");
 
 	bind();
-	glUniform1i(edgeLoc, 0);
+	glUniform1i(edgeLoc, 1);
 	unbind();
 }
 

@@ -14,10 +14,10 @@ void GraphQuad::init() {
 	verts[2] =  1;
 	verts[3] = -1;
 
-	verts[4] = -1;
+	verts[4] =  1;
 	verts[5] =  1;
 
-	verts[6] = 1;
+	verts[6] = -1;
 	verts[7] = -1;
 
 	verts[8] = -1;
