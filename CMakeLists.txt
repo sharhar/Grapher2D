@@ -25,18 +25,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-#https://iweb.dl.sourceforge.net/project/glew/glew/2.0.0/glew-2.0.0.zip
-
-
 set(GLEW_SOURCE_VERSION "2.0.0")
 set(GLEW_SOURCE_NAME "glew-${GLEW_SOURCE_VERSION}")
 set(GLEW_URL "https://kent.dl.sourceforge.net/project/glew/glew/${GLEW_SOURCE_VERSION}/${GLEW_SOURCE_NAME}.tgz")
 
 
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/${GLEW_SOURCE_NAME})
+if(NOT EXISTS ${EXT_EXTRACT_DIR}/${GLEW_SOURCE_NAME})
 	download_library(${GLEW_SOURCE_NAME} ${GLEW_URL})
-	add_subdirectory(${EXT_EXTRACT_DIR}/${GLEW_SOURCE_NAME}/build/cmake)
-	
+		
 	if(BUILD_SHARED_LIBS)
 		add_definitions(-DGLEW_BUILD)
 	else()
@@ -44,6 +40,10 @@ if(NOT EXISTS ${PROJECT_SOURCE_DIR}/${GLEW_SOURCE_NAME})
 	endif()
 	
 endif()
+
+option(BUILD_UTILS OFF)
+file(COPY "${CMAKE_SOURCE_DIR}/glewCMake/CMakeLists.txt" DESTINATION "${EXT_EXTRACT_DIR}/${GLEW_SOURCE_NAME}/build/cmake")
+add_subdirectory(${EXT_EXTRACT_DIR}/${GLEW_SOURCE_NAME}/build/cmake)
 
 set(GLEW_LIBRARY glew_s)
 set(GLEW_INCLUDE_DIR ${EXT_EXTRACT_DIR}/${GLEW_SOURCE_NAME}/include)
