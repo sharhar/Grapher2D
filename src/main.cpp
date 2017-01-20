@@ -11,7 +11,7 @@ using namespace glui;
 
 #define VAL_NUM 600
 #define ZOOM_PERCENT 0.05
-#define IMPLICIT_SKIP 4
+#define IMPLICIT_SKIP 2
 #define EQ_NUM 4
 
 #define glGenFramebuffers__ glFuncs->glGenFramebuffersM
@@ -32,6 +32,25 @@ int g_windowHeight = 600;
 
 int g_colorNum = 5;
 Color* g_colors = new Color[g_colorNum];
+
+typedef struct Graph;
+
+typedef struct ThreadGenExecInfo {
+	int status;
+	double* arr;
+	double xl; 
+	double xr;
+	double yd;
+	double yu;
+	Graph* g;
+	int index, start, stop;
+} ThreadGenExecInfo;
+
+typedef struct ThreadInterpolateExecInfo {
+	int status;
+	double* arr;
+	int start, stop;
+} ThreadInterpolateExecInfo;
 
 typedef struct MGLFuncs {
 	PFNGLGENFRAMEBUFFERSPROC glGenFramebuffersM;
@@ -54,9 +73,25 @@ typedef struct GraphEq {
 typedef struct Graph {
 	GraphEq** eq;
 	int eqNum;
+	bool done;
 	double* vals;
 	double startTime;
-	std::thread* th;
+	std::thread* thg1;
+	ThreadGenExecInfo*tig1;
+	std::thread* thg2;
+	ThreadGenExecInfo* tig2;
+	std::thread* thg3;
+	ThreadGenExecInfo* tig3;
+	std::thread* thg4;
+	ThreadGenExecInfo* tig4;
+	std::thread* thi1;
+	ThreadInterpolateExecInfo* tii1;
+	std::thread* thi2;
+	ThreadInterpolateExecInfo* tii2;
+	std::thread* thi3;
+	ThreadInterpolateExecInfo* tii3;
+	std::thread* thi4;
+	ThreadInterpolateExecInfo* tii4;
 	bool implicit;
 	bool del;
 } Graph;
@@ -74,6 +109,628 @@ inline double abs_c(double n1) {
 
 inline int sign_c(double n1) {
 	return n1 >= 0 ? (n1 != 0 ? 1 : 0) : -1;
+}
+
+void drawAxes(int width, int height);
+void threadGenVals(double* arr, double xl, double xr, Graph* g);
+void genVals(double* arr, double xl, double xr, Graph* g);
+void threadGenImplicitValsSubThread(double* arr, double xl, double xr, double yd, double yu, Graph* g, int index, int start, int stop);
+void threadGenImplicitValsSubThreadInterpolate(double* arr, int start, int stop);
+void genImplicitVals(double* arr, double xl, double xr, double yd, double yu, Graph* g);
+void renderImplicitVals(double* arr, double xl, double xr, double yd, double yu, int width, int height, Color color);
+void drawGrid(double xl, double xr, double yd, double yu, int width, int height);
+void drawNums(double xl, double xr, double yd, double yu, int width, int height, Font* font, Color* color);
+void renderVals(double* arr, double xl, double xr, double yd, double yu, int width, int height, Color color);
+GLFWimage* genIcon();
+GLuint genFBO(MGLFuncs* glFuncs, int samples, int width, int height);
+
+bool checkDone(Graph* g) {
+	if (g->done) {
+		return true;
+	}
+
+	if (g->tii1->status == 3 && g->tii2->status == 3 && g->tii3->status == 3 && g->tii4->status == 3) {
+		g->done = true;
+		g->tig1->status = 1;
+		g->tig2->status = 1;
+		g->tig3->status = 1;
+		g->tig4->status = 1;
+		g->tii1->status = 1;
+		g->tii2->status = 1;
+		g->tii3->status = 1;
+		g->tii4->status = 1;
+		return true;
+	}
+
+	if (g->tig1->status == 3 && g->tii1->status == 1) {
+		g->tii1->status = 2;
+	}
+
+	if (g->tig2->status == 3 && g->tii2->status == 1) {
+		g->tii2->status = 2;
+	}
+
+	if (g->tig3->status == 3 && g->tii3->status == 1) {
+		g->tii3->status = 2;
+	}
+
+	if (g->tig4->status == 3 && g->tii4->status == 1) {
+		g->tii4->status = 2;
+	}
+
+	return false;
+}
+
+void threadGenImplicit(ThreadGenExecInfo* info) {
+	while (info->status != 0) {
+		
+		if (info->status == 2) {
+			threadGenImplicitValsSubThread(info->arr, info->xl, info->xr, info->yd, info->yu, info->g, info->index, info->start, info->stop);
+			info->status = 3;
+		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+}
+
+void threadInterpolateImplicit(ThreadInterpolateExecInfo* info) {
+	while (info->status != 0) {
+
+		if (info->status == 2) {
+			threadGenImplicitValsSubThreadInterpolate(info->arr, info->start, info->stop);
+			info->status = 3;
+		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+}
+
+int main() {
+	GLUI::init();
+
+	Window win("Grapher2D", 1000, 620, false, 1, genIcon());
+	Renderer::init(&win);
+	Layout* layout = new AbsoluteLayout(&win, 1000, 620);
+
+	Font* font24 = new Font("arial.ttf", 24);
+
+	if (!font24->inited()) {
+		win.destroy();
+		std::cout << "Could not load arial.ttf!\n";
+		return -1;
+	}
+
+	Font* font20 = new Font("arial.ttf", 20);
+
+	if (!font20->inited()) {
+		win.destroy();
+		std::cout << "Could not load arial.ttf!\n";
+		return -1;
+	}
+
+	Theme theme = {};
+	theme.body = color::lightGrey;
+	theme.check = color::black;
+	theme.circle = color::black;
+	theme.hover = color::grey;
+	theme.outline = color::black;
+	theme.press = color::darkGrey;
+	theme.text = color::black;
+	theme.popupBackground = { 0.6f * 0.8f, 0.75f * 0.8f, 1};
+	theme.popupText = color::black;
+
+	TextStyle textStyle = { 20, font20 };
+	TextStyle buttonStyle = { 24, font24 };
+
+	std::vector<Button*> buttons;
+	std::vector<TextBox*> textBoxes;
+	std::vector<Graph*> graphs;
+	std::vector<GraphData*> datas;
+
+	int frameBufferWidth, frameBufferHeight;
+	glfwGetFramebufferSize((GLFWwindow*) win.getGLFWwindow(), &frameBufferWidth, &frameBufferHeight);
+
+	int samples = 4;
+	MGLFuncs* glFuncs = (MGLFuncs*)malloc(sizeof(MGLFuncs));
+	GLuint fbo = genFBO(glFuncs, samples, frameBufferWidth, frameBufferHeight);
+
+	GLPanel* panel;
+
+	panel = new GLPanel({ 390, 10, 600, 600 }, { 600, 600 }, layout,
+	[]()->void {
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(0, g_windowWidth, 0, g_windowHeight, -1, 1);
+		glMatrixMode(GL_MODELVIEW);
+
+	},
+	[&]()->void {
+		glBindFramebuffer__(GL_FRAMEBUFFER, fbo);
+
+		glClear(GL_COLOR_BUFFER_BIT);
+		drawGrid(g_left, g_right, g_down, g_up, 600, 600);
+		drawAxes(600, 600);
+
+		for (int i = 0; i < graphs.size(); i++) {
+			if (graphs[i] == NULL) {
+				continue;
+			}
+
+			graphs[i]->done = false;
+
+			for (int j = 0; j < graphs[i]->eqNum;j++) {
+				graphs[i]->eq[j]->atVar->value = glfwGetTime();
+				graphs[i]->eq[j]->tVar->value = graphs[i]->eq[j]->atVar->value - graphs[i]->startTime;
+			}
+			
+			if (graphs[i]->implicit) {
+				genImplicitVals(graphs[i]->vals, g_left, g_right, g_down, g_up, graphs[i]);
+
+			}
+			else {
+				genVals(graphs[i]->vals, g_left, g_right, graphs[i]);
+			}
+		}
+
+		bool done = true;
+		while (!done) {
+			for (int i = 0; i < graphs.size(); i++) {
+				if (graphs[i] == NULL) {
+					continue;
+				}
+
+				bool temp = checkDone(graphs[i]);
+				done = done && temp;
+			}
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
+
+		for (int i = 0; i < graphs.size(); i++) {
+			if (graphs[i] == NULL || !graphs[i]->implicit) {
+				continue;
+			}
+
+			double* arr = graphs[i]->vals;
+			for (int j = 0; j < VAL_NUM*VAL_NUM; j++) {
+				arr[j] = (double)sign_c(arr[j]);
+			}
+		}
+
+		for (int i = 0; i < graphs.size(); i++) {
+			if (graphs[i] == NULL || graphs[i]->implicit) {
+				continue;
+			}
+
+			if (graphs[i]->thg1 != NULL) {
+				graphs[i]->thg1->join();
+				delete graphs[i]->thg1;
+				graphs[i]->thg1 = NULL;
+			}
+		}
+
+		for (int i = 0; i < graphs.size(); i++) {
+			if (graphs[i] == NULL) {
+				continue;
+			}
+
+			if (graphs[i]->implicit) {
+				renderImplicitVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 600, 600, g_colors[i%g_colorNum]);
+
+			}
+			else {
+				renderVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 600, 600, g_colors[i%g_colorNum]);
+			}
+		}
+
+		drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, &color::black);
+
+		glBindFramebuffer__(GL_FRAMEBUFFER, panel->getFBO());
+
+		glClear(GL_COLOR_BUFFER_BIT);
+		
+		glBindFramebuffer__(GL_READ_FRAMEBUFFER, fbo);
+		glBlitFramebuffer__(0, 0, frameBufferWidth, frameBufferHeight, 
+			              0, 0, frameBufferWidth, frameBufferHeight, 
+			              GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+		glBindFramebuffer__(GL_FRAMEBUFFER, panel->getFBO());
+	},
+	[](GLPanelMouseData* data)->void {
+		if ((data->difference.x != 0 || data->difference.y != 0) && data->leftDown) {
+			double width = g_right - g_left;
+			double percentX = data->difference.x / g_windowWidth;
+
+			double moveX = -width * percentX;
+
+			g_left += moveX;
+			g_right += moveX;
+
+			double height = g_up - g_down;
+			double percentY = data->difference.y / g_windowHeight;
+
+			double moveY = height * percentY;
+
+			g_down += moveY;
+			g_up += moveY;
+		}
+		
+		if (data->scroll != 0) {
+			double width = g_right - g_left;
+			double percentX = (data->pos.x - g_windowHeight / 2.0) / g_windowWidth;
+			double moveX = width * percentX;
+
+			double xpos = ((g_right + g_left) / 2.0);
+			double ypos = ((g_up + g_down) / 2.0);
+
+			double sizeX = g_right - g_left;
+			double sizeY = g_up - g_down;
+
+			if (data->scroll < 0) {
+				sizeX = sizeX / ((1 - ZOOM_PERCENT));
+				sizeY = sizeY / ((1 - ZOOM_PERCENT));
+			}
+			else if (data->scroll > 0) {
+				sizeX = sizeX * ((1 - ZOOM_PERCENT));
+				sizeY = sizeY * ((1 - ZOOM_PERCENT));
+			}
+
+			g_left = xpos - sizeX / 2;
+			g_right = xpos + sizeX / 2;
+			g_down = ypos - sizeY / 2;
+			g_up = ypos + sizeY / 2;
+		}
+	}, theme);
+
+	Button* addGraphButton = NULL;
+
+	auto deleteGraph = [&](int index)->void {
+		if (graphs[index] != NULL) {
+			for (int i = 0; i < graphs[index]->eqNum;i++) {
+				graphs[index]->eq[i]->e->cleanUp();
+				delete graphs[index]->eq[i]->e;
+			}
+
+			delete[] graphs[index]->eq;
+			
+			if (graphs[index]->implicit) {
+				graphs[index]->tig1->status = 0;
+				if (graphs[index]->thg1 != NULL) {
+					if (graphs[index]->thg1->joinable()) {
+						graphs[index]->thg1->join();
+					}
+					delete graphs[index]->thg1;
+				}
+				free(graphs[index]->tig1);
+
+				graphs[index]->tig2->status = 0;
+				if (graphs[index]->thg2 != NULL) {
+					if (graphs[index]->thg2->joinable()) {
+						graphs[index]->thg2->join();
+					}
+					delete graphs[index]->thg2;
+				}
+				free(graphs[index]->tig2);
+
+				graphs[index]->tig3->status = 0;
+				if (graphs[index]->thg3 != NULL) {
+					if (graphs[index]->thg3->joinable()) {
+						graphs[index]->thg3->join();
+					}
+					delete graphs[index]->thg3;
+				}
+				free(graphs[index]->tig3);
+
+				graphs[index]->tig4->status = 0;
+				if (graphs[index]->thg4 != NULL) {
+					if (graphs[index]->thg4->joinable()) {
+						graphs[index]->thg4->join();
+					}
+					delete graphs[index]->thg4;
+				}
+				free(graphs[index]->tig4);
+
+				graphs[index]->tii1->status = 0;
+				if (graphs[index]->thi1 != NULL) {
+					if (graphs[index]->thi1->joinable()) {
+						graphs[index]->thi1->join();
+					}
+					delete graphs[index]->thi1;
+				}
+				free(graphs[index]->tii1);
+
+				graphs[index]->tii2->status = 0;
+				if (graphs[index]->thi2 != NULL) {
+					if (graphs[index]->thi2->joinable()) {
+						graphs[index]->thi2->join();
+					}
+					delete graphs[index]->thi2;
+				}
+				free(graphs[index]->tii2);
+
+				graphs[index]->tii3->status = 0;
+				if (graphs[index]->thi3 != NULL) {
+					if (graphs[index]->thi3->joinable()) {
+						graphs[index]->thi3->join();
+					}
+					delete graphs[index]->thi3;
+				}
+				free(graphs[index]->tii3);
+
+				graphs[index]->tii4->status = 0;
+				if (graphs[index]->thi4 != NULL) {
+					if (graphs[index]->thi4->joinable()) {
+						graphs[index]->thi4->join();
+					}
+					delete graphs[index]->thi4;
+				}
+				free(graphs[index]->tii4);
+			} else {
+				if (graphs[index]->thg1 != NULL) {
+					if (graphs[index]->thg1->joinable()) {
+						graphs[index]->thg1->join();
+					}
+					delete graphs[index]->thg1;
+				}
+			}
+
+			delete[] graphs[index]->vals;
+			free(graphs[index]);
+			
+			graphs[index] = NULL;
+		}
+	};
+
+	auto setGraph = [&](std::string eq, int index)->void {
+		if (graphs[index] != NULL) {
+			deleteGraph(index);
+		}
+
+		if (eq.size() == 0) {
+			return;
+		}
+
+		String equ = String((char*)eq.c_str());
+
+		graphs[index] = (Graph*)malloc(sizeof(Graph));
+
+		graphs[index]->eq = new GraphEq*[EQ_NUM];
+
+		for (int i = 0; i < EQ_NUM; i++) {
+			graphs[index]->eq[i] = (GraphEq*)malloc(sizeof(GraphEq));
+			graphs[index]->eqNum = EQ_NUM;
+
+			graphs[index]->eq[i]->e = new Equation();
+			graphs[index]->eq[i]->e->setString(equ);
+
+			graphs[index]->eq[i]->yVar = graphs[index]->eq[i]->e->createVariable("y");
+			graphs[index]->eq[i]->xVar = graphs[index]->eq[i]->e->createVariable("x");
+			graphs[index]->eq[i]->tVar = graphs[index]->eq[i]->e->createVariable("t");
+			graphs[index]->eq[i]->atVar = graphs[index]->eq[i]->e->createVariable("at");
+		}
+
+		if (equ.find('=') != -1) {
+			graphs[index]->vals = new double[(VAL_NUM*VAL_NUM)];
+			graphs[index]->implicit = true;
+
+			graphs[index]->tig1 = (ThreadGenExecInfo*)malloc(sizeof(ThreadGenExecInfo));
+			graphs[index]->tig1->status = 1;
+			graphs[index]->tig1->arr = graphs[index]->vals;
+			graphs[index]->tig1->g = graphs[index];
+			graphs[index]->tig1->index = 0;
+			graphs[index]->tig1->start = 0;
+			graphs[index]->tig1->stop = 150;
+			graphs[index]->thg1 = new std::thread(threadGenImplicit, graphs[index]->tig1);
+
+			graphs[index]->tig2 = (ThreadGenExecInfo*)malloc(sizeof(ThreadGenExecInfo));
+			graphs[index]->tig2->status = 1;
+			graphs[index]->tig2->arr = graphs[index]->vals;
+			graphs[index]->tig2->g = graphs[index];
+			graphs[index]->tig2->index = 1;
+			graphs[index]->tig2->start = 150;
+			graphs[index]->tig2->stop = 300;
+			graphs[index]->thg2 = new std::thread(threadGenImplicit, graphs[index]->tig2);
+
+			graphs[index]->tig3 = (ThreadGenExecInfo*)malloc(sizeof(ThreadGenExecInfo));
+			graphs[index]->tig3->status = 1;
+			graphs[index]->tig3->arr = graphs[index]->vals;
+			graphs[index]->tig3->g = graphs[index];
+			graphs[index]->tig3->index = 2;
+			graphs[index]->tig3->start = 300;
+			graphs[index]->tig3->stop = 450;
+			graphs[index]->thg3 = new std::thread(threadGenImplicit, graphs[index]->tig3);
+
+			graphs[index]->tig4 = (ThreadGenExecInfo*)malloc(sizeof(ThreadGenExecInfo));
+			graphs[index]->tig4->status = 1;
+			graphs[index]->tig4->arr = graphs[index]->vals;
+			graphs[index]->tig4->g = graphs[index];
+			graphs[index]->tig4->index = 3;
+			graphs[index]->tig4->start = 450;
+			graphs[index]->tig4->stop = 600;
+			graphs[index]->thg4 = new std::thread(threadGenImplicit, graphs[index]->tig4);
+
+			graphs[index]->tii1 = (ThreadInterpolateExecInfo*)malloc(sizeof(ThreadInterpolateExecInfo));
+			graphs[index]->tii1->status = 1;
+			graphs[index]->tii1->start = 0;
+			graphs[index]->tii1->stop = 150;
+			graphs[index]->thi1 = new std::thread(threadInterpolateImplicit, graphs[index]->tii1);
+
+			graphs[index]->tii2 = (ThreadInterpolateExecInfo*)malloc(sizeof(ThreadInterpolateExecInfo));
+			graphs[index]->tii2->status = 1;
+			graphs[index]->tii2->start = 150;
+			graphs[index]->tii2->stop = 300;
+			graphs[index]->thi2 = new std::thread(threadInterpolateImplicit, graphs[index]->tii2);
+
+			graphs[index]->tii3 = (ThreadInterpolateExecInfo*)malloc(sizeof(ThreadInterpolateExecInfo));
+			graphs[index]->tii3->status = 1;
+			graphs[index]->tii3->start = 300;
+			graphs[index]->tii3->stop = 450;
+			graphs[index]->thi3 = new std::thread(threadInterpolateImplicit, graphs[index]->tii3);
+
+			graphs[index]->tii4 = (ThreadInterpolateExecInfo*)malloc(sizeof(ThreadInterpolateExecInfo));
+			graphs[index]->tii4->status = 1;
+			graphs[index]->tii4->start = 450;
+			graphs[index]->tii4->stop = 600;
+			graphs[index]->thi4 = new std::thread(threadInterpolateImplicit, graphs[index]->tii4);
+		} else {
+			graphs[index]->vals = new double[VAL_NUM];
+			graphs[index]->implicit = false;
+		}
+		graphs[index]->startTime = glfwGetTime();
+
+		graphs[index]->del = false;
+
+		String* result = NULL;
+
+		for (int i = 0; i < EQ_NUM; i++) {
+			result = graphs[index]->eq[i]->e->parse();
+
+			if (result != NULL) {
+				break;
+			}
+		}
+
+		if (result != NULL) {
+			char** chars = new char*[1];
+			chars[0] = "Ok";
+
+			std::string text = "Error parsing expression: \n" + 
+				std::string(1, '"') + eq + std::string(1, '"') + 
+				"\n\n" + 
+				"Error: " + (*result).getstdstring();
+
+			PopupDescriptor pDesc = {};
+			pDesc.width = 300;
+			pDesc.height = 200;
+			pDesc.title = "Parsing Error!";
+			pDesc.text = text.c_str();
+			pDesc.btnNum = 1;
+			pDesc.btnText = (const char**)chars;
+			pDesc.window = &win;
+			pDesc.bodyTextStyle = textStyle;
+			pDesc.buttonTextStyle = buttonStyle;
+
+			Window::popup(pDesc, theme);
+
+			delete result;
+			deleteGraph(index);
+		}
+	};
+
+	std::function<void(void)> addGraphButtonCallback = [&]() -> void {
+		if (buttons.size() >= 9) {
+			return;
+		}
+
+		Rectangle boundsa = addGraphButton->getBounds();
+		addGraphButton->setPos({ boundsa.x, boundsa.y - 60 });
+
+		GraphData* data = (GraphData*)malloc(sizeof(GraphData));
+
+		int bSize = buttons.size();
+
+		TextBox* textBox = new TextBox({ 10, (float)(560 - 60.0f * buttons.size()) + 10, 335, 30 }, layout, { textStyle , 1, 2, theme });
+
+		textBox->setEnterFunc([bSize, textBox, setGraph]() -> void { setGraph(textBox->m_text, bSize); });
+
+		Button* button = new Button({ 355, (float)(560 - 60.0f * buttons.size()) + 10, 25, 30 }, layout, "X", { textStyle,
+			[&addGraphButton, &buttons, &deleteGraph, &graphs, &textBoxes, data]()->void {
+				data->del = true;
+			}, 
+		2, theme
+		});
+
+		data->button = button;
+		data->textBox = textBox;
+		data->graph = NULL;
+		data->del = false;
+
+		textBoxes.push_back(textBox);
+		buttons.push_back(button);
+		graphs.push_back(NULL);
+		datas.push_back(data);
+	};
+
+	addGraphButton = new Button({ 10 - 2, 570, 360 / 2, 40 }, layout, "Add Graph", { buttonStyle, addGraphButtonCallback, 3, theme });
+
+	addGraphButtonCallback();
+
+	g_colors[0] = { 0.8f, 0.2f , 0.2f };
+	g_colors[1] = { 0.1f, 0.6f , 0.1f };
+	g_colors[2] = { 0.2f, 0.2f , 0.9f };
+	g_colors[3] = { 0.9f, 0.65f, 0.2f };
+	g_colors[4] = { 0.8f, 0.2f , 0.8f };
+
+	while (win.isOpen()) {
+		win.poll();
+		
+		panel->poll();
+		addGraphButton->poll();
+		
+		for (int i = 0; i < buttons.size();i++) {
+			buttons[i]->setPos({ buttons[i]->getBounds().x, (float)(560 - 60.0f * i) + 10 });
+			textBoxes[i]->setPos({ textBoxes[i]->getBounds().x, (float)(560 - 60.0f * i) + 10 });
+		}
+
+		for (Button* b:buttons) {
+			b->poll();
+		}
+
+		for (TextBox* t:textBoxes) {
+			t->poll();
+		}
+
+		for (int i = 0; i < graphs.size();i++) {
+			if (datas[i]->del) {
+				Rectangle bounds = addGraphButton->getBounds();
+				addGraphButton->setPos({ bounds.x, bounds.y + 60 });
+
+				deleteGraph(i);
+				graphs.erase(graphs.begin() + i);
+
+				delete buttons[i];
+				buttons.erase(buttons.begin() + i);
+
+				delete textBoxes[i];
+				textBoxes.erase(textBoxes.begin() + i);
+
+				free(datas[i]);
+				datas.erase(datas.begin() + i);
+
+				break;
+			}
+		}
+
+		if (graphs.size() < 1) {
+			addGraphButtonCallback();
+		}
+
+		Renderer::clear({0.6f, 0.75f, 1});
+
+		panel->render();
+		addGraphButton->render();
+
+		for (Button* b : buttons) {
+			b->render();
+		}
+
+		for (TextBox* t : textBoxes) {
+			t->render();
+		}
+
+		win.swap();
+	}
+
+	for (int i = 0; i < graphs.size(); i++) {
+		deleteGraph(i);
+	}
+
+	win.destroy();
+
+	GLUI::destroy();
+	return 0;
 }
 
 void drawAxes(int width, int height) {
@@ -127,15 +784,15 @@ void threadGenVals(double* arr, double xl, double xr, Graph* g) {
 }
 
 void genVals(double* arr, double xl, double xr, Graph* g) {
-	g->th = new std::thread(threadGenVals, arr, xl, xr, g);
+	g->thg1 = new std::thread(threadGenVals, arr, xl, xr, g);
 }
 
 void threadGenImplicitValsSubThread(double* arr, double xl, double xr, double yd, double yu, Graph* g, int index, int start, int stop) {
 	double xint = (xr - xl) / (VAL_NUM);
 	double yint = (yu - yd) / (VAL_NUM);
-	for (int x = start; x < stop; x+= IMPLICIT_SKIP) {
+	for (int x = start; x < stop; x += IMPLICIT_SKIP) {
 		g->eq[index]->xVar->value = xint*x + xl;
-		for (int y = 0; y < VAL_NUM; y+= IMPLICIT_SKIP) {
+		for (int y = 0; y < VAL_NUM; y += IMPLICIT_SKIP) {
 			g->eq[index]->yVar->value = yint*y + yd;
 			arr[x * VAL_NUM + y] = g->eq[index]->e->eval();
 		}
@@ -145,7 +802,7 @@ void threadGenImplicitValsSubThread(double* arr, double xl, double xr, double yd
 void threadGenImplicitValsSubThreadInterpolate(double* arr, int start, int stop) {
 	for (int x = start; x < stop; x += IMPLICIT_SKIP) {
 		for (int y = 0; y < VAL_NUM; y += IMPLICIT_SKIP) {
-			
+
 			double m = 0;
 
 			if (y + IMPLICIT_SKIP < VAL_NUM) {
@@ -156,7 +813,8 @@ void threadGenImplicitValsSubThreadInterpolate(double* arr, int start, int stop)
 				for (int i = 1; i < IMPLICIT_SKIP; i++) {
 					arr[x * VAL_NUM + y + i] = st + m*i;
 				}
-			} else {
+			}
+			else {
 				double st = arr[x * VAL_NUM + y];
 
 				m = (arr[x * VAL_NUM + y] - arr[x * VAL_NUM + y - IMPLICIT_SKIP]) / IMPLICIT_SKIP;
@@ -178,10 +836,11 @@ void threadGenImplicitValsSubThreadInterpolate(double* arr, int start, int stop)
 				double m = (arr[otherOff + y] - st) / IMPLICIT_SKIP;
 
 				for (int i = 1; i < IMPLICIT_SKIP; i++) {
-						arr[(x + i) * VAL_NUM + y] = st + i*m;
+					arr[(x + i) * VAL_NUM + y] = st + i*m;
 				}
 			}
-		} else {
+		}
+		else {
 			int myOff = x*VAL_NUM;
 			int otherOff = (x - IMPLICIT_SKIP)*VAL_NUM;
 
@@ -197,36 +856,35 @@ void threadGenImplicitValsSubThreadInterpolate(double* arr, int start, int stop)
 	}
 }
 
-void threadGenImplicitVals(double* arr, double xl, double xr, double yd, double yu, Graph* g) {
-	std::thread t1(threadGenImplicitValsSubThread, arr, xl, xr, yd, yu, g, 0,   0, 150);
-	std::thread t2(threadGenImplicitValsSubThread, arr, xl, xr, yd, yu, g, 1, 150, 300);
-	std::thread t3(threadGenImplicitValsSubThread, arr, xl, xr, yd, yu, g, 2, 300, 450);
-	std::thread t4(threadGenImplicitValsSubThread, arr, xl, xr, yd, yu, g, 3, 450, 600);
-	t1.join();
-	t2.join();
-	std::thread ti1(threadGenImplicitValsSubThreadInterpolate, arr, 0, 150);
-	t3.join();
-	std::thread ti2(threadGenImplicitValsSubThreadInterpolate, arr, 150, 300);
-	t4.join();
-	std::thread ti3(threadGenImplicitValsSubThreadInterpolate, arr, 300, 450);
-	std::thread ti4(threadGenImplicitValsSubThreadInterpolate, arr, 450, 600);
-	ti1.join();
-	ti2.join();
-	ti3.join();
-	ti4.join();
-
-	for (int i = 0; i < VAL_NUM*VAL_NUM;i++) {
-			arr[i] = (double)sign_c(arr[i]);
-	}
-}
-
 void genImplicitVals(double* arr, double xl, double xr, double yd, double yu, Graph* g) {
-	g->th = new std::thread(threadGenImplicitVals, arr, xl, xr, yd, yu, g);
+	g->tig1->xl = xl;
+	g->tig1->xr = xr;
+	g->tig1->yd = yd;
+	g->tig1->yu = yu;
+	g->tig1->status = 2;
+
+	g->tig2->xl = xl;
+	g->tig2->xr = xr;
+	g->tig2->yd = yd;
+	g->tig2->yu = yu;
+	g->tig2->status = 2;
+
+	g->tig3->xl = xl;
+	g->tig3->xr = xr;
+	g->tig3->yd = yd;
+	g->tig3->yu = yu;
+	g->tig3->status = 2;
+
+	g->tig4->xl = xl;
+	g->tig4->xr = xr;
+	g->tig4->yd = yd;
+	g->tig4->yu = yu;
+	g->tig4->status = 2;
 }
 
 void renderImplicitVals(double* arr, double xl, double xr, double yd, double yu, int width, int height, Color color) {
 	glColor4f(color.r, color.g, color.b, 1);
-	
+
 	float lineWidthHalf = 1;
 
 	glBegin(GL_QUADS);
@@ -240,12 +898,14 @@ void renderImplicitVals(double* arr, double xl, double xr, double yd, double yu,
 				glVertex2f(x + lineWidthHalf, y - lineWidthHalf);
 				glVertex2f(x + lineWidthHalf, y + lineWidthHalf);
 				glVertex2f(x - lineWidthHalf, y + lineWidthHalf);
-			} else if (x + 1 < VAL_NUM && num != arr[(x + 1) * VAL_NUM + (y)]) {
+			}
+			else if (x + 1 < VAL_NUM && num != arr[(x + 1) * VAL_NUM + (y)]) {
 				glVertex2f(x - lineWidthHalf, y - lineWidthHalf);
 				glVertex2f(x + lineWidthHalf, y - lineWidthHalf);
 				glVertex2f(x + lineWidthHalf, y + lineWidthHalf);
 				glVertex2f(x - lineWidthHalf, y + lineWidthHalf);
-			}else if (y + 1 < VAL_NUM && num != arr[(x) * VAL_NUM + (y + 1)]) {
+			}
+			else if (y + 1 < VAL_NUM && num != arr[(x)* VAL_NUM + (y + 1)]) {
 				glVertex2f(x - lineWidthHalf, y - lineWidthHalf);
 				glVertex2f(x + lineWidthHalf, y - lineWidthHalf);
 				glVertex2f(x + lineWidthHalf, y + lineWidthHalf);
@@ -258,7 +918,7 @@ void renderImplicitVals(double* arr, double xl, double xr, double yd, double yu,
 }
 
 void drawGrid(double xl, double xr, double yd, double yu, int width, int height) {
-	double xratio = width/(xr - xl);
+	double xratio = width / (xr - xl);
 
 	double xlen = xr - xl;
 	double xlog = log10(xlen);
@@ -267,22 +927,22 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 
 	if (floor(xlog - 0.25) < xfloor) {
 		xmag /= 2;
-	} 
+	}
 
 	if (floor(xlog - 0.5) < xfloor) {
 		xmag /= 2;
 	}
 
-	double xlr = round(xl/xmag)*xmag;
-	double xrr = round(xr/xmag)*xmag;
-	
-	double xNum = (xrr - xlr)/xmag;
+	double xlr = round(xl / xmag)*xmag;
+	double xrr = round(xr / xmag)*xmag;
+
+	double xNum = (xrr - xlr) / xmag;
 
 	glColor3f(0.5f, 0.5f, 0.5f);
 	glLineWidth(1.0f);
 
 	glBegin(GL_LINES);
-	for (int i = 0; i < xNum;i++) {
+	for (int i = 0; i < xNum; i++) {
 		double tx = (xlr - xl + xmag*i)*xratio;
 
 		if (tx  < 0 || tx > width) {
@@ -326,7 +986,7 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 			continue;
 		}
 
-		glVertex2f(0,     ty);
+		glVertex2f(0, ty);
 		glVertex2f(width, ty);
 	}
 
@@ -604,400 +1264,4 @@ GLuint genFBO(MGLFuncs* glFuncs, int samples, int width, int height) {
 	glBindFramebuffer__(GL_FRAMEBUFFER, 0);
 
 	return fbo;
-}
-
-int main() {
-	GLUI::init();
-
-	Window win("Grapher2D", 1000, 620, false, 1, genIcon());
-	Renderer::init(&win);
-	Layout* layout = new AbsoluteLayout(&win, 1000, 620);
-
-	Font* font24 = new Font("arial.ttf", 24);
-
-	if (!font24->inited()) {
-		win.destroy();
-#if defined(_WIN32) || defined (_WIN64)
-		system("PAUSE");
-#endif
-		return -1;
-	}
-
-	Font* font20 = new Font("arial.ttf", 20);
-
-	if (!font20->inited()) {
-		win.destroy();
-#if defined(_WIN32) || defined (_WIN64)
-		system("PAUSE");
-#endif
-		return -1;
-	}
-
-	Theme theme = {};
-	theme.body = color::lightGrey;
-	theme.check = color::black;
-	theme.circle = color::black;
-	theme.hover = color::grey;
-	theme.outline = color::black;
-	theme.press = color::darkGrey;
-	theme.text = color::black;
-	theme.popupBackground = { 0.6f * 0.8f, 0.75f * 0.8f, 1};
-	theme.popupText = color::black;
-
-	TextStyle textStyle = { 20, font20 };
-	TextStyle buttonStyle = { 24, font24 };
-
-	std::vector<Button*> buttons;
-	std::vector<TextBox*> textBoxes;
-	std::vector<Graph*> graphs;
-	std::vector<GraphData*> datas;
-
-	int frameBufferWidth, frameBufferHeight;
-	glfwGetFramebufferSize((GLFWwindow*) win.getGLFWwindow(), &frameBufferWidth, &frameBufferHeight);
-
-	int samples = 4;
-	MGLFuncs* glFuncs = (MGLFuncs*)malloc(sizeof(MGLFuncs));
-	GLuint fbo = genFBO(glFuncs, samples, frameBufferWidth, frameBufferHeight);
-
-	GLPanel* panel;
-
-	panel = new GLPanel({ 390, 10, 600, 600 }, { 600, 600 }, layout,
-	[]()->void {
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(0, g_windowWidth, 0, g_windowHeight, -1, 1);
-		glMatrixMode(GL_MODELVIEW);
-
-	},
-	[&]()->void {
-		glBindFramebuffer__(GL_FRAMEBUFFER, fbo);
-
-		glClear(GL_COLOR_BUFFER_BIT);
-		drawGrid(g_left, g_right, g_down, g_up, 600, 600);
-		drawAxes(600, 600);
-	
-		for (int i = 0; i < graphs.size(); i++) {
-			if (graphs[i] == NULL) {
-				continue;
-			}
-
-			for (int j = 0; j < graphs[i]->eqNum;j++) {
-				graphs[i]->eq[j]->atVar->value = glfwGetTime();
-				graphs[i]->eq[j]->tVar->value = graphs[i]->eq[j]->atVar->value - graphs[i]->startTime;
-			}
-			
-			if (graphs[i]->implicit) {
-				genImplicitVals(graphs[i]->vals, g_left, g_right, g_down, g_up, graphs[i]);
-
-			}
-			else {
-				genVals(graphs[i]->vals, g_left, g_right, graphs[i]);
-			}
-		}
-
-		for (int i = 0; i < graphs.size(); i++) {
-			if (graphs[i] == NULL) {
-				continue;
-			}
-
-			if (graphs[i]->th != NULL) {
-				graphs[i]->th->join();
-				delete graphs[i]->th;
-				graphs[i]->th = NULL;
-			}
-		}
-
-		for (int i = 0; i < graphs.size(); i++) {
-			if (graphs[i] == NULL) {
-				continue;
-			}
-
-			if (graphs[i]->implicit) {
-				renderImplicitVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 600, 600, g_colors[i%g_colorNum]);
-
-			}
-			else {
-				renderVals(graphs[i]->vals, g_left, g_right, g_down, g_up, 600, 600, g_colors[i%g_colorNum]);
-			}
-		}
-
-		drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, &color::black);
-
-		glBindFramebuffer__(GL_FRAMEBUFFER, panel->getFBO());
-
-		glClear(GL_COLOR_BUFFER_BIT);
-		
-		glBindFramebuffer__(GL_READ_FRAMEBUFFER, fbo);
-		glBlitFramebuffer__(0, 0, frameBufferWidth, frameBufferHeight, 
-			              0, 0, frameBufferWidth, frameBufferHeight, 
-			              GL_COLOR_BUFFER_BIT, GL_NEAREST);
-#ifdef __APPLE__
-		glGetError();
-#endif
-		glBindFramebuffer__(GL_FRAMEBUFFER, panel->getFBO());
-
-		glFinish();
-	},
-	[](GLPanelMouseData* data)->void {
-		if ((data->difference.x != 0 || data->difference.y != 0) && data->leftDown) {
-			double width = g_right - g_left;
-			double percentX = data->difference.x / g_windowWidth;
-
-			double moveX = -width * percentX;
-
-			g_left += moveX;
-			g_right += moveX;
-
-			double height = g_up - g_down;
-			double percentY = data->difference.y / g_windowHeight;
-
-			double moveY = height * percentY;
-
-			g_down += moveY;
-			g_up += moveY;
-		}
-		
-		if (data->scroll != 0) {
-			double width = g_right - g_left;
-			double percentX = (data->pos.x - g_windowHeight / 2.0) / g_windowWidth;
-			double moveX = width * percentX;
-
-			double xpos = ((g_right + g_left) / 2.0);
-			double ypos = ((g_up + g_down) / 2.0);
-
-			double sizeX = g_right - g_left;
-			double sizeY = g_up - g_down;
-
-			if (data->scroll < 0) {
-				sizeX = sizeX / ((1 - ZOOM_PERCENT));
-				sizeY = sizeY / ((1 - ZOOM_PERCENT));
-			}
-			else if (data->scroll > 0) {
-				sizeX = sizeX * ((1 - ZOOM_PERCENT));
-				sizeY = sizeY * ((1 - ZOOM_PERCENT));
-			}
-
-			g_left = xpos - sizeX / 2;
-			g_right = xpos + sizeX / 2;
-			g_down = ypos - sizeY / 2;
-			g_up = ypos + sizeY / 2;
-		}
-	}, theme);
-
-	Button* addGraphButton = NULL;
-
-	auto deleteGraph = [&](int index)->void {
-		if (graphs[index] != NULL) {
-			for (int i = 0; i < graphs[index]->eqNum;i++) {
-				graphs[index]->eq[i]->e->cleanUp();
-				delete graphs[index]->eq[i]->e;
-			}
-
-			delete[] graphs[index]->eq;
-			
-			if (graphs[index]->th != NULL) {
-				if (graphs[index]->th->joinable()) {
-					graphs[index]->th->join();
-				}
-				delete graphs[index]->th;
-			}
-			delete[] graphs[index]->vals;
-			free(graphs[index]);
-			
-			graphs[index] = NULL;
-		}
-	};
-
-	auto setGraph = [&](std::string eq, int index)->void {
-		if (graphs[index] != NULL) {
-			deleteGraph(index);
-		}
-
-		if (eq.size() == 0) {
-			return;
-		}
-
-		String equ = String((char*)eq.c_str());
-
-		graphs[index] = (Graph*)malloc(sizeof(Graph));
-
-		graphs[index]->eq = new GraphEq*[EQ_NUM];
-
-		for (int i = 0; i < EQ_NUM; i++) {
-			graphs[index]->eq[i] = (GraphEq*)malloc(sizeof(GraphEq));
-			graphs[index]->eqNum = EQ_NUM;
-
-			graphs[index]->eq[i]->e = new Equation();
-			graphs[index]->eq[i]->e->setString(equ);
-
-			graphs[index]->eq[i]->yVar = graphs[index]->eq[i]->e->createVariable("y");
-			graphs[index]->eq[i]->xVar = graphs[index]->eq[i]->e->createVariable("x");
-			graphs[index]->eq[i]->tVar = graphs[index]->eq[i]->e->createVariable("t");
-			graphs[index]->eq[i]->atVar = graphs[index]->eq[i]->e->createVariable("at");
-		}
-
-		if (equ.find('=') != -1) {
-			graphs[index]->vals = new double[(VAL_NUM*VAL_NUM)];
-			graphs[index]->implicit = true;
-			
-		} else {
-			graphs[index]->vals = new double[VAL_NUM];
-			graphs[index]->implicit = false;
-		}
-		graphs[index]->startTime = glfwGetTime();
-
-		graphs[index]->th = NULL;
-		graphs[index]->del = false;
-
-		String* result = NULL;
-
-		for (int i = 0; i < EQ_NUM; i++) {
-			result = graphs[index]->eq[i]->e->parse();
-
-			if (result != NULL) {
-				break;
-			}
-		}
-
-		if (result != NULL) {
-			char** chars = new char*[1];
-			chars[0] = "Ok";
-
-			std::string text = "Error parsing expression: \n" + 
-				std::string(1, '"') + eq + std::string(1, '"') + 
-				"\n\n" + 
-				"Error: " + (*result).getstdstring();
-
-			PopupDescriptor pDesc = {};
-			pDesc.width = 300;
-			pDesc.height = 200;
-			pDesc.title = "Parsing Error!";
-			pDesc.text = text.c_str();
-			pDesc.btnNum = 1;
-			pDesc.btnText = (const char**)chars;
-			pDesc.window = &win;
-			pDesc.bodyTextStyle = textStyle;
-			pDesc.buttonTextStyle = buttonStyle;
-
-			Window::popup(pDesc, theme);
-
-			delete result;
-			deleteGraph(index);
-		}
-	};
-
-	std::function<void(void)> addGraphButtonCallback = [&]() -> void {
-		if (buttons.size() >= 9) {
-			return;
-		}
-
-		Rectangle boundsa = addGraphButton->getBounds();
-		addGraphButton->setPos({ boundsa.x, boundsa.y - 60 });
-
-		GraphData* data = (GraphData*)malloc(sizeof(GraphData));
-
-		int bSize = buttons.size();
-
-		TextBox* textBox = new TextBox({ 10, (float)(560 - 60.0f * buttons.size()) + 10, 335, 30 }, layout, { textStyle , 1, 2, theme });
-
-		textBox->setEnterFunc([bSize, textBox, setGraph]() -> void { setGraph(textBox->m_text, bSize); });
-
-		Button* button = new Button({ 355, (float)(560 - 60.0f * buttons.size()) + 10, 25, 30 }, layout, "X", { textStyle,
-			[&addGraphButton, &buttons, &deleteGraph, &graphs, &textBoxes, data]()->void {
-				data->del = true;
-			}, 
-		2, theme
-		});
-
-		data->button = button;
-		data->textBox = textBox;
-		data->graph = NULL;
-		data->del = false;
-
-		textBoxes.push_back(textBox);
-		buttons.push_back(button);
-		graphs.push_back(NULL);
-		datas.push_back(data);
-	};
-
-	addGraphButton = new Button({ 10 - 2, 570, 360 / 2, 40 }, layout, "Add Graph", { buttonStyle, addGraphButtonCallback, 3, theme });
-
-	addGraphButtonCallback();
-
-	g_colors[0] = { 0.8f, 0.2f , 0.2f };
-	g_colors[1] = { 0.1f, 0.6f , 0.1f };
-	g_colors[2] = { 0.2f, 0.2f , 0.9f };
-	g_colors[3] = { 0.9f, 0.65f, 0.2f };
-	g_colors[4] = { 0.8f, 0.2f , 0.8f };
-
-	while (win.isOpen()) {
-		win.poll();
-		
-		panel->poll();
-		addGraphButton->poll();
-		
-		for (int i = 0; i < buttons.size();i++) {
-			buttons[i]->setPos({ buttons[i]->getBounds().x, (float)(560 - 60.0f * i) + 10 });
-			textBoxes[i]->setPos({ textBoxes[i]->getBounds().x, (float)(560 - 60.0f * i) + 10 });
-		}
-
-		for (Button* b:buttons) {
-			b->poll();
-		}
-
-		for (TextBox* t:textBoxes) {
-			t->poll();
-		}
-
-		for (int i = 0; i < graphs.size();i++) {
-			if (datas[i]->del) {
-				Rectangle bounds = addGraphButton->getBounds();
-				addGraphButton->setPos({ bounds.x, bounds.y + 60 });
-
-				deleteGraph(i);
-				graphs.erase(graphs.begin() + i);
-
-				delete buttons[i];
-				buttons.erase(buttons.begin() + i);
-
-				delete textBoxes[i];
-				textBoxes.erase(textBoxes.begin() + i);
-
-				free(datas[i]);
-				datas.erase(datas.begin() + i);
-
-				break;
-			}
-		}
-
-		if (graphs.size() < 1) {
-			addGraphButtonCallback();
-		}
-
-		Renderer::clear({0.6f, 0.75f, 1});
-
-		panel->render();
-		addGraphButton->render();
-
-		for (Button* b : buttons) {
-			b->render();
-		}
-
-		for (TextBox* t : textBoxes) {
-			t->render();
-		}
-
-		win.swap();
-	}
-
-	for (int i = 0; i < graphs.size(); i++) {
-		deleteGraph(i);
-	}
-
-	win.destroy();
-
-	GLUI::destroy();
-	return 0;
 }
