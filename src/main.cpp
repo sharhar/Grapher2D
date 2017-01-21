@@ -11,7 +11,7 @@
 using namespace glui;
 
 #define VAL_NUM 600
-#define ZOOM_PERCENT 0.05
+#define ZOOM_PERCENT 0.025
 
 double g_left  = -6;
 double g_right =  6;
@@ -501,29 +501,39 @@ int main() {
 		}
 		
 		if (data->scroll != 0) {
-			double width = g_right - g_left;
-			double percentX = (data->pos.x - g_windowHeight / 2.0) / g_windowWidth;
-			double moveX = width * percentX;
+			double x1 = 0;
+			double y1 = 0;
+			double x2 = g_right - g_left;
+			double y2 = g_up - g_down;
+			
+			double w1 = (data->pos.x / 600.0)*x2;
+			double w2 = x2 - w1;
 
-			double xpos = ((g_right + g_left) / 2.0);
-			double ypos = ((g_up + g_down) / 2.0);
-
-			double sizeX = g_right - g_left;
-			double sizeY = g_up - g_down;
-
-			if (data->scroll < 0) {
-				sizeX = sizeX / ((1 - ZOOM_PERCENT));
-				sizeY = sizeY / ((1 - ZOOM_PERCENT));
-			}
-			else if (data->scroll > 0) {
-				sizeX = sizeX * ((1 - ZOOM_PERCENT));
-				sizeY = sizeY * ((1 - ZOOM_PERCENT));
+			if (data->scroll > 0) {
+				x1 = 2 * ZOOM_PERCENT*w1;
+				x2 = x2 - 2 * ZOOM_PERCENT*w2;
+			} else if (data->scroll < 0){
+				x1 = - 2 * ZOOM_PERCENT*w1;
+				x2 = x2 + 2 * ZOOM_PERCENT*w2;
 			}
 
-			g_left = xpos - sizeX / 2;
-			g_right = xpos + sizeX / 2;
-			g_down = ypos - sizeY / 2;
-			g_up = ypos + sizeY / 2;
+			double h1 = ((600.0 - data->pos.y) / 600.0)*(y2);
+			double h2 = y2 - ((600.0 - data->pos.y) / 600.0)*(y2);
+
+			if (data->scroll > 0) {
+				y1 = 2 * ZOOM_PERCENT*h1;
+				y2 = y2 - 2 * ZOOM_PERCENT*h2;
+			}
+			else if (data->scroll < 0) {
+				y1 = -2 * ZOOM_PERCENT*h1;
+				y2 = y2 + 2 * ZOOM_PERCENT*h2;
+			}
+
+
+			g_right = g_left + x2;
+			g_left = g_left + x1;
+			g_up = g_down + y2;
+			g_down = g_down + y1;
 		}
 	}, theme);
 
