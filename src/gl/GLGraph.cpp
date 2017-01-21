@@ -88,7 +88,7 @@ String getNodeString(Node* node) {
 			result = "(" + prevVal + ")-(" + nextVal + ")";
 		}
 		else if (op->name == '^') {
-			result = "pow(" + prevVal + "," + nextVal + ")";
+			result = "pow_c(" + prevVal + "," + nextVal + ")";
 		}
 		return result;
 	}
@@ -130,7 +130,10 @@ String getNodeString(Node* node) {
 			result = "asin(1/(" + arg + "))";
 		} else if (name == "asec") {
 			result = "acos(1/(" + arg + "))";
-		} else {
+		} else if (name == "pow") {
+			result = "pow_c(" + arg + ")";
+		}
+		else {
 			result = name + "(" + arg + ")";
 		}
 

@@ -6,7 +6,7 @@
 #include <string>
 #include <thread>
 #include <chrono>
-#include "GLGraph.h"
+#include "gl/GLGraph.h"
 
 using namespace glui;
 

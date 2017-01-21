@@ -39,12 +39,21 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 
 	fragSource += "in vec2 coord;\n";
 	fragSource += "out vec4 out_color;\n";
+
+	fragSource += "float pow_c(float b, float p) {\n";
+
+	fragSource += "if(p < 0) {";
+	fragSource += "return 1/(pow(b, abs(p)));";
+	fragSource += "}\n";
+
+	fragSource += "return pow(b, p);";
+	fragSource += "}\n";
+
 	fragSource += "void main(void) {\n";
 	fragSource += "float x = coord.x;\n";
 	fragSource += "float y = coord.y;\n";
 	fragSource += "float total = " + eq + ";\n";
 	fragSource += "imageStore(data, ivec2(gl_FragCoord.xy), vec4(total, sign(total), x, y));\n";
-	//fragSource += "out_color = vec4((total-100.0)/200.0 + 0.5, sign(total), 0.0, 1.0);";
 	fragSource += "discard;\n";
 	fragSource += "}\n";
 
@@ -171,7 +180,7 @@ GraphEdgeShader::GraphEdgeShader() {
 	fragSource += "vec4 d2 = imageLoad(data, ivec2(coord.x, coord.y - 2));\n";
 
 	fragSource += "float mm = 10;";
-	fragSource += "float mm2 = 100000;";
+	fragSource += "float mm2 = 50000;";
 
 	//Up Pixel
 	fragSource += "if(coord.y + 2 <= 1200 && coord.y - 1 >= 0) {";
@@ -190,7 +199,7 @@ GraphEdgeShader::GraphEdgeShader() {
 	fragSource += "return true;\n";
 	fragSource += "}\n";
 
-	fragSource += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2;";
+	fragSource += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2 && abs(m) > mm*5;";
 
 	fragSource += "if(u.y == c.y && sk2) {";
 	fragSource += "return true;\n";
@@ -215,7 +224,7 @@ GraphEdgeShader::GraphEdgeShader() {
 	fragSource += "return true;\n";
 	fragSource += "}\n";
 
-	fragSource += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2;";
+	fragSource += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2 && abs(m) > mm*5;";
 
 	fragSource += "if(c.y == d.y && sk2) {";
 	fragSource += "return true;\n";
@@ -240,7 +249,7 @@ GraphEdgeShader::GraphEdgeShader() {
 	fragSource += "return true;\n";
 	fragSource += "}\n";
 
-	fragSource += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2;";
+	fragSource += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2 && abs(m) > mm*5;";
 
 	fragSource += "if(r.y == c.y && sk2) {";
 	fragSource += "return true;\n";
@@ -265,7 +274,7 @@ GraphEdgeShader::GraphEdgeShader() {
 	fragSource += "return true;\n";
 	fragSource += "}\n";
 
-	fragSource += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2;";
+	fragSource += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2 && abs(m) > mm*5;";
 
 	fragSource += "if(c.y == l.y && sk2) {";
 	fragSource += "return true;\n";

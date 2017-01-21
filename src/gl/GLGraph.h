@@ -3,8 +3,8 @@
 #include <GL/glew.h>
 #include "GraphShader.h"
 #include "GraphQuad.h"
-#include "math/Equation.h"
-#include "utils/String.h"
+#include "../math/Equation.h"
+#include "../utils/String.h"
 
 class GLGraph {
 private:
