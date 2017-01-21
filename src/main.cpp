@@ -11,7 +11,7 @@ using namespace glui;
 
 #define VAL_NUM 600
 #define ZOOM_PERCENT 0.05
-#define IMPLICIT_SKIP 2
+#define IMPLICIT_SKIP 3
 #define EQ_NUM 4
 
 #define glGenFramebuffers__ glFuncs->glGenFramebuffersM
@@ -52,6 +52,13 @@ typedef struct ThreadInterpolateExecInfo {
 	int start, stop;
 } ThreadInterpolateExecInfo;
 
+typedef struct ThreadGenValsNonImplicitInfo {
+	volatile int status;
+	double* arr;
+	double xl, xr;
+	Graph* g;
+} ThreadGenValsNonImplicitInfo;
+
 typedef struct MGLFuncs {
 	PFNGLGENFRAMEBUFFERSPROC glGenFramebuffersM;
 	PFNGLGENRENDERBUFFERSPROC glGenRenderbuffersM;
@@ -75,6 +82,7 @@ typedef struct Graph {
 	int eqNum;
 	bool done;
 	double* vals;
+	ThreadGenValsNonImplicitInfo* thgni;
 	double startTime;
 	std::thread* thg1;
 	ThreadGenExecInfo*tig1;
@@ -129,33 +137,41 @@ bool checkDone(Graph* g) {
 		return true;
 	}
 
-	if (g->tii1->status == 3 && g->tii2->status == 3 && g->tii3->status == 3 && g->tii4->status == 3) {
-		g->done = true;
-		g->tig1->status = 1;
-		g->tig2->status = 1;
-		g->tig3->status = 1;
-		g->tig4->status = 1;
-		g->tii1->status = 1;
-		g->tii2->status = 1;
-		g->tii3->status = 1;
-		g->tii4->status = 1;
-		return true;
-	}
+	if (g->implicit) {
+		if (g->tii1->status == 3 && g->tii2->status == 3 && g->tii3->status == 3 && g->tii4->status == 3) {
+			g->done = true;
+			g->tig1->status = 1;
+			g->tig2->status = 1;
+			g->tig3->status = 1;
+			g->tig4->status = 1;
+			g->tii1->status = 1;
+			g->tii2->status = 1;
+			g->tii3->status = 1;
+			g->tii4->status = 1;
+			return true;
+		}
 
-	if (g->tig1->status == 3 && g->tii1->status == 1) {
-		g->tii1->status = 2;
-	}
+		if (g->tig1->status == 3 && g->tii1->status == 1) {
+			g->tii1->status = 2;
+		}
 
-	if (g->tig2->status == 3 && g->tii2->status == 1) {
-		g->tii2->status = 2;
-	}
+		if (g->tig2->status == 3 && g->tii2->status == 1) {
+			g->tii2->status = 2;
+		}
 
-	if (g->tig3->status == 3 && g->tii3->status == 1) {
-		g->tii3->status = 2;
-	}
+		if (g->tig3->status == 3 && g->tii3->status == 1) {
+			g->tii3->status = 2;
+		}
 
-	if (g->tig4->status == 3 && g->tii4->status == 1) {
-		g->tii4->status = 2;
+		if (g->tig4->status == 3 && g->tii4->status == 1) {
+			g->tii4->status = 2;
+		}
+	} else {
+		if (g->thgni->status == 3) {
+			g->done = true;
+			g->thgni->status = 1;
+			return true;
+		}
 	}
 	
 	return false;
@@ -166,6 +182,18 @@ void threadGenImplicit(ThreadGenExecInfo* info) {
 
 		if (info->status == 2) {
 			threadGenImplicitValsSubThread(info->arr, info->xl, info->xr, info->yd, info->yu, info->g, info->index, info->start, info->stop);
+			info->status = 3;
+		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+}
+
+void threadGenNonImplicit(ThreadGenValsNonImplicitInfo* info) {
+	while (info->status != 0) {
+
+		if (info->status == 2) {
+			threadGenVals(info->arr, info->xl, info->xr, info->g);
 			info->status = 3;
 		}
 
@@ -279,7 +307,7 @@ int main() {
 			done = true;
 
 			for (int i = 0; i < graphs.size(); i++) {
-				if (graphs[i] != NULL && graphs[i]->implicit) {
+				if (graphs[i] != NULL) {
 					bool temp = checkDone(graphs[i]);
 					done = done && temp;
 				}
@@ -294,18 +322,6 @@ int main() {
 			double* arr = graphs[i]->vals;
 			for (int j = 0; j < VAL_NUM*VAL_NUM; j++) {
 				arr[j] = (double)sign_c(arr[j]);
-			}
-		}
-
-		for (int i = 0; i < graphs.size(); i++) {
-			if (graphs[i] == NULL || graphs[i]->implicit) {
-				continue;
-			}
-
-			if (graphs[i]->thg1 != NULL) {
-				graphs[i]->thg1->join();
-				delete graphs[i]->thg1;
-				graphs[i]->thg1 = NULL;
 			}
 		}
 
@@ -466,12 +482,15 @@ int main() {
 				}
 				free((void*)graphs[index]->tii4);
 			} else {
+				graphs[index]->thgni->status = 0;
 				if (graphs[index]->thg1 != NULL) {
 					if (graphs[index]->thg1->joinable()) {
 						graphs[index]->thg1->join();
 					}
 					delete graphs[index]->thg1;
 				}
+
+				free((void*)graphs[index]->thgni);
 			}
 
 			delete[] graphs[index]->vals;
@@ -579,6 +598,12 @@ int main() {
 		} else {
 			graphs[index]->vals = new double[VAL_NUM];
 			graphs[index]->implicit = false;
+
+			graphs[index]->thgni = (ThreadGenValsNonImplicitInfo*)malloc(sizeof(ThreadGenValsNonImplicitInfo));
+			graphs[index]->thgni->status = 1;
+			graphs[index]->thgni->arr = graphs[index]->vals;
+			graphs[index]->thgni->g = graphs[index];
+			graphs[index]->thg1 = new std::thread(threadGenNonImplicit, graphs[index]->thgni);
 		}
 		graphs[index]->startTime = glfwGetTime();
 
@@ -786,7 +811,9 @@ void threadGenVals(double* arr, double xl, double xr, Graph* g) {
 }
 
 void genVals(double* arr, double xl, double xr, Graph* g) {
-	g->thg1 = new std::thread(threadGenVals, arr, xl, xr, g);
+	g->thgni->xl = xl;
+	g->thgni->xr = xr;
+	g->thgni->status = 2;
 }
 
 void threadGenImplicitValsSubThread(double* arr, double xl, double xr, double yd, double yu, Graph* g, int index, int start, int stop) {
@@ -944,7 +971,7 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 	glLineWidth(1.0f);
 
 	glBegin(GL_LINES);
-	for (int i = 0; i < xNum; i++) {
+	for (int i = 0; i < xNum+1; i++) {
 		double tx = (xlr - xl + xmag*i)*xratio;
 
 		if (tx  < 0 || tx > width) {
@@ -1086,44 +1113,28 @@ void renderVals(double* arr, double xl, double xr, double yd, double yu, int wid
 	double axint = (xr - xl) / (VAL_NUM);
 	double yh = (yu - yd);
 
-	float x1;
-	float y1;
-	float x2;
-	float y2;
-
-	float m;
-
-	float ax1;
-	float ax2;
-	float ay1;
-	float ay2;
-	float ax3;
-	float ax4;
-	float ay3;
-	float ay4;
-
 	glColor3f(color.r, color.g, color.b);
 	glLineWidth(2.5f);
 	glBegin(GL_LINES);
 	for (int i = 1; i < VAL_NUM; i++) {
-		ay1 = arr[i - 1];
-		ay2 = arr[i];
+		float ay1 = arr[i - 1];
+		float ay2 = arr[i];
 
-		x1 = xint*(i - 1);
-		x2 = xint*(i);
+		float x1 = xint*(i - 1);
+		float x2 = xint*(i);
 
-		y1 = ((ay1 - yd) / yh)*height;
-		y2 = ((ay2 - yd) / yh)*height;
+		float y1 = ((ay1 - yd) / yh)*height;
+		float y2 = ((ay2 - yd) / yh)*height;
 
 		if (i - 1 > 0 && i + 1 < VAL_NUM) {
-			ax1 = axint*(i - 1) + xl;
-			ax2 = axint*i + xl;
+			float ax1 = axint*(i - 1) + xl;
+			float ax2 = axint*i + xl;
 
-			ay3 = arr[i - 2];
-			ay4 = arr[i + 1];
+			float ay3 = arr[i - 2];
+			float ay4 = arr[i + 1];
 
-			ax3 = axint*(i - 2) + xl;
-			ax4 = axint*(i + 1) + xl;
+			float ax3 = axint*(i - 2) + xl;
+			float ax4 = axint*(i + 1) + xl;
 
 			float m1 = (ay1 - ay3) / (ax1 - ax3);
 			float m2 = (ay2 - ay4) / (ax2 - ax4);
