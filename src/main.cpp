@@ -36,7 +36,7 @@ Color* g_colors = new Color[g_colorNum];
 typedef struct Graph;
 
 typedef struct ThreadGenExecInfo {
-	int status;
+	volatile int status;
 	double* arr;
 	double xl; 
 	double xr;
@@ -47,7 +47,7 @@ typedef struct ThreadGenExecInfo {
 } ThreadGenExecInfo;
 
 typedef struct ThreadInterpolateExecInfo {
-	int status;
+	volatile int status;
 	double* arr;
 	int start, stop;
 } ThreadInterpolateExecInfo;
@@ -157,13 +157,13 @@ bool checkDone(Graph* g) {
 	if (g->tig4->status == 3 && g->tii4->status == 1) {
 		g->tii4->status = 2;
 	}
-
+	
 	return false;
 }
 
 void threadGenImplicit(ThreadGenExecInfo* info) {
 	while (info->status != 0) {
-		
+
 		if (info->status == 2) {
 			threadGenImplicitValsSubThread(info->arr, info->xl, info->xr, info->yd, info->yu, info->g, info->index, info->start, info->stop);
 			info->status = 3;
@@ -175,7 +175,7 @@ void threadGenImplicit(ThreadGenExecInfo* info) {
 
 void threadInterpolateImplicit(ThreadInterpolateExecInfo* info) {
 	while (info->status != 0) {
-
+		
 		if (info->status == 2) {
 			threadGenImplicitValsSubThreadInterpolate(info->arr, info->start, info->stop);
 			info->status = 3;
@@ -275,18 +275,16 @@ int main() {
 		}
 
 		bool done = true;
-		while (!done) {
+		do {
+			done = true;
+
 			for (int i = 0; i < graphs.size(); i++) {
-				if (graphs[i] == NULL) {
-					continue;
+				if (graphs[i] != NULL && graphs[i]->implicit) {
+					bool temp = checkDone(graphs[i]);
+					done = done && temp;
 				}
-
-				bool temp = checkDone(graphs[i]);
-				done = done && temp;
 			}
-
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		}
+		} while (!done);
 
 		for (int i = 0; i < graphs.size(); i++) {
 			if (graphs[i] == NULL || !graphs[i]->implicit) {
@@ -403,7 +401,7 @@ int main() {
 					}
 					delete graphs[index]->thg1;
 				}
-				free(graphs[index]->tig1);
+				free((void*)graphs[index]->tig1);
 
 				graphs[index]->tig2->status = 0;
 				if (graphs[index]->thg2 != NULL) {
@@ -412,7 +410,7 @@ int main() {
 					}
 					delete graphs[index]->thg2;
 				}
-				free(graphs[index]->tig2);
+				free((void*)graphs[index]->tig2);
 
 				graphs[index]->tig3->status = 0;
 				if (graphs[index]->thg3 != NULL) {
@@ -421,7 +419,7 @@ int main() {
 					}
 					delete graphs[index]->thg3;
 				}
-				free(graphs[index]->tig3);
+				free((void*)graphs[index]->tig3);
 
 				graphs[index]->tig4->status = 0;
 				if (graphs[index]->thg4 != NULL) {
@@ -430,7 +428,7 @@ int main() {
 					}
 					delete graphs[index]->thg4;
 				}
-				free(graphs[index]->tig4);
+				free((void*)graphs[index]->tig4);
 
 				graphs[index]->tii1->status = 0;
 				if (graphs[index]->thi1 != NULL) {
@@ -439,7 +437,7 @@ int main() {
 					}
 					delete graphs[index]->thi1;
 				}
-				free(graphs[index]->tii1);
+				free((void*)graphs[index]->tii1);
 
 				graphs[index]->tii2->status = 0;
 				if (graphs[index]->thi2 != NULL) {
@@ -448,7 +446,7 @@ int main() {
 					}
 					delete graphs[index]->thi2;
 				}
-				free(graphs[index]->tii2);
+				free((void*)graphs[index]->tii2);
 
 				graphs[index]->tii3->status = 0;
 				if (graphs[index]->thi3 != NULL) {
@@ -457,7 +455,7 @@ int main() {
 					}
 					delete graphs[index]->thi3;
 				}
-				free(graphs[index]->tii3);
+				free((void*)graphs[index]->tii3);
 
 				graphs[index]->tii4->status = 0;
 				if (graphs[index]->thi4 != NULL) {
@@ -466,7 +464,7 @@ int main() {
 					}
 					delete graphs[index]->thi4;
 				}
-				free(graphs[index]->tii4);
+				free((void*)graphs[index]->tii4);
 			} else {
 				if (graphs[index]->thg1 != NULL) {
 					if (graphs[index]->thg1->joinable()) {
@@ -553,24 +551,28 @@ int main() {
 
 			graphs[index]->tii1 = (ThreadInterpolateExecInfo*)malloc(sizeof(ThreadInterpolateExecInfo));
 			graphs[index]->tii1->status = 1;
+			graphs[index]->tii1->arr = graphs[index]->vals;
 			graphs[index]->tii1->start = 0;
 			graphs[index]->tii1->stop = 150;
 			graphs[index]->thi1 = new std::thread(threadInterpolateImplicit, graphs[index]->tii1);
 
 			graphs[index]->tii2 = (ThreadInterpolateExecInfo*)malloc(sizeof(ThreadInterpolateExecInfo));
 			graphs[index]->tii2->status = 1;
+			graphs[index]->tii2->arr = graphs[index]->vals;
 			graphs[index]->tii2->start = 150;
 			graphs[index]->tii2->stop = 300;
 			graphs[index]->thi2 = new std::thread(threadInterpolateImplicit, graphs[index]->tii2);
 
 			graphs[index]->tii3 = (ThreadInterpolateExecInfo*)malloc(sizeof(ThreadInterpolateExecInfo));
 			graphs[index]->tii3->status = 1;
+			graphs[index]->tii3->arr = graphs[index]->vals;
 			graphs[index]->tii3->start = 300;
 			graphs[index]->tii3->stop = 450;
 			graphs[index]->thi3 = new std::thread(threadInterpolateImplicit, graphs[index]->tii3);
 
 			graphs[index]->tii4 = (ThreadInterpolateExecInfo*)malloc(sizeof(ThreadInterpolateExecInfo));
 			graphs[index]->tii4->status = 1;
+			graphs[index]->tii4->arr = graphs[index]->vals;
 			graphs[index]->tii4->start = 450;
 			graphs[index]->tii4->stop = 600;
 			graphs[index]->thi4 = new std::thread(threadInterpolateImplicit, graphs[index]->tii4);
