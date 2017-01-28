@@ -333,6 +333,27 @@ int main() {
 		exit(-1);
 	}
 
+#ifdef _DEBUG
+	std::cout << "GL 1.0: " << GLAD_GL_VERSION_1_0 << "\n";
+	std::cout << "GL 1.1: " << GLAD_GL_VERSION_1_1 << "\n";
+	std::cout << "GL 1.2: " << GLAD_GL_VERSION_1_2 << "\n";
+	std::cout << "GL 1.3: " << GLAD_GL_VERSION_1_3 << "\n";
+	std::cout << "GL 1.4: " << GLAD_GL_VERSION_1_4 << "\n";
+	std::cout << "GL 1.5: " << GLAD_GL_VERSION_1_5 << "\n";
+
+	std::cout << "GL 2.0: " << GLAD_GL_VERSION_2_0 << "\n";
+	std::cout << "GL 2.1: " << GLAD_GL_VERSION_2_1 << "\n";
+
+	std::cout << "GL 3.0: " << GLAD_GL_VERSION_3_0 << "\n";
+	std::cout << "GL 3.1: " << GLAD_GL_VERSION_3_1 << "\n";
+	std::cout << "GL 3.2: " << GLAD_GL_VERSION_3_2 << "\n";
+	std::cout << "GL 3.3: " << GLAD_GL_VERSION_3_3 << "\n";
+
+	std::cout << "GL 4.0: " << GLAD_GL_VERSION_4_0 << "\n";
+	std::cout << "GL 4.1: " << GLAD_GL_VERSION_4_1 << "\n";
+	std::cout << "GL 4.2: " << GLAD_GL_VERSION_4_2 << "\n";
+#endif
+
 	Renderer::init(&win);
 	Layout* layout = new AbsoluteLayout(&win, 1000, 620);
 
