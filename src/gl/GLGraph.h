@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GL/glew.h>
+#include <glad/glad.h>
 #include "GraphShader.h"
 #include "GraphQuad.h"
 #include "../math/Equation.h"

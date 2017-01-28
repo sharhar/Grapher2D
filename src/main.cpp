@@ -1,7 +1,7 @@
-#include <GL/glew.h>
+#include <glad/glad.h>
 #include <GLUI/GLUI.h>
-#include <GLFW/glfw3.h>
 #include "math/Equation.h"
+#include <iostream>
 #include <math.h>
 #include <string>
 #include <thread>
@@ -328,11 +328,10 @@ int main() {
 	GLUI::init();
 
 	Window win("Grapher2D", 1000, 620, false, 1, genIcon());
-	
-	GLenum initResult = glewInit();
-	if (initResult != GLEW_OK) {
-		std::cout << "GLEW could not initialize!\n";
-		return -1;
+
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		std::cout << "Could not load OpenGL!\n";
+		exit(-1);
 	}
 
 	Renderer::init(&win);
@@ -372,9 +371,6 @@ int main() {
 	std::vector<TextBox*> textBoxes;
 	std::vector<Graph*> graphs;
 	std::vector<GraphData*> datas;
-
-	int frameBufferWidth, frameBufferHeight;
-	glfwGetFramebufferSize((GLFWwindow*) win.getGLFWwindow(), &frameBufferWidth, &frameBufferHeight);
 
 	glGenFramebuffers(1, &g_fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
@@ -623,7 +619,7 @@ int main() {
 			return;
 		}
 
-		Rectangle boundsa = addGraphButton->getBounds();
+		glui::Rectangle boundsa = addGraphButton->getBounds();
 		addGraphButton->setPos({ boundsa.x, boundsa.y - 60 });
 
 		GraphData* data = (GraphData*)malloc(sizeof(GraphData));
@@ -683,7 +679,7 @@ int main() {
 
 		for (int i = 0; i < graphs.size();i++) {
 			if (datas[i]->del) {
-				Rectangle bounds = addGraphButton->getBounds();
+				glui::Rectangle bounds = addGraphButton->getBounds();
 				addGraphButton->setPos({ bounds.x, bounds.y + 60 });
 
 				deleteGraph(i);
