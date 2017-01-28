@@ -325,7 +325,7 @@ GLFWimage* genIcon() {
 	return img;
 }
 
-bool isGL42() {
+bool hasGL42() {
     std::string vertSource = "";
     
     vertSource += "#version 420 core\n";
@@ -383,7 +383,7 @@ int main() {
 		exit(-1);
 	}
     
-	g_gl42 = false;// isGL42();
+	g_gl42 = hasGL42();
     
 	Renderer::init(&win);
 	
