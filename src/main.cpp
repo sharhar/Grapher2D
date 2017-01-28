@@ -383,7 +383,7 @@ int main() {
 		exit(-1);
 	}
     
-    g_gl42 = isGL42();
+	g_gl42 = false;// isGL42();
     
 	Renderer::init(&win);
 	
@@ -443,13 +443,8 @@ int main() {
 
 	GraphQuad::init();
     
-    GraphEdgeShader* edgeShader;
-    GraphRenderShader* renderShader;
-    
-    if(g_gl42) {
-        edgeShader = new GraphEdgeShader();
-        renderShader = new GraphRenderShader();
-    }
+    GraphEdgeShader* edgeShader = new GraphEdgeShader(g_gl42);
+	GraphRenderShader* renderShader = new GraphRenderShader(g_gl42);
 
 	GLPanel* panel;
 
@@ -476,18 +471,18 @@ int main() {
         
 		GraphQuad::bind();
 		glEnableVertexAttribArray(0);
+		
+		if (g_gl42) {
+			for (int i = 0; i < graphs.size(); i++) {
+				if (graphs[i] == NULL) {
+					continue;
+				}
 
-		for (int i = 0; i < graphs.size(); i++) {
-			if (graphs[i] == NULL) {
-				continue;
+				graphs[i]->glg->calc(g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
 			}
 
-			graphs[i]->glg->calc(g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
-		}
-
-		glFlush();
-        
-        if(g_gl42) {
+			glFlush();
+       
             edgeShader->bind();
             for (int i = 0; i < graphs.size(); i++) {
                 if (graphs[i] == NULL) {
@@ -509,11 +504,50 @@ int main() {
                 }
                 
                 renderShader->setUniforms(g_colors[i % 5]);
-                glBindImageTexture(1, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
+                glBindImageTexture(0, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
                 glDrawArrays(GL_TRIANGLES, 0, 6);
             }
             renderShader->unbind();
-        }
+		} else {
+			for (int i = 0; i < graphs.size(); i++) {
+				if (graphs[i] == NULL) {
+					continue;
+				}
+
+				graphs[i]->glg->calc33(g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
+			}
+
+			glFlush();
+			
+			edgeShader->bind();
+			for (int i = 0; i < graphs.size(); i++) {
+				if (graphs[i] == NULL) {
+					continue;
+				}
+
+				glBindFramebuffer(GL_FRAMEBUFFER, graphs[i]->glg->efbo);
+				glBindTexture(GL_TEXTURE_2D, graphs[i]->glg->dtex);
+				glActiveTexture(GL_TEXTURE0);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+			}
+			edgeShader->unbind();
+			
+			glFlush();
+			glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
+
+			renderShader->bind();
+			for (int i = 0; i < graphs.size(); i++) {
+				if (graphs[i] == NULL) {
+					continue;
+				}
+
+				renderShader->setUniforms(g_colors[i % 5]);
+				glBindTexture(GL_TEXTURE_2D, graphs[i]->glg->etex);
+				glActiveTexture(GL_TEXTURE0);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+			}
+			renderShader->unbind();
+		}
         
         glDisableVertexAttribArray(0);
 		GraphQuad::unbind();
@@ -642,7 +676,7 @@ int main() {
 
 			graphs[index]->del = false;
 
-			graphs[index]->glg = new GLGraph(equation);
+			graphs[index]->glg = new GLGraph(equation, g_gl42);
 			graphs[index]->startTime = glfwGetTime();
 		} else {
 			char** chars = new char*[1];
@@ -782,8 +816,10 @@ int main() {
 		deleteGraph(i);
 	}
 
-	edgeShader->cleanUp();
-	renderShader->cleanUp();
+	if (g_gl42) {
+		edgeShader->cleanUp();
+		renderShader->cleanUp();
+	}
     
 	win.destroy();
 

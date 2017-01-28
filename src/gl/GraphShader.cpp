@@ -2,80 +2,177 @@
 #include <vector>
 #include <iostream>
 
-GraphCalcShader::GraphCalcShader(std::string eq) {
+static inline std::string getCalcVertSource42() {
+	std::string result = "";
+
+	result += "#version 420 core\n";
+	result += "in vec2 position;\n";
+	result += "out vec2 coord;\n";
+	result += "uniform float up;\n";
+	result += "uniform float down;\n";
+	result += "uniform float left;\n";
+	result += "uniform float right;\n";
+	result += "void main(void) {\n";
+	result += "gl_Position = vec4(position.xy, 0, 1);\n";
+	result += "coord = vec2(0.0, 0.0);\n";
+
+	result += "if(position.x == 1) {coord.x = right;}";
+	result += "else {coord.x = left;}";
+
+	result += "if(position.y == 1) {coord.y = up;}";
+	result += "else {coord.y = down;}";
+
+	result += "}\n";
+
+	return result;
+}
+
+static inline std::string getCalcFragSource42(std::string eq) {
+	std::string result = "";
+
+	result += "#version 420 core\n";
+	result += "uniform float t;\n";
+	result += "uniform float at;\n";
+
+	result += "layout (rgba32f) uniform image2D data;\n";
+
+	result += "const float e = 2.718281828459045;\n";
+	result += "const float pi = 3.141592653589793;\n";
+	result += "const float tau = 3.141592653589793 * 2;\n";
+
+	result += "in vec2 coord;\n";
+	result += "out vec4 out_color;\n";
+
+	result += "float powi_c(float b, int p) {";
+
+	result += "if(p%2 == 0) {";
+	result += "return pow(abs(b), p);";
+	result += "}";
+
+	result += "return sign(b)*pow(abs(b), p);";
+	result += "}\n";
+
+	result += "float pow_c(float b, float p) {\n";
+
+	result += "int pi = int(p);";
+
+	result += "if(p < 0) {";
+	result += "if(pi == p) {";
+	result += "return 1/(powi_c(b, abs(pi)));";
+	result += "} else {";
+	result += "return 1/(pow(b, abs(p)));";
+	result += "}\n";
+	result += "}\n";
+
+	result += "if(pi == p) {";
+	result += "return powi_c(b, pi);";
+	result += "} else {";
+	result += "return pow(b, p);";
+	result += "}\n";
+
+	result += "}\n";
+
+	result += "void main(void) {\n";
+	result += "float x = coord.x;\n";
+	result += "float y = coord.y;\n";
+	result += "float total = " + eq + ";\n";
+	result += "imageStore(data, ivec2(gl_FragCoord.xy), vec4(total, sign(total), x, y));\n";
+	result += "discard;\n";
+	result += "}\n";
+
+	return result;
+}
+
+static inline std::string getCalcVertSource33() {
+	std::string result = "";
+
+	result += "#version 330 core\n";
+	result += "in vec2 position;\n";
+	result += "out vec2 coord;\n";
+	result += "uniform float up;\n";
+	result += "uniform float down;\n";
+	result += "uniform float left;\n";
+	result += "uniform float right;\n";
+	result += "void main(void) {\n";
+	result += "gl_Position = vec4(position.xy, 0, 1);\n";
+	result += "coord = vec2(0.0, 0.0);\n";
+
+	result += "if(position.x == 1) {coord.x = right;}";
+	result += "else {coord.x = left;}";
+
+	result += "if(position.y == 1) {coord.y = up;}";
+	result += "else {coord.y = down;}";
+
+	result += "}\n";
+
+	return result;
+}
+
+static inline std::string getCalcFragSource33(std::string eq) {
+	std::string result = "";
+
+	result += "#version 330 core\n";
+	result += "uniform float t;\n";
+	result += "uniform float at;\n";
+
+	result += "const float e = 2.718281828459045;\n";
+	result += "const float pi = 3.141592653589793;\n";
+	result += "const float tau = 3.141592653589793 * 2;\n";
+
+	result += "in vec2 coord;\n";
+	result += "out vec4 out_color;\n";
+
+	result += "float powi_c(float b, int p) {";
+
+	result += "if(p%2 == 0) {";
+	result += "return pow(abs(b), p);";
+	result += "}";
+
+	result += "return sign(b)*pow(abs(b), p);";
+	result += "}\n";
+
+	result += "float pow_c(float b, float p) {\n";
+
+	result += "int pi = int(p);";
+
+	result += "if(p < 0) {";
+	result += "if(pi == p) {";
+	result += "return 1/(powi_c(b, abs(pi)));";
+	result += "} else {";
+	result += "return 1/(pow(b, abs(p)));";
+	result += "}\n";
+	result += "}\n";
+
+	result += "if(pi == p) {";
+	result += "return powi_c(b, pi);";
+	result += "} else {";
+	result += "return pow(b, p);";
+	result += "}\n";
+
+	result += "}\n";
+
+	result += "void main(void) {\n";
+	result += "float x = coord.x;\n";
+	result += "float y = coord.y;\n";
+	result += "float total = " + eq + ";\n";
+	result += "out_color = vec4(sign(total)/2 + 0.5, 0.0, 0.0, 1.0);\n";
+	result += "}\n";
+
+	return result;
+}
+
+GraphCalcShader::GraphCalcShader(std::string eq, bool gl42) {
 	
-	std::string vertSource = "";
+	std::string vertSource;
+	std::string fragSource;
 
-	vertSource += "#version 420 core\n";
-	vertSource += "in vec2 position;\n";
-	vertSource += "out vec2 coord;\n";
-	vertSource += "uniform float up;\n";
-	vertSource += "uniform float down;\n";
-	vertSource += "uniform float left;\n";
-	vertSource += "uniform float right;\n";
-	vertSource += "void main(void) {\n";
-	vertSource += "gl_Position = vec4(position.xy, 0, 1);\n";
-	vertSource += "coord = vec2(0.0, 0.0);\n";
-
-	vertSource += "if(position.x == 1) {coord.x = right;}";
-	vertSource += "else {coord.x = left;}";
-
-	vertSource += "if(position.y == 1) {coord.y = up;}";
-	vertSource += "else {coord.y = down;}";
-
-	vertSource += "}\n";
-
-	std::string fragSource = "";
-
-	fragSource += "#version 420 core\n";
-	fragSource += "uniform float t;\n";
-	fragSource += "uniform float at;\n";
-
-	fragSource += "layout (rgba32f) uniform image2D data;\n";
-
-	fragSource += "const float e = 2.718281828459045;\n";
-	fragSource += "const float pi = 3.141592653589793;\n";
-	fragSource += "const float tau = 3.141592653589793 * 2;\n";
-
-	fragSource += "in vec2 coord;\n";
-	fragSource += "out vec4 out_color;\n";
-
-	fragSource += "float powi_c(float b, int p) {";
-
-	fragSource += "if(p%2 == 0) {";
-	fragSource += "return pow(abs(b), p);";
-	fragSource += "}";
-
-	fragSource += "return sign(b)*pow(abs(b), p);";
-	fragSource += "}\n";
-
-	fragSource += "float pow_c(float b, float p) {\n";
-
-	fragSource += "int pi = int(p);";
-
-	fragSource += "if(p < 0) {";
-	fragSource += "if(pi == p) {";
-	fragSource += "return 1/(powi_c(b, abs(pi)));";
-	fragSource += "} else {";
-	fragSource += "return 1/(pow(b, abs(p)));";
-	fragSource += "}\n";
-	fragSource += "}\n";
-
-	fragSource += "if(pi == p) {";
-	fragSource += "return powi_c(b, pi);";
-	fragSource += "} else {";
-	fragSource += "return pow(b, p);";
-	fragSource += "}\n";
-	
-	fragSource += "}\n";
-
-	fragSource += "void main(void) {\n";
-	fragSource += "float x = coord.x;\n";
-	fragSource += "float y = coord.y;\n";
-	fragSource += "float total = " + eq + ";\n";
-	fragSource += "imageStore(data, ivec2(gl_FragCoord.xy), vec4(total, sign(total), x, y));\n";
-	fragSource += "discard;\n";
-	fragSource += "}\n";
+	if (gl42) {
+		vertSource = getCalcVertSource42();
+		fragSource = getCalcFragSource42(eq);
+	} else {
+		vertSource = getCalcVertSource33();
+		fragSource = getCalcFragSource33(eq);
+	}
 
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -164,154 +261,216 @@ void GraphCalcShader::cleanUp() {
 	glDeleteProgram(shaderProgram);
 }
 
-GraphEdgeShader::GraphEdgeShader() {
-	std::string vertSource = "";
+static inline std::string getEdgeVertSource42() {
+	std::string result = "";
 
-	vertSource += "#version 420 core\n";
-	vertSource += "out vec2 coord;\n";
-	vertSource += "in vec2 position;\n";
-	vertSource += "void main(void) {\n";
-	vertSource += "gl_Position = vec4(position.xy, 0, 1);\n";
-	vertSource += "coord = position/2.0 + 0.5;\n";
-	vertSource += "}\n";
+	result += "#version 420 core\n";
+	result += "out vec2 coord;\n";
+	result += "in vec2 position;\n";
+	result += "void main(void) {\n";
+	result += "gl_Position = vec4(position.xy, 0, 1);\n";
+	result += "coord = position/2.0 + 0.5;\n";
+	result += "}\n";
 
-	std::string fragSource = "";
+	return result;
+}
 
-	fragSource += "#version 420 core\n";
+static inline std::string getEdgeFragSource42() {
+	std::string result = "";
 
-	fragSource += "layout (rgba32f) uniform image2D data;\n";
-	fragSource += "layout (rg32f) uniform image2D edge;\n";
+	result += "#version 420 core\n";
 
-	fragSource += "in vec2 coord;\n";
-	fragSource += "out vec4 out_color;\n";
+	result += "layout (rgba32f) uniform image2D data;\n";
+	result += "layout (rg32f) uniform image2D edge;\n";
 
-	fragSource += "bool isColored(ivec2 coord) {";
+	result += "in vec2 coord;\n";
+	result += "out vec4 out_color;\n";
 
-	fragSource += "vec4 c = imageLoad(data, coord);\n";
-	
-	fragSource += "vec4 r = imageLoad(data, ivec2(coord.x + 1, coord.y));\n";
-	fragSource += "vec4 u = imageLoad(data, ivec2(coord.x, coord.y + 1));\n";
-	fragSource += "vec4 l = imageLoad(data, ivec2(coord.x - 1, coord.y));\n";
-	fragSource += "vec4 d = imageLoad(data, ivec2(coord.x, coord.y - 1));\n";
+	result += "bool isColored(ivec2 coord) {";
 
-	fragSource += "vec4 r2 = imageLoad(data, ivec2(coord.x + 2, coord.y));\n";
-	fragSource += "vec4 u2 = imageLoad(data, ivec2(coord.x, coord.y + 2));\n";
-	fragSource += "vec4 l2 = imageLoad(data, ivec2(coord.x - 2, coord.y));\n";
-	fragSource += "vec4 d2 = imageLoad(data, ivec2(coord.x, coord.y - 2));\n";
+	result += "vec4 c = imageLoad(data, coord);\n";
 
-	fragSource += "float mm = 10;";
-	fragSource += "float mm2 = 50000;";
+	result += "vec4 r = imageLoad(data, ivec2(coord.x + 1, coord.y));\n";
+	result += "vec4 u = imageLoad(data, ivec2(coord.x, coord.y + 1));\n";
+	result += "vec4 l = imageLoad(data, ivec2(coord.x - 1, coord.y));\n";
+	result += "vec4 d = imageLoad(data, ivec2(coord.x, coord.y - 1));\n";
+
+	result += "vec4 r2 = imageLoad(data, ivec2(coord.x + 2, coord.y));\n";
+	result += "vec4 u2 = imageLoad(data, ivec2(coord.x, coord.y + 2));\n";
+	result += "vec4 l2 = imageLoad(data, ivec2(coord.x - 2, coord.y));\n";
+	result += "vec4 d2 = imageLoad(data, ivec2(coord.x, coord.y - 2));\n";
+
+	result += "float mm = 10;";
+	result += "float mm2 = 50000;";
 
 	//Up Pixel
-	fragSource += "if(coord.y + 2 <= 1200 && coord.y - 1 >= 0) {";
+	result += "if(coord.y + 2 <= 1200 && coord.y - 1 >= 0) {";
 
-	fragSource += "float m1 = (c.x - d.x)/(c.z - d.z);";
-	fragSource += "float m2 = (u2.x - u.x)/(u2.z - u.z);";
-	fragSource += "float m = (u.x - c.x)/(u.z - c.z);";
+	result += "float m1 = (c.x - d.x)/(c.z - d.z);";
+	result += "float m2 = (u2.x - u.x)/(u2.z - u.z);";
+	result += "float m = (u.x - c.x)/(u.z - c.z);";
 
-	fragSource += "bool p1 = m1 > 0;";
-	fragSource += "bool p2 = m2 > 0;";
-	fragSource += "bool p = m > 0;";
+	result += "bool p1 = m1 > 0;";
+	result += "bool p2 = m2 > 0;";
+	result += "bool p = m > 0;";
 
-	fragSource += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
+	result += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
 
-	fragSource += "if(u.y != c.y && !sk) {";
-	fragSource += "return true;\n";
-	fragSource += "}\n";
+	result += "if(u.y != c.y && !sk) {";
+	result += "return true;\n";
+	result += "}\n";
 
-	fragSource += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2 && abs(m) > mm*5;";
+	result += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2 && abs(m) > mm*5;";
 
-	fragSource += "if(u.y == c.y && sk2) {";
-	fragSource += "return true;\n";
-	fragSource += "}\n";
+	result += "if(u.y == c.y && sk2) {";
+	result += "return true;\n";
+	result += "}\n";
 
-	fragSource += "}\n";
+	result += "}\n";
 
 	//Down Pixel
-	fragSource += "if(coord.y + 1 <= 1200 && coord.y - 2 >= 0) {";
+	result += "if(coord.y + 1 <= 1200 && coord.y - 2 >= 0) {";
 
-	fragSource += "float m1 = (d.x - d2.x)/(d.z - d2.z);";
-	fragSource += "float m2 = (u.x - c.x)/(u.z - c.z);";
-	fragSource += "float m = (c.x - d.x)/(c.z - d.z);";
+	result += "float m1 = (d.x - d2.x)/(d.z - d2.z);";
+	result += "float m2 = (u.x - c.x)/(u.z - c.z);";
+	result += "float m = (c.x - d.x)/(c.z - d.z);";
 
-	fragSource += "bool p1 = m1 > 0;";
-	fragSource += "bool p2 = m2 > 0;";
-	fragSource += "bool p = m > 0;";
+	result += "bool p1 = m1 > 0;";
+	result += "bool p2 = m2 > 0;";
+	result += "bool p = m > 0;";
 
-	fragSource += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
+	result += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
 
-	fragSource += "if(c.y != d.y && !sk) {";
-	fragSource += "return true;\n";
-	fragSource += "}\n";
+	result += "if(c.y != d.y && !sk) {";
+	result += "return true;\n";
+	result += "}\n";
 
-	fragSource += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2 && abs(m) > mm*5;";
+	result += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2 && abs(m) > mm*5;";
 
-	fragSource += "if(c.y == d.y && sk2) {";
-	fragSource += "return true;\n";
-	fragSource += "}\n";
+	result += "if(c.y == d.y && sk2) {";
+	result += "return true;\n";
+	result += "}\n";
 
-	fragSource += "}\n";
+	result += "}\n";
 
 	//Right Pixel
-	fragSource += "if(coord.x + 2 <= 1200 && coord.x - 1 >= 0) {";
+	result += "if(coord.x + 2 <= 1200 && coord.x - 1 >= 0) {";
 
-	fragSource += "float m1 = (c.x - l.x)/(c.z - l.z);";
-	fragSource += "float m2 = (r2.x - r.x)/(r2.z - r.z);";
-	fragSource += "float m = (r.x - c.x)/(r.z - c.z);";
+	result += "float m1 = (c.x - l.x)/(c.z - l.z);";
+	result += "float m2 = (r2.x - r.x)/(r2.z - r.z);";
+	result += "float m = (r.x - c.x)/(r.z - c.z);";
 
-	fragSource += "bool p1 = m1 > 0;";
-	fragSource += "bool p2 = m2 > 0;";
-	fragSource += "bool p = m > 0;";
+	result += "bool p1 = m1 > 0;";
+	result += "bool p2 = m2 > 0;";
+	result += "bool p = m > 0;";
 
-	fragSource += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
+	result += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
 
-	fragSource += "if(r.y != c.y && !sk) {";
-	fragSource += "return true;\n";
-	fragSource += "}\n";
+	result += "if(r.y != c.y && !sk) {";
+	result += "return true;\n";
+	result += "}\n";
 
-	fragSource += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2 && abs(m) > mm*5;";
+	result += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2 && abs(m) > mm*5;";
 
-	fragSource += "if(r.y == c.y && sk2) {";
-	fragSource += "return true;\n";
-	fragSource += "}\n";
+	result += "if(r.y == c.y && sk2) {";
+	result += "return true;\n";
+	result += "}\n";
 
-	fragSource += "}\n";
+	result += "}\n";
 
 	//Left Pixel
-	fragSource += "if(coord.x + 1 <= 1200 && coord.x - 2 >= 0) {";
+	result += "if(coord.x + 1 <= 1200 && coord.x - 2 >= 0) {";
 
-	fragSource += "float m1 = (l.x - l2.x)/(l.z - l2.z);";
-	fragSource += "float m2 = (r.x - c.x)/(r.z - c.z);";
-	fragSource += "float m = (c.x - l.x)/(c.z - l.z);";
+	result += "float m1 = (l.x - l2.x)/(l.z - l2.z);";
+	result += "float m2 = (r.x - c.x)/(r.z - c.z);";
+	result += "float m = (c.x - l.x)/(c.z - l.z);";
 
-	fragSource += "bool p1 = m1 > 0;";
-	fragSource += "bool p2 = m2 > 0;";
-	fragSource += "bool p = m > 0;";
+	result += "bool p1 = m1 > 0;";
+	result += "bool p2 = m2 > 0;";
+	result += "bool p = m > 0;";
 
-	fragSource += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
+	result += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
 
-	fragSource += "if(c.y != l.y && !sk) {";
-	fragSource += "return true;\n";
-	fragSource += "}\n";
+	result += "if(c.y != l.y && !sk) {";
+	result += "return true;\n";
+	result += "}\n";
 
-	fragSource += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2 && abs(m) > mm*5;";
+	result += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2 && abs(m) > mm*5;";
 
-	fragSource += "if(c.y == l.y && sk2) {";
-	fragSource += "return true;\n";
-	fragSource += "}\n";
+	result += "if(c.y == l.y && sk2) {";
+	result += "return true;\n";
+	result += "}\n";
 
-	fragSource += "}\n";
+	result += "}\n";
 
-	fragSource += "return false;\n";
+	result += "return false;\n";
 
-	fragSource += "}";
+	result += "}";
 
-	fragSource += "void main(void) {\n";
+	result += "void main(void) {\n";
 
-	fragSource += "if(isColored(ivec2(gl_FragCoord.xy))) {imageStore(edge, ivec2(gl_FragCoord.xy), vec4(1.0, 0.0, 0.0, 0.0)); }";
-	fragSource += "else {imageStore(edge, ivec2(gl_FragCoord.xy), vec4(0.0, 0.0, 0.0, 0.0));}";
-	fragSource += "discard;";
-	fragSource += "}\n";
+	result += "if(isColored(ivec2(gl_FragCoord.xy))) {imageStore(edge, ivec2(gl_FragCoord.xy), vec4(1.0, 0.0, 0.0, 0.0)); }";
+	result += "else {imageStore(edge, ivec2(gl_FragCoord.xy), vec4(0.0, 0.0, 0.0, 0.0));}";
+	result += "discard;";
+	result += "}\n";
+
+	return result;
+}
+
+static inline std::string getEdgeVertSource33() {
+	std::string result = "";
+
+	result += "#version 330 core\n";
+	result += "out vec2 coord;\n";
+	result += "in vec2 position;\n";
+	result += "void main(void) {\n";
+	result += "gl_Position = vec4(position.xy, 0, 1);\n";
+	result += "coord = position/2.0 + 0.5;\n";
+	result += "}\n";
+
+	return result;
+}
+
+static inline std::string getEdgeFragSource33() {
+	std::string result = "";
+
+	result += "#version 330 core\n";
+
+	result += "uniform sampler2D data;\n";
+	result += "in vec2 coord;\n";
+	result += "out vec4 out_color;\n";
+
+	result += "void main(void) {\n";
+
+	result += "float pxw = 1.0/1200.0;\n";
+	result += "vec4 ct = texture(data, coord);\n";
+	result += "float c = (ct.x-0.5)*2;\n";
+	result += "float r = (texture(data, vec2(coord.x + pxw, coord.y)).x-0.5)*2;\n";
+	result += "float u = (texture(data, vec2(coord.x, coord.y + pxw)).x-0.5)*2;\n";
+	result += "float l = (texture(data, vec2(coord.x - pxw, coord.y)).x-0.5)*2;\n";
+	result += "float d = (texture(data, vec2(coord.x, coord.y - pxw)).x-0.5)*2;\n";
+	result += "if(c == 0 || (coord.x + pxw <= 1.0 && c != r) || (coord.y + pxw <= 1.0 && c != u) ||";
+	result += "	(coord.x - pxw >= 0.0 && c != l) || (coord.y - pxw >= 0.0 && c != d)) {out_color = vec4(1.0, 0.0, 0.0, 1.0); return;}\n";
+
+	result += "out_color = vec4(0.0, 0.0, 0.0, 1.0);";
+
+	result += "}\n";
+
+	return result;
+}
+
+GraphEdgeShader::GraphEdgeShader(bool gl42) {
+	std::string vertSource;
+	std::string fragSource;
+
+	if (gl42) {
+		vertSource = getEdgeVertSource42();
+		fragSource = getEdgeFragSource42();
+	}
+	else {
+		vertSource = getEdgeVertSource33();
+		fragSource = getEdgeFragSource33();
+	}
 
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -394,43 +553,110 @@ void GraphEdgeShader::cleanUp() {
 	glDeleteProgram(shaderProgram);
 }
 
-GraphRenderShader::GraphRenderShader() {
-	std::string vertSource = "";
+static inline std::string getRenderVertSource42() {
+	std::string result = "";
 
-	vertSource += "#version 420 core\n";
-	vertSource += "out vec2 coord;\n";
-	vertSource += "in vec2 position;\n";
-	vertSource += "void main(void) {\n";
-	vertSource += "gl_Position = vec4(position.xy, 0, 1);\n";
-	vertSource += "coord = position/2.0 + 0.5;\n";
-	vertSource += "}\n";
+	result += "#version 420 core\n";
+	result += "out vec2 coord;\n";
+	result += "in vec2 position;\n";
+	result += "void main(void) {\n";
+	result += "gl_Position = vec4(position.xy, 0, 1);\n";
+	result += "coord = position/2.0 + 0.5;\n";
+	result += "}\n";
 
-	std::string fragSource = "";
+	return result;
+}
 
-	fragSource += "#version 420 core\n";
+static inline std::string getRenderFragSource42() {
+	std::string result = "";
 
-	fragSource += "layout (rg32f) uniform image2D edge;\n";
-	fragSource += "uniform vec3 g_color;\n";
+	result += "#version 420 core\n";
 
-	fragSource += "in vec2 coord;\n";
-	fragSource += "out vec4 out_color;\n";
+	result += "layout (rg32f) uniform image2D edge;\n";
+	result += "uniform vec3 g_color;\n";
 
-	fragSource += "void main(void) {\n";
+	result += "in vec2 coord;\n";
+	result += "out vec4 out_color;\n";
 
-	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	result += "void main(void) {\n";
 
-	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x + 1, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x - 1, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y + 1)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y - 1)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
 
-	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x + 2, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x - 2, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y + 2)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	fragSource += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y - 2)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x + 1, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x - 1, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y + 1)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y - 1)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
 
-	fragSource += "discard;";
-	fragSource += "}\n";
+	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x + 2, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x - 2, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y + 2)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y - 2)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+
+	result += "discard;";
+	result += "}\n";
+
+	return result;
+}
+
+static inline std::string getRenderVertSource33() {
+	std::string result = "";
+
+	result += "#version 330 core\n";
+	result += "out vec2 coord;\n";
+	result += "in vec2 position;\n";
+	result += "void main(void) {\n";
+	result += "gl_Position = vec4(position.xy, 0, 1);\n";
+	result += "coord = position/2.0 + 0.5;\n";
+	result += "}\n";
+
+	return result;
+}
+
+static inline std::string getRenderFragSource33() {
+	std::string result = "";
+
+	result += "#version 330 core\n";
+
+	result += "uniform sampler2D edge;\n";
+	result += "uniform vec3 g_color;\n";
+
+	result += "in vec2 coord;\n";
+	result += "out vec4 out_color;\n";
+
+	result += "void main(void) {\n";
+
+	result += "float pw = 1.0/1200.0;";
+
+	result += "if(texture(edge, vec2(coord.x, coord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+
+	result += "if(texture(edge, vec2(coord.x + pw, coord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	result += "if(texture(edge, vec2(coord.x - pw, coord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	result += "if(texture(edge, vec2(coord.x, coord.y + pw)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	result += "if(texture(edge, vec2(coord.x, coord.y - pw)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+
+	result += "if(texture(edge, vec2(coord.x + pw*2, coord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	result += "if(texture(edge, vec2(coord.x - pw*2, coord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	result += "if(texture(edge, vec2(coord.x, coord.y + pw*2)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+	result += "if(texture(edge, vec2(coord.x, coord.y - pw*2)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
+
+	result += "discard;";
+	result += "}\n";
+
+	return result;
+}
+
+GraphRenderShader::GraphRenderShader(bool gl42) {
+	std::string vertSource;
+	std::string fragSource;
+
+	if (gl42) {
+		vertSource = getRenderVertSource42();
+		fragSource = getRenderFragSource42();
+	}
+	else {
+		vertSource = getRenderVertSource33();
+		fragSource = getRenderFragSource33();
+	}
 
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -488,7 +714,9 @@ GraphRenderShader::GraphRenderShader() {
 	colorLoc = glGetUniformLocation(shaderProgram, "g_color");
 
 	bind();
-	glUniform1i(edgeLoc, 1);
+
+	glUniform1i(edgeLoc, 0);
+	
 	unbind();
 }
 

@@ -21,24 +21,69 @@ typedef struct Node {
 
 String getNodeString(Node* node);
 
-GLGraph::GLGraph(Equation* e) {
+GLGraph::GLGraph(Equation* e, bool gl42) {
 	String eqt = getNodeString((Node*)e->getRootNode());
 
-	calcShader = new GraphCalcShader(eqt.getstdstring());
+	calcShader = new GraphCalcShader(eqt.getstdstring(), gl42);
 
-	glGenTextures(1, &dtex);
-	glBindTexture(GL_TEXTURE_2D, dtex);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, 1200, 1200);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	if (gl42) {
+		glGenTextures(1, &dtex);
+		glBindTexture(GL_TEXTURE_2D, dtex);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, 1200, 1200);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
-	glGenTextures(1, &etex);
-	glBindTexture(GL_TEXTURE_2D, etex);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG32F, 1200, 1200);
-	glBindTexture(GL_TEXTURE_2D, 0);
+		glGenTextures(1, &etex);
+		glBindTexture(GL_TEXTURE_2D, etex);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG32F, 1200, 1200);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	} else {
+		glGenFramebuffers(1, &efbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, efbo);
+		glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+		glGenTextures(1, &etex);
+		glBindTexture(GL_TEXTURE_2D, etex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1200, 1200,
+			0, GL_RGBA, GL_FLOAT, NULL);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, etex, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		glGenFramebuffers(1, &dfbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, dfbo);
+		glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+		glGenTextures(1, &dtex);
+		glBindTexture(GL_TEXTURE_2D, dtex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1200, 1200,
+			0, GL_RGBA, GL_FLOAT, NULL);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, dtex, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
 }
 
 void GLGraph::calc(float up, float down, float left, float right, float time, float atime) {
 	glBindImageTexture(0, dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+	calcShader->bind();
+	calcShader->setUniforms(up, down, left, right, time, atime);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	calcShader->unbind();
+}
+
+void GLGraph::calc33(float up, float down, float left, float right, float time, float atime) {
+	glBindFramebuffer(GL_FRAMEBUFFER, dfbo);
 
 	calcShader->bind();
 	calcShader->setUniforms(up, down, left, right, time, atime);

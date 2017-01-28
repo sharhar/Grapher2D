@@ -16,7 +16,7 @@ private:
 public:
 	bool compiled;
 
-	GraphCalcShader(std::string eq);
+	GraphCalcShader(std::string eq, bool gl42);
 
 	void bind();
 	void unbind();
@@ -34,7 +34,7 @@ private:
 public:
 	bool compiled;
 
-	GraphEdgeShader();
+	GraphEdgeShader(bool gl42);
 
 	void bind();
 	void unbind();
@@ -51,7 +51,7 @@ private:
 public:
 	bool compiled;
 
-	GraphRenderShader();
+	GraphRenderShader(bool gl42);
 
 	void bind();
 	void setUniforms(glui::Color graphColor);
