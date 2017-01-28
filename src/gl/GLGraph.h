@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glad/glad.h>
+#include <glad/glad.hpp>
 #include "GraphShader.h"
 #include "GraphQuad.h"
 #include "../math/Equation.h"

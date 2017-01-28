@@ -1,4 +1,4 @@
-#include <glad/glad.h>
+#include <glad/glad.hpp>
 #include <GLUI/GLUI.h>
 #include "math/Equation.h"
 #include <iostream>
