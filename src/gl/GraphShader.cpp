@@ -41,11 +41,12 @@ GraphCalcShader::GraphCalcShader(std::string eq) {
 	fragSource += "out vec4 out_color;\n";
 
 	fragSource += "float powi_c(float b, int p) {";
-	fragSource += "float result = 1;";
-	fragSource += "for(int i = 0; i < p; i++) {";
-	fragSource += "result = result * b;";
-	fragSource += "}\n";
-	fragSource += "return result;";
+
+	fragSource += "if(p%2 == 0) {";
+	fragSource += "return pow(abs(b), p);";
+	fragSource += "}";
+
+	fragSource += "return sign(b)*pow(abs(b), p);";
 	fragSource += "}\n";
 
 	fragSource += "float pow_c(float b, float p) {\n";

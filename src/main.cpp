@@ -10,7 +10,6 @@
 
 using namespace glui;
 
-#define VAL_NUM 600
 #define ZOOM_PERCENT 0.025
 
 double g_left  = -6;

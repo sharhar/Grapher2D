@@ -244,6 +244,18 @@ void loadDefaults(Equation* e) {
 		return sqrt(input[0]);
 	};
 
+	Function* funcSign = (Function*)malloc(sizeof(Function));
+	funcSign->name = new String((char*)"sign");
+	funcSign->func = [](int len, double* input)->double {
+		return sqrt(input[0]);
+	};
+
+	Function* funcFloor = (Function*)malloc(sizeof(Function));
+	funcFloor->name = new String((char*)"floor");
+	funcFloor->func = [](int len, double* input)->double {
+		return floor(input[0]);
+	};
+
 	e->addFunction(funcTan);
 	e->addFunction(funcSin);
 	e->addFunction(funcCos);
@@ -265,6 +277,8 @@ void loadDefaults(Equation* e) {
 	e->addFunction(funcAbs);
 	e->addFunction(funcPow);
 	e->addFunction(funcSqrt);
+	e->addFunction(funcSign);
+	e->addFunction(funcFloor);
 
 	e->createVariable("e")->value = 2.718281828459045;
 	e->createVariable("pi")->value = 3.141592653589793;
