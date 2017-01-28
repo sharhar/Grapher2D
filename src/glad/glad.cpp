@@ -2065,21 +2065,21 @@ static void find_coreGL(void) {
 
     GLVersion.major = major; GLVersion.minor = minor;
     max_loaded_major = major; max_loaded_minor = minor;
-	GLAD_GL_VERSION_1_0 = (major == 1 && minor >= 0) || major > 1;
-	GLAD_GL_VERSION_1_1 = (major == 1 && minor >= 1) || major > 1;
-	GLAD_GL_VERSION_1_2 = (major == 1 && minor >= 2) || major > 1;
-	GLAD_GL_VERSION_1_3 = (major == 1 && minor >= 3) || major > 1;
-	GLAD_GL_VERSION_1_4 = (major == 1 && minor >= 4) || major > 1;
-	GLAD_GL_VERSION_1_5 = (major == 1 && minor >= 5) || major > 1;
-	GLAD_GL_VERSION_2_0 = (major == 2 && minor >= 0) || major > 2;
-	GLAD_GL_VERSION_2_1 = (major == 2 && minor >= 1) || major > 2;
-	GLAD_GL_VERSION_3_0 = (major == 3 && minor >= 0) || major > 3;
-	GLAD_GL_VERSION_3_1 = (major == 3 && minor >= 1) || major > 3;
-	GLAD_GL_VERSION_3_2 = (major == 3 && minor >= 2) || major > 3;
-	GLAD_GL_VERSION_3_3 = (major == 3 && minor >= 3) || major > 3;
-	GLAD_GL_VERSION_4_0 = (major == 4 && minor >= 0) || major > 4;
-	GLAD_GL_VERSION_4_1 = (major == 4 && minor >= 1) || major > 4;
-	GLAD_GL_VERSION_4_2 = (major == 4 && minor >= 2) || major > 4;
+    GLAD_GL_VERSION_1_0 = 1;//(major == 1 && minor >= 0) || major > 1;
+	GLAD_GL_VERSION_1_1 = 1;//(major == 1 && minor >= 1) || major > 1;
+	GLAD_GL_VERSION_1_2 = 1;//(major == 1 && minor >= 2) || major > 1;
+	GLAD_GL_VERSION_1_3 = 1;//(major == 1 && minor >= 3) || major > 1;
+	GLAD_GL_VERSION_1_4 = 1;//(major == 1 && minor >= 4) || major > 1;
+	GLAD_GL_VERSION_1_5 = 1;//(major == 1 && minor >= 5) || major > 1;
+	GLAD_GL_VERSION_2_0 = 1;//(major == 2 && minor >= 0) || major > 2;
+	GLAD_GL_VERSION_2_1 = 1;//(major == 2 && minor >= 1) || major > 2;
+	GLAD_GL_VERSION_3_0 = 1;//(major == 3 && minor >= 0) || major > 3;
+	GLAD_GL_VERSION_3_1 = 1;//(major == 3 && minor >= 1) || major > 3;
+	GLAD_GL_VERSION_3_2 = 1;//(major == 3 && minor >= 2) || major > 3;
+	GLAD_GL_VERSION_3_3 = 1;//(major == 3 && minor >= 3) || major > 3;
+	GLAD_GL_VERSION_4_0 = 1;//(major == 4 && minor >= 0) || major > 4;
+	GLAD_GL_VERSION_4_1 = 1;//(major == 4 && minor >= 1) || major > 4;
+	GLAD_GL_VERSION_4_2 = 1;//(major == 4 && minor >= 2) || major > 4;
 	if (GLVersion.major > 4 || (GLVersion.major >= 4 && GLVersion.minor >= 2)) {
 		max_loaded_major = 4;
 		max_loaded_minor = 2;

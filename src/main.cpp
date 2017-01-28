@@ -17,6 +17,8 @@ double g_right =  6;
 double g_down  = -6;
 double g_up    =  6;
 
+bool g_gl42;
+
 int g_windowWidth = 600;
 int g_windowHeight = 600;
 
@@ -323,39 +325,69 @@ GLFWimage* genIcon() {
 	return img;
 }
 
+bool isGL42() {
+    std::string vertSource = "";
+    
+    vertSource += "#version 420 core\n";
+    vertSource += "void main(void) {\n";
+    vertSource += "gl_Position = vec4(1, 1, 1, 1);\n";
+    vertSource += "}\n";
+    
+    std::string fragSource = "";
+    
+    fragSource += "#version 420 core\n";
+    fragSource += "void main(void) {\n";
+    fragSource += "discard;\n";
+    fragSource += "}\n";
+    
+    GLuint vertexShader;
+    GLuint fragmentShader;
+    
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    GLchar* shadersource = (GLchar*)vertSource.c_str();
+    glShaderSource(vertexShader, 1, &shadersource, 0);
+    shadersource = (GLchar*)fragSource.c_str();
+    glShaderSource(fragmentShader, 1, &shadersource, 0);
+    
+    glCompileShader(vertexShader);
+    
+    GLint compiled = 0;
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &compiled);
+    if (compiled == GL_FALSE) {
+        glDeleteShader(vertexShader);
+        return false;
+    }
+    
+    glCompileShader(fragmentShader);
+    
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compiled);
+    if (compiled == GL_FALSE) {
+        glDeleteShader(fragmentShader);
+        return false;
+    }
+    
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+    
+    return true;
+}
+
 int main() {
 	GLUI::init();
 
 	Window win("Grapher2D", 1000, 620, false, 1, genIcon());
-
+    
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		std::cout << "Could not load OpenGL!\n";
+            std::cout << "Could not load OpenGL!\n";
 		exit(-1);
 	}
-
-#ifdef _DEBUG
-	std::cout << "GL 1.0: " << GLAD_GL_VERSION_1_0 << "\n";
-	std::cout << "GL 1.1: " << GLAD_GL_VERSION_1_1 << "\n";
-	std::cout << "GL 1.2: " << GLAD_GL_VERSION_1_2 << "\n";
-	std::cout << "GL 1.3: " << GLAD_GL_VERSION_1_3 << "\n";
-	std::cout << "GL 1.4: " << GLAD_GL_VERSION_1_4 << "\n";
-	std::cout << "GL 1.5: " << GLAD_GL_VERSION_1_5 << "\n";
-
-	std::cout << "GL 2.0: " << GLAD_GL_VERSION_2_0 << "\n";
-	std::cout << "GL 2.1: " << GLAD_GL_VERSION_2_1 << "\n";
-
-	std::cout << "GL 3.0: " << GLAD_GL_VERSION_3_0 << "\n";
-	std::cout << "GL 3.1: " << GLAD_GL_VERSION_3_1 << "\n";
-	std::cout << "GL 3.2: " << GLAD_GL_VERSION_3_2 << "\n";
-	std::cout << "GL 3.3: " << GLAD_GL_VERSION_3_3 << "\n";
-
-	std::cout << "GL 4.0: " << GLAD_GL_VERSION_4_0 << "\n";
-	std::cout << "GL 4.1: " << GLAD_GL_VERSION_4_1 << "\n";
-	std::cout << "GL 4.2: " << GLAD_GL_VERSION_4_2 << "\n";
-#endif
-
+    
+    g_gl42 = isGL42();
+    
 	Renderer::init(&win);
-	Layout* layout = new AbsoluteLayout(&win, 1000, 620);
+	
+    Layout* layout = new AbsoluteLayout(&win, 1000, 620);
 
 	Font* font24 = new Font("arial.ttf", 24);
 
@@ -410,9 +442,14 @@ int main() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	GraphQuad::init();
-
-	GraphEdgeShader* edgeShader = new GraphEdgeShader();
-	GraphRenderShader* renderShader = new GraphRenderShader();
+    
+    GraphEdgeShader* edgeShader;
+    GraphRenderShader* renderShader;
+    
+    if(g_gl42) {
+        edgeShader = new GraphEdgeShader();
+        renderShader = new GraphRenderShader();
+    }
 
 	GLPanel* panel;
 
@@ -436,7 +473,7 @@ int main() {
 		drawAxes(600, 600);
 		
 		float time = glfwGetTime();
-
+        
 		GraphQuad::bind();
 		glEnableVertexAttribArray(0);
 
@@ -449,35 +486,38 @@ int main() {
 		}
 
 		glFlush();
-
-		edgeShader->bind();
-		for (int i = 0; i < graphs.size(); i++) {
-			if (graphs[i] == NULL) {
-				continue;
-			}
-
-			glBindImageTexture(0, graphs[i]->glg->dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-			glBindImageTexture(1, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-		}
-		edgeShader->unbind();
-
-		glFlush();
-
-		renderShader->bind();
-		for (int i = 0; i < graphs.size(); i++) {
-			if (graphs[i] == NULL) {
-				continue;
-			}
-
-			renderShader->setUniforms(g_colors[i % 5]);
-			glBindImageTexture(1, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-		}
-		renderShader->unbind();
-
-		glDisableVertexAttribArray(0);
+        
+        if(g_gl42) {
+            edgeShader->bind();
+            for (int i = 0; i < graphs.size(); i++) {
+                if (graphs[i] == NULL) {
+                    continue;
+                }
+                
+                glBindImageTexture(0, graphs[i]->glg->dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+                glBindImageTexture(1, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
+                glDrawArrays(GL_TRIANGLES, 0, 6);
+            }
+            edgeShader->unbind();
+            
+            glFlush();
+            
+            renderShader->bind();
+            for (int i = 0; i < graphs.size(); i++) {
+                if (graphs[i] == NULL) {
+                    continue;
+                }
+                
+                renderShader->setUniforms(g_colors[i % 5]);
+                glBindImageTexture(1, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
+                glDrawArrays(GL_TRIANGLES, 0, 6);
+            }
+            renderShader->unbind();
+        }
+        
+        glDisableVertexAttribArray(0);
 		GraphQuad::unbind();
+        
 
 		drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, &color::black);
 
@@ -744,7 +784,7 @@ int main() {
 
 	edgeShader->cleanUp();
 	renderShader->cleanUp();
-
+    
 	win.destroy();
 
 	GLUI::destroy();
