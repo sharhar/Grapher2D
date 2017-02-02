@@ -54,7 +54,7 @@ void drawAxes(int width, int height) {
 		glPushMatrix();
 
 		glTranslatef(xoff, 0, 0);
-
+        
 		glColor3f(0.0f, 0.0f, 0.0f);
 		glLineWidth(4.0f);
 		glBegin(GL_LINES);
@@ -162,7 +162,7 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 	glEnd();
 }
 
-void drawNums(double xl, double xr, double yd, double yu, int width, int height, Font* font, Color color) {
+void drawNums(double xl, double xr, double yd, double yu, int width, int height, Font* font, Color color, GLuint modelLoc) {
 	double xratio = width / (xr - xl);
 
 	double xlen = xr - xl;
@@ -201,8 +201,8 @@ void drawNums(double xl, double xr, double yd, double yu, int width, int height,
 		if (str.at(str.length() - 1) == '.') {
 			str.pop_back();
 		}
-
-		Renderer::drawString(str, tx + 2, 10, 15, font, color);
+        
+		Renderer::drawStringCustom(str, modelLoc, tx + 2, 10, 15, font, color);
 	}
 
 	double yratio = height / (yu - yd);
@@ -244,7 +244,7 @@ void drawNums(double xl, double xr, double yd, double yu, int width, int height,
 			str.pop_back();
 		}
 
-		Renderer::drawString(str, 10, ty + 2, 15, font, color);
+		Renderer::drawStringCustom(str, modelLoc, 10, ty + 2, 15, font, color);
 	}
 }
 
@@ -372,74 +372,7 @@ bool hasGL42() {
     return true;
 }
 
-int main() {
-	GLUI::init();
-
-	Window win("Grapher2D", 1000, 620, false, 1, genIcon());
-    
-	g_gl42 = hasGL42();
-    
-	Renderer::init(&win);
-	
-    Layout* layout = new AbsoluteLayout(&win, 1000, 620);
-
-	Font* font24 = new Font("arial.ttf", 24);
-
-	if (!font24->inited()) {
-		win.destroy();
-		std::cout << "Could not load arial.tff!\n";
-		return -1;
-	}
-
-	Font* font20 = new Font("arial.ttf", 20);
-
-	if (!font20->inited()) {
-		win.destroy();
-		std::cout << "Could not load arial.tff!\n";
-		return -1;
-	}
-
-	Theme theme = {};
-	theme.body = color::lightGrey;
-	theme.check = color::black;
-	theme.circle = color::black;
-	theme.hover = color::grey;
-	theme.outline = color::black;
-	theme.press = color::darkGrey;
-	theme.text = color::black;
-	theme.popupBackground = { 0.6f * 0.8f, 0.75f * 0.8f, 1};
-	theme.popupText = color::black;
-
-	TextStyle textStyle = { 20, font20 };
-	TextStyle buttonStyle = { 24, font24 };
-
-	std::vector<Button*> buttons;
-	std::vector<TextBox*> textBoxes;
-	std::vector<Graph*> graphs;
-	std::vector<GraphData*> datas;
-
-	glGenFramebuffers(1, &g_fbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
-	glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-	glGenTextures(1, &g_gtex);
-	glBindTexture(GL_TEXTURE_2D, g_gtex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1200, 1200,
-		0, GL_RGBA, GL_FLOAT, NULL);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, g_gtex, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	GraphQuad::init();
-    
-    GraphEdgeShader* edgeShader = new GraphEdgeShader(g_gl42);
-	GraphRenderShader* renderShader = new GraphRenderShader(g_gl42);
-
+GLuint getQuadShader() {
     std::string vertSource = "";
     
     vertSource += "#version 330 core\n";
@@ -518,12 +451,182 @@ int main() {
     glLinkProgram(shaderProgram);
     glValidateProgram(shaderProgram);
     
-    GLuint texLoc = glGetUniformLocation(shaderProgram, "tex");
+    return shaderProgram;
+}
+
+GLuint getNumberShader() {
+    std::string vertSource = "";
     
-    glUseProgram(shaderProgram);
+    vertSource += "#version 330 core\n";
     
+    vertSource += "in vec2 position;\n";
+    vertSource += "in vec2 texcoord;\n";
+    vertSource += "out vec2 texcoord_out;\n";
+    
+    vertSource += "uniform mat4 projection;\n";
+    vertSource += "uniform mat4 modelview;\n";
+    
+    vertSource += "void main(void) {\n";
+    vertSource += "gl_Position = projection * modelview * vec4(position.x, position.y, 0, 1);\n";
+    vertSource += "texcoord_out = texcoord;\n";
+    vertSource += "}\n";
+    
+    std::string fragSource = "";
+    
+    fragSource += "#version 330 core\n";
+    fragSource += "out vec4 out_color;\n";
+    
+    fragSource += "uniform sampler2D tex;\n";
+    fragSource += "in vec2 texcoord_out;\n";
+    
+    fragSource += "void main(void) {\n";
+    fragSource += "out_color = vec4(0.0, 0.0, 0.0, texture(tex, texcoord_out).r);\n";
+    fragSource += "}\n";
+    
+    GLuint vertShader = glCreateShader(GL_VERTEX_SHADER);
+    GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
+    GLchar* shadersource = (GLchar*)vertSource.c_str();
+    glShaderSource(vertShader, 1, &shadersource, 0);
+    shadersource = (GLchar*)fragSource.c_str();
+    glShaderSource(fragShader, 1, &shadersource, 0);
+    
+    glCompileShader(vertShader);
+    
+    GLint compiled = 0;
+    glGetShaderiv(vertShader, GL_COMPILE_STATUS, &compiled);
+    if (compiled == GL_FALSE) {
+        GLint maxLength = 0;
+        glGetShaderiv(vertShader, GL_INFO_LOG_LENGTH, &maxLength);
+        
+        GLchar* message = (GLchar*)malloc(sizeof(GLchar)*maxLength);
+        glGetShaderInfoLog(vertShader, maxLength, &maxLength, message);
+        
+        std::cout << "Vertex Shader failed to compile:\n";
+        std::cout << message << "\n";
+        
+        glDeleteShader(vertShader);
+        return -1;
+    }
+    
+    glCompileShader(fragShader);
+    
+    glGetShaderiv(fragShader, GL_COMPILE_STATUS, &compiled);
+    if (compiled == GL_FALSE) {
+        GLint maxLength = 0;
+        glGetShaderiv(fragShader, GL_INFO_LOG_LENGTH, &maxLength);
+        
+        GLchar* message = (GLchar*)malloc(sizeof(GLchar)*maxLength);
+        glGetShaderInfoLog(fragShader, maxLength, &maxLength, message);
+        
+        std::cout << "Fragment Shader failed to compile:\n";
+        std::cout << message << "\n";
+        
+        glDeleteShader(fragShader);
+        return -1;
+    }
+    
+    GLuint shaderProgram = glCreateProgram();
+    
+    glAttachShader(shaderProgram, vertShader);
+    glAttachShader(shaderProgram, fragShader);
+    
+    glBindAttribLocation(shaderProgram, 0, "position");
+    glBindAttribLocation(shaderProgram, 1, "texcoord");
+    
+    glLinkProgram(shaderProgram);
+    glValidateProgram(shaderProgram);
+    
+    return shaderProgram;
+}
+
+int main() {
+	GLUI::init();
+
+	Window win("Grapher2D", 1000, 620, false, 1, genIcon());
+    
+	g_gl42 = hasGL42();
+    
+	Renderer::init(&win);
+	
+    Layout* layout = new AbsoluteLayout(&win, 1000, 620);
+
+	Font* font24 = new Font("arial.ttf", 24);
+
+	if (!font24->inited()) {
+		win.destroy();
+		std::cout << "Could not load arial.tff!\n";
+		return -1;
+	}
+
+	Font* font20 = new Font("arial.ttf", 20);
+
+	if (!font20->inited()) {
+		win.destroy();
+		std::cout << "Could not load arial.tff!\n";
+		return -1;
+	}
+
+	Theme theme = {};
+	theme.body = color::lightGrey;
+	theme.check = color::black;
+	theme.circle = color::black;
+	theme.hover = color::grey;
+	theme.outline = color::black;
+	theme.press = color::darkGrey;
+	theme.text = color::black;
+	theme.popupBackground = { 0.6f * 0.8f, 0.75f * 0.8f, 1};
+	theme.popupText = color::black;
+
+	TextStyle textStyle = { 20, font20 };
+	TextStyle buttonStyle = { 24, font24 };
+
+	std::vector<Button*> buttons;
+	std::vector<TextBox*> textBoxes;
+	std::vector<Graph*> graphs;
+	std::vector<GraphData*> datas;
+
+	glGenFramebuffers(1, &g_fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+	glGenTextures(1, &g_gtex);
+	glBindTexture(GL_TEXTURE_2D, g_gtex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1200, 1200,
+		0, GL_RGBA, GL_FLOAT, NULL);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, g_gtex, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	GraphQuad::init();
+    
+    GraphEdgeShader* edgeShader = new GraphEdgeShader(g_gl42);
+	GraphRenderShader* renderShader = new GraphRenderShader(g_gl42);
+
+    GLuint quadShader = getQuadShader();
+    
+    GLuint texLoc = glGetUniformLocation(quadShader, "tex");
+    
+    glUseProgram(quadShader);
     glUniform1i(texLoc, 0);
+    glUseProgram(0);
     
+    GLuint numberShader = getNumberShader();
+    
+    texLoc = glGetUniformLocation(numberShader, "tex");
+    GLuint numProjLoc = glGetUniformLocation(numberShader, "projection");
+    GLuint numModelLoc = glGetUniformLocation(numberShader, "modelview");
+    
+    float* numProj = new float[16];
+    Utils::getOrthoMatrix(numProj, 0, 600, 0, 600, -1, 1);
+    
+    glUseProgram(numberShader);
+    glUniform1i(texLoc, 0);
+    glUniformMatrix4fv(numProjLoc, 1, false, numProj);
     glUseProgram(0);
     
 	GLPanel* panel;
@@ -617,15 +720,17 @@ int main() {
         
         glDisableVertexAttribArray(0);
         GraphQuad::unbind();
+
         
-        //drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, color::black);
+        Renderer::beginDraw();
+        glUseProgram(numberShader);
+        drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, color::black, numModelLoc);
         
 		glBindFramebuffer(GL_FRAMEBUFFER, panel->getFBO());
 		glViewport(0, 0, 600, 600);
 		glClear(GL_COLOR_BUFFER_BIT);
         
-        Renderer::beginDraw();
-        glUseProgram(shaderProgram);
+        glUseProgram(quadShader);
         Renderer::drawRect(0, 0, 600, 600, g_gtex);
         Renderer::endDraw();
 	},
