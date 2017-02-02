@@ -1,6 +1,9 @@
 # Grapher2D
 A 2d graphing calculator.
 
+##Running
+The latest git commit might be unstable. Please download the source code or builds from the "releases" tab for the repo.
+
 ##Cloning
 Use the `--recursive` flag when cloning the repo to copy the GLUI submodule with the rest of the repo.
 
