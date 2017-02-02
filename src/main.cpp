@@ -543,7 +543,6 @@ int main() {
         
 		GraphQuad::bind();
 		glEnableVertexAttribArray(0);
-        GLsync sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 		
 		if (g_gl42) {
 			for (int i = 0; i < graphs.size(); i++) {
@@ -553,9 +552,6 @@ int main() {
 
 				graphs[i]->glg->calc(g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
 			}
-
-			GLenum res = glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
-            sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
        
             edgeShader->bind();
             for (int i = 0; i < graphs.size(); i++) {
@@ -568,9 +564,6 @@ int main() {
                 glDrawArrays(GL_TRIANGLES, 0, 6);
             }
             edgeShader->unbind();
-            
-            res = glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
-            sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
             
             renderShader->bind();
             for (int i = 0; i < graphs.size(); i++) {
@@ -622,13 +615,11 @@ int main() {
 			renderShader->unbind();
 		}
         
-        glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
-        
         glDisableVertexAttribArray(0);
-		GraphQuad::unbind();
-
-		//drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, color::black);
-
+        GraphQuad::unbind();
+        
+        //drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, color::black);
+        
 		glBindFramebuffer(GL_FRAMEBUFFER, panel->getFBO());
 		glViewport(0, 0, 600, 600);
 		glClear(GL_COLOR_BUFFER_BIT);

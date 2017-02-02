@@ -452,7 +452,7 @@ static inline std::string getEdgeFragSource33() {
 	result += "if(c == 0 || (coord.x + pxw <= 1.0 && c != r) || (coord.y + pxw <= 1.0 && c != u) ||";
 	result += "	(coord.x - pxw >= 0.0 && c != l) || (coord.y - pxw >= 0.0 && c != d)) {out_color = vec4(1.0, 0.0, 0.0, 1.0); return;}\n";
     
-	result += "out_color = texture(data, coord);";
+	result += "out_color = vec4(0.0, 0.0, 0.0, 1.0);";
 
 	result += "}\n";
 
