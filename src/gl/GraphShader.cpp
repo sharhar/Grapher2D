@@ -441,7 +441,7 @@ static inline std::string getEdgeFragSource33() {
 	result += "out vec4 out_color;\n";
 
 	result += "void main(void) {\n";
-
+    
 	result += "float pxw = 1.0/1200.0;\n";
 	result += "vec4 ct = texture(data, coord);\n";
 	result += "float c = (ct.x-0.5)*2;\n";
@@ -451,8 +451,8 @@ static inline std::string getEdgeFragSource33() {
 	result += "float d = (texture(data, vec2(coord.x, coord.y - pxw)).x-0.5)*2;\n";
 	result += "if(c == 0 || (coord.x + pxw <= 1.0 && c != r) || (coord.y + pxw <= 1.0 && c != u) ||";
 	result += "	(coord.x - pxw >= 0.0 && c != l) || (coord.y - pxw >= 0.0 && c != d)) {out_color = vec4(1.0, 0.0, 0.0, 1.0); return;}\n";
-
-	result += "out_color = vec4(0.0, 0.0, 0.0, 1.0);";
+    
+	result += "out_color = texture(data, coord);";
 
 	result += "}\n";
 

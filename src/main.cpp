@@ -554,7 +554,7 @@ int main() {
 				graphs[i]->glg->calc(g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
 			}
 
-			glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
+			GLenum res = glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
             sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
        
             edgeShader->bind();
@@ -569,7 +569,7 @@ int main() {
             }
             edgeShader->unbind();
             
-            glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
+            res = glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
             sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
             
             renderShader->bind();
@@ -591,10 +591,7 @@ int main() {
 
 				graphs[i]->glg->calc33(g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
 			}
-
-            glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
-            sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-			
+            
 			edgeShader->bind();
 			for (int i = 0; i < graphs.size(); i++) {
 				if (graphs[i] == NULL) {
@@ -602,14 +599,13 @@ int main() {
 				}
 
 				glBindFramebuffer(GL_FRAMEBUFFER, graphs[i]->glg->efbo);
+                glClear(GL_COLOR_BUFFER_BIT);
 				glBindTexture(GL_TEXTURE_2D, graphs[i]->glg->dtex);
 				glActiveTexture(GL_TEXTURE0);
 				glDrawArrays(GL_TRIANGLES, 0, 6);
 			}
 			edgeShader->unbind();
-			
-            glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
-            sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+            
 			glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
 
 			renderShader->bind();

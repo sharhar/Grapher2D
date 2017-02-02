@@ -84,6 +84,8 @@ void GLGraph::calc(float up, float down, float left, float right, float time, fl
 
 void GLGraph::calc33(float up, float down, float left, float right, float time, float atime) {
 	glBindFramebuffer(GL_FRAMEBUFFER, dfbo);
+    
+    glClear(GL_COLOR_BUFFER_BIT);
 
 	calcShader->bind();
 	calcShader->setUniforms(up, down, left, right, time, atime);
@@ -98,7 +100,7 @@ void GLGraph::cleanUp() {
 
 String getNodeString(Node* node) {
 	if (node->type == NODE_TYPE_ZRO) {
-		return "0";
+		return (char*)"0";
 	}
 	else if (node->type == NODE_TYPE_NUM) {
 		return String(std::to_string(((double*)(node->value[0]))[0]));
