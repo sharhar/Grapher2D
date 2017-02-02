@@ -1,4 +1,3 @@
-#include <glad/glad.hpp>
 #include <GLUI/GLUI.h>
 #include "math/Equation.h"
 #include <iostream>
@@ -163,7 +162,7 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 	glEnd();
 }
 
-void drawNums(double xl, double xr, double yd, double yu, int width, int height, Font* font, Color* color) {
+void drawNums(double xl, double xr, double yd, double yu, int width, int height, Font* font, Color color) {
 	double xratio = width / (xr - xl);
 
 	double xlen = xr - xl;
@@ -378,11 +377,6 @@ int main() {
 
 	Window win("Grapher2D", 1000, 620, false, 1, genIcon());
     
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-            std::cout << "Could not load OpenGL!\n";
-		exit(-1);
-	}
-    
 	g_gl42 = hasGL42();
     
 	Renderer::init(&win);
@@ -446,31 +440,110 @@ int main() {
     GraphEdgeShader* edgeShader = new GraphEdgeShader(g_gl42);
 	GraphRenderShader* renderShader = new GraphRenderShader(g_gl42);
 
+    std::string vertSource = "";
+    
+    vertSource += "#version 330 core\n";
+    
+    vertSource += "in vec2 position;\n";
+    vertSource += "in vec2 texcoord;\n";
+    vertSource += "out vec2 texcoord_out;\n";
+    
+    vertSource += "void main(void) {\n";
+    vertSource += "gl_Position = vec4(position.x*2, position.y*2, 0, 1);\n";
+    vertSource += "texcoord_out = texcoord;\n";
+    vertSource += "}\n";
+    
+    std::string fragSource = "";
+    
+    fragSource += "#version 330 core\n";
+    fragSource += "out vec4 out_color;\n";
+    
+    fragSource += "uniform sampler2D tex;\n";
+    fragSource += "in vec2 texcoord_out;\n";
+    
+    fragSource += "void main(void) {\n";
+    fragSource += "out_color = texture(tex, texcoord_out);\n";
+    fragSource += "}\n";
+    
+    GLuint vertShader = glCreateShader(GL_VERTEX_SHADER);
+    GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
+    GLchar* shadersource = (GLchar*)vertSource.c_str();
+    glShaderSource(vertShader, 1, &shadersource, 0);
+    shadersource = (GLchar*)fragSource.c_str();
+    glShaderSource(fragShader, 1, &shadersource, 0);
+    
+    glCompileShader(vertShader);
+    
+    GLint compiled = 0;
+    glGetShaderiv(vertShader, GL_COMPILE_STATUS, &compiled);
+    if (compiled == GL_FALSE) {
+        GLint maxLength = 0;
+        glGetShaderiv(vertShader, GL_INFO_LOG_LENGTH, &maxLength);
+        
+        GLchar* message = (GLchar*)malloc(sizeof(GLchar)*maxLength);
+        glGetShaderInfoLog(vertShader, maxLength, &maxLength, message);
+        
+        std::cout << "Vertex Shader failed to compile:\n";
+        std::cout << message << "\n";
+        
+        glDeleteShader(vertShader);
+        return -1;
+    }
+    
+    glCompileShader(fragShader);
+    
+    glGetShaderiv(fragShader, GL_COMPILE_STATUS, &compiled);
+    if (compiled == GL_FALSE) {
+        GLint maxLength = 0;
+        glGetShaderiv(fragShader, GL_INFO_LOG_LENGTH, &maxLength);
+        
+        GLchar* message = (GLchar*)malloc(sizeof(GLchar)*maxLength);
+        glGetShaderInfoLog(fragShader, maxLength, &maxLength, message);
+        
+        std::cout << "Fragment Shader failed to compile:\n";
+        std::cout << message << "\n";
+        
+        glDeleteShader(fragShader);
+        return -1;
+    }
+    
+    GLuint shaderProgram = glCreateProgram();
+    
+    glAttachShader(shaderProgram, vertShader);
+    glAttachShader(shaderProgram, fragShader);
+    
+    glBindAttribLocation(shaderProgram, 0, "position");
+    glBindAttribLocation(shaderProgram, 1, "texcoord");
+    
+    glLinkProgram(shaderProgram);
+    glValidateProgram(shaderProgram);
+    
+    GLuint texLoc = glGetUniformLocation(shaderProgram, "tex");
+    
+    glUseProgram(shaderProgram);
+    
+    glUniform1i(texLoc, 0);
+    
+    glUseProgram(0);
+    
 	GLPanel* panel;
 
 	panel = new GLPanel({ 390, 10, 600, 600 }, { 600, 600 }, layout,
-	[]()->void {
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(0, g_windowWidth, 0, g_windowHeight, -1, 1);
-		glMatrixMode(GL_MODELVIEW);
-
-		glEnable(GL_TEXTURE_2D);
-	},
 	[&]()->void {
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        
 		glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
 		glViewport(0, 0, 1200, 1200);
 		glClearColor(1.0, 1.0, 1.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
-		drawGrid(g_left, g_right, g_down, g_up, 600, 600);
-		drawAxes(600, 600);
+		//drawGrid(g_left, g_right, g_down, g_up, 600, 600);
+		//drawAxes(600, 600);
 		
 		float time = glfwGetTime();
         
 		GraphQuad::bind();
 		glEnableVertexAttribArray(0);
+        GLsync sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 		
 		if (g_gl42) {
 			for (int i = 0; i < graphs.size(); i++) {
@@ -481,7 +554,8 @@ int main() {
 				graphs[i]->glg->calc(g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
 			}
 
-			glFlush();
+			glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
+            sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
        
             edgeShader->bind();
             for (int i = 0; i < graphs.size(); i++) {
@@ -495,7 +569,8 @@ int main() {
             }
             edgeShader->unbind();
             
-            glFlush();
+            glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
+            sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
             
             renderShader->bind();
             for (int i = 0; i < graphs.size(); i++) {
@@ -517,7 +592,8 @@ int main() {
 				graphs[i]->glg->calc33(g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
 			}
 
-			glFlush();
+            glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
+            sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 			
 			edgeShader->bind();
 			for (int i = 0; i < graphs.size(); i++) {
@@ -532,7 +608,8 @@ int main() {
 			}
 			edgeShader->unbind();
 			
-			glFlush();
+            glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
+            sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 			glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
 
 			renderShader->bind();
@@ -549,27 +626,21 @@ int main() {
 			renderShader->unbind();
 		}
         
+        glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
+        
         glDisableVertexAttribArray(0);
 		GraphQuad::unbind();
-        
 
-		drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, &color::black);
+		//drawNums(g_left, g_right, g_down, g_up, 600, 600, font20, color::black);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, panel->getFBO());
 		glViewport(0, 0, 600, 600);
 		glClear(GL_COLOR_BUFFER_BIT);
-
-		glBindTexture(GL_TEXTURE_2D, g_gtex);
-		glColor3f(1.0, 1.0, 1.0);
-
-		glBegin(GL_QUADS);
-		glTexCoord2d(0.0, 1.0); glVertex2f(0, 600);
-		glTexCoord2d(1.0, 1.0); glVertex2f(600, 600);
-		glTexCoord2d(1.0, 0.0); glVertex2f(600, 0);
-		glTexCoord2d(0.0, 0.0); glVertex2f(0, 0);
-		glEnd();
-
-		glBindTexture(GL_TEXTURE_2D, 0);
+        
+        Renderer::beginDraw();
+        glUseProgram(shaderProgram);
+        Renderer::drawRect(0, 0, 600, 600, g_gtex);
+        Renderer::endDraw();
 	},
 	[](GLPanelMouseData* data)->void {
 		if ((data->difference.x != 0 || data->difference.y != 0) && data->leftDown) {
@@ -795,6 +866,8 @@ int main() {
 		if (graphs.size() < 1) {
 			addGraphButtonCallback();
 		}
+        
+        Renderer::beginDraw();
 
 		Renderer::clear({0.6f, 0.75f, 1});
 
@@ -808,6 +881,8 @@ int main() {
 		for (TextBox* t : textBoxes) {
 			t->render();
 		}
+        
+        Renderer::endDraw();
 
 		win.swap();
 	}
