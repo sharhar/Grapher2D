@@ -7,6 +7,10 @@
 #include <chrono>
 #include "gl/GLGraph.h"
 
+#if defined(_WIN32) && !defined(_DEBUG)
+#include <windows.h>
+#endif
+
 using namespace glui;
 
 #define ZOOM_PERCENT 0.025
@@ -44,25 +48,16 @@ inline double abs_c(double n1) {
 	return n1 > 0 ? n1 : -(n1);
 }
 
-void drawAxes(int width, int height) {
+void drawAxes(float* modelMat, GLuint modelLoc, int width, int height) {
 	double l = abs_c(g_left);
 	double r = abs_c(g_right);
 
 	double xoff = (l / (r + l))* width;
 
 	if (g_left < 0 && g_right > 0) {
-		glPushMatrix();
-
-		glTranslatef(xoff, 0, 0);
-        
-		glColor3f(0.0f, 0.0f, 0.0f);
-		glLineWidth(4.0f);
-		glBegin(GL_LINES);
-		glVertex2f(0, 0);
-		glVertex2f(0, height);
-		glEnd();
-
-		glPopMatrix();
+		Utils::getModelviewMatrix(modelMat, xoff, 300, 1, 600);
+		glUniformMatrix4fv(modelLoc, 1, false, modelMat);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 
 	double d = abs_c(g_down);
@@ -71,22 +66,13 @@ void drawAxes(int width, int height) {
 	double yoff = (d / (u + d))* height;
 
 	if (g_up > 0 && g_down < 0) {
-		glPushMatrix();
-
-		glTranslatef(0, yoff, 0);
-
-		glColor3f(0.0f, 0.0f, 0.0f);
-		glLineWidth(4.0f);
-		glBegin(GL_LINES);
-		glVertex2f(0, 0);
-		glVertex2f(width, 0);
-		glEnd();
-
-		glPopMatrix();
+		Utils::getModelviewMatrix(modelMat, 300, yoff, 600, 1);
+		glUniformMatrix4fv(modelLoc, 1, false, modelMat);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 }
 
-void drawGrid(double xl, double xr, double yd, double yu, int width, int height) {
+void drawGrid(float* modelMat, GLuint modelLoc, double xl, double xr, double yd, double yu, int width, int height) {
 	double xratio = width/(xr - xl);
 
 	double xlen = xr - xl;
@@ -106,11 +92,6 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 	double xrr = round(xr/xmag)*xmag;
 	
 	double xNum = (xrr - xlr)/xmag;
-
-	glColor3f(0.5f, 0.5f, 0.5f);
-	glLineWidth(1.0f);
-
-	glBegin(GL_LINES);
 	for (int i = 0; i < xNum+1;i++) {
 		double tx = (xlr - xl + xmag*i)*xratio;
 
@@ -118,12 +99,11 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 			continue;
 		}
 
-		glVertex2f(tx, 0);
-		glVertex2f(tx, height);
+		Utils::getModelviewMatrix(modelMat, tx, 300, 0.25f, 600);
+		glUniformMatrix4fv(modelLoc, 1, false, modelMat);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
-
-	glEnd();
-
+	
 	double yratio = height / (yu - yd);
 
 	double ylen = yu - yd;
@@ -144,22 +124,16 @@ void drawGrid(double xl, double xr, double yd, double yu, int width, int height)
 
 	double yNum = (yrr - ylr) / ymag;
 
-	glColor3f(0.5f, 0.5f, 0.5f);
-	glLineWidth(1.0f);
-
-	glBegin(GL_LINES);
 	for (int i = 0; i < yNum * 2; i++) {
 		double ty = (ylr - yd + ymag*i)*yratio;
 
 		if (ty < 0 || ty > height) {
 			continue;
 		}
-
-		glVertex2f(0,     ty);
-		glVertex2f(width, ty);
+		Utils::getModelviewMatrix(modelMat, 300, ty, 600, 0.25f);
+		glUniformMatrix4fv(modelLoc, 1, false, modelMat);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
-
-	glEnd();
 }
 
 void drawNums(double xl, double xr, double yd, double yu, int width, int height, Font* font, Color color, GLuint modelLoc) {
@@ -539,7 +513,91 @@ GLuint getNumberShader() {
     return shaderProgram;
 }
 
+GLuint getLineShader() {
+	std::string vertSource = "";
+
+	vertSource += "#version 330 core\n";
+
+	vertSource += "in vec2 position;\n";
+
+	vertSource += "uniform mat4 projection;\n";
+	vertSource += "uniform mat4 modelview;\n";
+
+	vertSource += "void main(void) {\n";
+	vertSource += "gl_Position = projection * modelview * vec4(position.x, position.y, 0, 1);\n";
+	vertSource += "}\n";
+
+	std::string fragSource = "";
+
+	fragSource += "#version 330 core\n";
+	fragSource += "out vec4 out_color;\n";
+
+	fragSource += "uniform vec3 color;\n";
+
+	fragSource += "void main(void) {\n";
+	fragSource += "out_color = vec4(color.xyz, 1.0);\n";
+	fragSource += "}\n";
+
+	GLuint vertShader = glCreateShader(GL_VERTEX_SHADER);
+	GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
+	GLchar* shadersource = (GLchar*)vertSource.c_str();
+	glShaderSource(vertShader, 1, &shadersource, 0);
+	shadersource = (GLchar*)fragSource.c_str();
+	glShaderSource(fragShader, 1, &shadersource, 0);
+
+	glCompileShader(vertShader);
+
+	GLint compiled = 0;
+	glGetShaderiv(vertShader, GL_COMPILE_STATUS, &compiled);
+	if (compiled == GL_FALSE) {
+		GLint maxLength = 0;
+		glGetShaderiv(vertShader, GL_INFO_LOG_LENGTH, &maxLength);
+
+		GLchar* message = (GLchar*)malloc(sizeof(GLchar)*maxLength);
+		glGetShaderInfoLog(vertShader, maxLength, &maxLength, message);
+
+		std::cout << "Vertex Shader failed to compile:\n";
+		std::cout << message << "\n";
+
+		glDeleteShader(vertShader);
+		return -1;
+	}
+
+	glCompileShader(fragShader);
+
+	glGetShaderiv(fragShader, GL_COMPILE_STATUS, &compiled);
+	if (compiled == GL_FALSE) {
+		GLint maxLength = 0;
+		glGetShaderiv(fragShader, GL_INFO_LOG_LENGTH, &maxLength);
+
+		GLchar* message = (GLchar*)malloc(sizeof(GLchar)*maxLength);
+		glGetShaderInfoLog(fragShader, maxLength, &maxLength, message);
+
+		std::cout << "Fragment Shader failed to compile:\n";
+		std::cout << message << "\n";
+
+		glDeleteShader(fragShader);
+		return -1;
+	}
+
+	GLuint shaderProgram = glCreateProgram();
+
+	glAttachShader(shaderProgram, vertShader);
+	glAttachShader(shaderProgram, fragShader);
+
+	glBindAttribLocation(shaderProgram, 0, "position");
+
+	glLinkProgram(shaderProgram);
+	glValidateProgram(shaderProgram);
+
+	return shaderProgram;
+}
+
 int main() {
+#if defined(_WIN32) && !defined(_DEBUG)
+	FreeConsole();
+#endif
+
 	GLUI::init();
 
 	Window win("Grapher2D", 1000, 620, false, 1, genIcon());
@@ -628,7 +686,25 @@ int main() {
     glUniform1i(texLoc, 0);
     glUniformMatrix4fv(numProjLoc, 1, false, numProj);
     glUseProgram(0);
-    
+
+	GLuint lineShader = getLineShader();
+
+	GLuint lineColorLoc = glGetUniformLocation(lineShader, "color");
+	GLuint lineProjLoc = glGetUniformLocation(lineShader, "projection");
+	GLuint lineModelLoc = glGetUniformLocation(lineShader, "modelview");
+
+	float* lineProj = new float[16];
+	Utils::getOrthoMatrix(lineProj, 0, 600, 0, 600, -1, 1);
+
+	float* lineModel = new float[16];
+	Utils::getModelviewMatrix(lineModel, 0, 0, 1, 1);
+
+	glUseProgram(lineShader);
+	glUniform3f(lineColorLoc, 0, 0, 0);
+	glUniformMatrix4fv(lineProjLoc, 1, false, lineProj);
+	glUniformMatrix4fv(lineModelLoc, 1, false, lineModel);
+	glUseProgram(0);
+
 	GLPanel* panel;
 
 	panel = new GLPanel({ 390, 10, 600, 600 }, { 600, 600 }, layout,
@@ -639,13 +715,16 @@ int main() {
 		glViewport(0, 0, 1200, 1200);
 		glClearColor(1.0, 1.0, 1.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
-		//drawGrid(g_left, g_right, g_down, g_up, 600, 600);
-		//drawAxes(600, 600);
 		
-		float time = glfwGetTime();
-        
 		GraphQuad::bind();
 		glEnableVertexAttribArray(0);
+		glUseProgram(lineShader);
+		glUniform3f(lineColorLoc, 0.5f, 0.5f, 0.5f);
+		drawGrid(lineModel, lineModelLoc, g_left, g_right, g_down, g_up, 600, 600);
+		glUniform3f(lineColorLoc, 0, 0, 0);
+		drawAxes(lineModel, lineModelLoc, 600, 600);		
+		
+		float time = glfwGetTime();
 		
 		if (g_gl42) {
 			for (int i = 0; i < graphs.size(); i++) {
