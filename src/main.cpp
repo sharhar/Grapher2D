@@ -655,6 +655,10 @@ int main() {
 
 				graphs[i]->glg->calc(g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
 			}
+
+			GLsync syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+			glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
+			glDeleteSync(syncObj);
        
             edgeShader->bind();
             for (int i = 0; i < graphs.size(); i++) {
@@ -667,6 +671,10 @@ int main() {
                 glDrawArrays(GL_TRIANGLES, 0, 6);
             }
             edgeShader->unbind();
+
+			syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+			glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
+			glDeleteSync(syncObj);
             
             renderShader->bind();
             for (int i = 0; i < graphs.size(); i++) {
@@ -731,7 +739,10 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
         
         glUseProgram(quadShader);
-        Renderer::drawRect(0, 0, 600, 600, g_gtex);
+		glBindTexture(GL_TEXTURE_2D, g_gtex);
+		glActiveTexture(GL_TEXTURE0);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
         Renderer::endDraw();
 	},
 	[](GLPanelMouseData* data)->void {
