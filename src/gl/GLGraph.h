@@ -1,10 +1,9 @@
 #pragma once
 
-#include <glad/glad.hpp>
+#include <GLUI/GLUI.h>
 #include "GraphShader.h"
 #include "GraphQuad.h"
-#include "../math/Equation.h"
-#include "../utils/String.h"
+#include "../utils/Equation.h"
 
 class GLGraph {
 private:

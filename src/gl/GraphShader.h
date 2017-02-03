@@ -1,8 +1,6 @@
 #pragma once
 
-#include <glad/glad.hpp>
 #include <string>
-#include <GLFW/glfw3.h>
 #include <GLUI/GLUI.h>
 
 class GraphCalcShader {

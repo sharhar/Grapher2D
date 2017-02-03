@@ -1,10 +1,11 @@
 #include <GLUI/GLUI.h>
-#include "math/Equation.h"
+#include "utils/Equation.h"
 #include <iostream>
 #include <math.h>
 #include <string>
 #include <thread>
 #include <chrono>
+#include <GLFW/glfw3.h>
 #include "gl/GLGraph.h"
 
 #if defined(_WIN32) && !defined(_DEBUG)
