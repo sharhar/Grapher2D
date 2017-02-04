@@ -553,7 +553,9 @@ int main() {
 
 	GLUI::init();
 
-	Window win("Grapher2D", 1000, 620, false, 1, genIcon());
+	GLFWimage* windowIcon = genIcon();
+
+	Window win("Grapher2D", 1000, 620, false, 1, windowIcon);
 
 	g_gl42 = GLAD_GL_VERSION_4_2 == 1;
     
@@ -688,31 +690,28 @@ int main() {
 				graphs[i]->glg->calc(g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
 			}
 
-			GLsync syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-			glDeleteSync(syncObj);
-       
-            edgeShader->bind();
+			glDeleteSync(glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0));
+			
+			edgeShader->bind();
             for (int i = 0; i < graphs.size(); i++) {
                 if (graphs[i] == NULL) {
                     continue;
                 }
-                
                 glBindImageTexture(0, graphs[i]->glg->dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
                 glBindImageTexture(1, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
                 glDrawArrays(GL_TRIANGLES, 0, 6);
             }
             edgeShader->unbind();
 
-			syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-			glDeleteSync(syncObj);
-            
+			glDeleteSync(glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0));
+
             renderShader->bind();
             for (int i = 0; i < graphs.size(); i++) {
                 if (graphs[i] == NULL) {
                     continue;
                 }
                 
-                renderShader->setUniforms(g_colors[i % 5]);
+				renderShader->setUniforms(g_colors[i % 5]);
                 glBindImageTexture(0, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
                 glDrawArrays(GL_TRIANGLES, 0, 6);
             }
@@ -901,6 +900,8 @@ int main() {
 			pDesc.window = &win;
 			pDesc.bodyTextStyle = textStyle;
 			pDesc.buttonTextStyle = buttonStyle;
+			pDesc.icon = windowIcon;
+			pDesc.iconNum = 1;
 
 			Window::popup(pDesc, theme);
 
