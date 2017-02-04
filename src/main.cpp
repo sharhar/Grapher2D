@@ -299,54 +299,6 @@ GLFWimage* genIcon() {
 	return img;
 }
 
-bool hasGL42() {
-    std::string vertSource = "";
-    
-    vertSource += "#version 420 core\n";
-    vertSource += "void main(void) {\n";
-    vertSource += "gl_Position = vec4(1, 1, 1, 1);\n";
-    vertSource += "}\n";
-    
-    std::string fragSource = "";
-    
-    fragSource += "#version 420 core\n";
-    fragSource += "void main(void) {\n";
-    fragSource += "discard;\n";
-    fragSource += "}\n";
-    
-    GLuint vertexShader;
-    GLuint fragmentShader;
-    
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    GLchar* shadersource = (GLchar*)vertSource.c_str();
-    glShaderSource(vertexShader, 1, &shadersource, 0);
-    shadersource = (GLchar*)fragSource.c_str();
-    glShaderSource(fragmentShader, 1, &shadersource, 0);
-    
-    glCompileShader(vertexShader);
-    
-    GLint compiled = 0;
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &compiled);
-    if (compiled == GL_FALSE) {
-        glDeleteShader(vertexShader);
-        return false;
-    }
-    
-    glCompileShader(fragmentShader);
-    
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compiled);
-    if (compiled == GL_FALSE) {
-        glDeleteShader(fragmentShader);
-        return false;
-    }
-    
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    
-    return true;
-}
-
 GLuint getQuadShader() {
     std::string vertSource = "";
     
@@ -602,8 +554,8 @@ int main() {
 	GLUI::init();
 
 	Window win("Grapher2D", 1000, 620, false, 1, genIcon());
-    
-	g_gl42 = hasGL42();
+
+	g_gl42 = GLAD_GL_VERSION_4_2 == 1;
     
 	Renderer::init(&win);
 	
@@ -737,7 +689,6 @@ int main() {
 			}
 
 			GLsync syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-			glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
 			glDeleteSync(syncObj);
        
             edgeShader->bind();
@@ -753,7 +704,6 @@ int main() {
             edgeShader->unbind();
 
 			syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-			glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
 			glDeleteSync(syncObj);
             
             renderShader->bind();
