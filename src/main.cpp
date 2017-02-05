@@ -563,21 +563,16 @@ int main() {
 	
     Layout* layout = new AbsoluteLayout(&win, 1000, 620);
 
-	Font* font24 = new Font("arial.ttf", 24);
-
-	if (!font24->inited()) {
+	FontFace* arial = new FontFace("arial.ttf");
+	if (!arial->inited()) {
 		win.destroy();
 		std::cout << "Could not load arial.tff!\n";
 		return -1;
 	}
 
-	Font* font20 = new Font("arial.ttf", 20);
-
-	if (!font20->inited()) {
-		win.destroy();
-		std::cout << "Could not load arial.tff!\n";
-		return -1;
-	}
+	Font* font20 = new Font(arial, 20);
+	Font* font24 = new Font(arial, 24);
+	Font* font30 = new Font(arial, 30);
 
 	Theme theme = {};
 	theme.body = color::lightGrey;
@@ -590,8 +585,9 @@ int main() {
 	theme.popupBackground = { 0.6f * 0.8f, 0.75f * 0.8f, 1};
 	theme.popupText = color::black;
 
-	TextStyle textStyle = { 20, font20 };
-	TextStyle buttonStyle = { 24, font24 };
+	TextStyle textStyle = { 20, font20, 0 };
+	TextStyle buttonStyle = { 24, font24, 0 };
+	TextStyle popupButtonStyle = { 30, font30, 0 };
 
 	std::vector<Button*> buttons;
 	std::vector<TextBox*> textBoxes;
@@ -828,7 +824,7 @@ int main() {
 			g_up = g_down + y2;
 			g_down = g_down + y1;
 		}
-	}, theme);
+	}, theme, 0);
 
 	Button* addGraphButton = NULL;
 
@@ -882,8 +878,8 @@ int main() {
 			graphs[index]->glg = new GLGraph(equation, g_gl42);
 			graphs[index]->startTime = glfwGetTime();
 		} else {
-			char** chars = new char*[1];
-			chars[0] = "Ok";
+			std::string** chars = new std::string*[1];
+			chars[0] = new std::string("Ok");
 
 			std::string text = "Error parsing expression: \n" + 
 				std::string(1, '"') + eq + std::string(1, '"') + 
@@ -893,17 +889,16 @@ int main() {
 			PopupDescriptor pDesc = {};
 			pDesc.width = 300;
 			pDesc.height = 200;
-			pDesc.title = "Parsing Error!";
-			pDesc.text = text.c_str();
+			pDesc.title = new std::string("Parsing Error!");
+			pDesc.text = &text;
 			pDesc.btnNum = 1;
-			pDesc.btnText = (const char**)chars;
-			pDesc.window = &win;
-			pDesc.bodyTextStyle = textStyle;
-			pDesc.buttonTextStyle = buttonStyle;
+			pDesc.btnText = chars;
+			pDesc.bodyTextStyle = &textStyle;
+			pDesc.buttonTextStyle = &popupButtonStyle;
 			pDesc.icon = windowIcon;
 			pDesc.iconNum = 1;
 
-			Window::popup(pDesc, theme);
+			win.popup(pDesc, &theme);
 
 			delete result;
 			deleteGraph(index);
@@ -925,7 +920,7 @@ int main() {
 
 		int bSize = buttons.size();
 
-		TextBox* textBox = new TextBox({ 10, (float)(560 - 60.0f * buttons.size()) + 10, 335, 30 }, layout, { textStyle , 1, 2, theme });
+		TextBox* textBox = new TextBox({ 10, (float)(560 - 60.0f * buttons.size()) + 10, 335, 30 }, layout, { textStyle , 1, 2, theme }, 0);
 
 		textBox->setEnterFunc([bSize, textBox, setGraph]() -> void { setGraph(textBox->m_text, bSize); });
 
@@ -934,7 +929,7 @@ int main() {
 				data->del = true;
 			}, 
 		2, theme
-		});
+		}, 0);
 
 		data->button = button;
 		data->textBox = textBox;
@@ -947,7 +942,7 @@ int main() {
 		datas.push_back(data);
 	};
 
-	addGraphButton = new Button({ 10 - 2, 570, 360 / 2, 40 }, layout, "Add Graph", { buttonStyle, addGraphButtonCallback, 3, theme });
+	addGraphButton = new Button({ 10 - 2, 570, 360 / 2, 40 }, layout, "Add Graph", { buttonStyle, addGraphButtonCallback, 3, theme}, 0);
 
 	addGraphButtonCallback();
 
