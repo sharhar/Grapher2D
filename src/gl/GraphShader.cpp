@@ -75,8 +75,34 @@ static inline std::string getCalcFragSource42(std::string eq) {
 	result += "void main(void) {\n";
 	result += "float x = coord.x;\n";
 	result += "float y = coord.y;\n";
+
+	/**
+		This commented section is some code that I wrote to test polar coordinates. I'll add them later.
+	*/
+
+	/*
+	result += "float x = atan(y1/x1);\n";
+	result += "float y = sqrt(x1*x1 + y1*y1);\n";
+
+	result += "if(x1 < 0 && y1 > 0) {";
+	result += "x = x + pi;";
+	result += "}";
+
+	result += "else if(x1 < 0 && y1 < 0) {";
+	result += "x = x + pi;";
+	result += "}";
+
+	result += "else if(x1 > 0 && y1 < 0) {";
+	result += "x = x + pi*2;";
+	result += "}";
+	*/
 	result += "float total = " + eq + ";\n";
-	result += "imageStore(data, ivec2(gl_FragCoord.xy), vec4(total, sign(total), x, y));\n";
+
+	result += "y = 0;\n";
+
+	result += "float total0 = " + eq + ";\n";
+
+	result += "imageStore(data, ivec2(gl_FragCoord.xy), vec4(total, total0, x, y));\n";
 	result += "discard;\n";
 	result += "}\n";
 
@@ -290,15 +316,9 @@ static inline std::string getEdgeFragSource42() {
 
 	result += "vec4 c = imageLoad(data, coord);\n";
 
-	result += "vec4 r = imageLoad(data, ivec2(coord.x + 1, coord.y));\n";
 	result += "vec4 u = imageLoad(data, ivec2(coord.x, coord.y + 1));\n";
-	result += "vec4 l = imageLoad(data, ivec2(coord.x - 1, coord.y));\n";
 	result += "vec4 d = imageLoad(data, ivec2(coord.x, coord.y - 1));\n";
-
-	result += "vec4 r2 = imageLoad(data, ivec2(coord.x + 2, coord.y));\n";
 	result += "vec4 u2 = imageLoad(data, ivec2(coord.x, coord.y + 2));\n";
-	result += "vec4 l2 = imageLoad(data, ivec2(coord.x - 2, coord.y));\n";
-	result += "vec4 d2 = imageLoad(data, ivec2(coord.x, coord.y - 2));\n";
 
 	result += "float mm = 10;";
 	result += "float mm2 = 50000;";
@@ -316,18 +336,28 @@ static inline std::string getEdgeFragSource42() {
 
 	result += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
 
-	result += "if(u.y != c.y && !sk) {";
+	result += "if(sign(u.x) != sign(c.x) && !sk) {";
 	result += "return true;\n";
 	result += "}\n";
 
-	result += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2 && abs(m) > mm*5;";
+	result += "float m10 = (c.y - d.y)/(c.z - d.z);";
+	result += "float m20 = (u2.y - u.y)/(u2.z - u.z);";
+	result += "float m0 = (u.y - c.y)/(u.z - c.z);";
 
-	result += "if(u.y == c.y && sk2) {";
+	result += "bool p10 = m10 > 0;";
+	result += "bool p20 = m20 > 0;";
+	result += "bool p0 = m0 > 0;";
+
+	result += "bool sk0 = p10 == p20 && p10 != p0 && abs(m0) > mm;";
+
+	result += "if(sign(u.x) == sign(c.x) && sign(u.y) != sign(c.y) && sk0) {";
 	result += "return true;\n";
 	result += "}\n";
 
 	result += "}\n";
-
+	
+	result += "vec4 d2 = imageLoad(data, ivec2(coord.x, coord.y - 2));\n";
+	
 	//Down Pixel
 	result += "if(coord.y + 1 <= 1200 && coord.y - 2 >= 0) {";
 
@@ -341,18 +371,30 @@ static inline std::string getEdgeFragSource42() {
 
 	result += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
 
-	result += "if(c.y != d.y && !sk) {";
+	result += "if(sign(c.x) != sign(d.x) && !sk) {";
 	result += "return true;\n";
 	result += "}\n";
 
-	result += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2 && abs(m) > mm*5;";
+	result += "float m10 = (d.y - d2.y)/(d.z - d2.z);";
+	result += "float m20 = (u.y - c.y)/(u.z - c.z);";
+	result += "float m0 = (c.y - d.y)/(c.z - d.z);";
 
-	result += "if(c.y == d.y && sk2) {";
+	result += "bool p10 = m10 > 0;";
+	result += "bool p20 = m20 > 0;";
+	result += "bool p0 = m0 > 0;";
+
+	result += "bool sk0 = p10 == p20 && p10 != p0 && abs(m0) > mm;";
+
+	result += "if(sign(c.x) == sign(d.x) && sign(c.y) != sign(d.y) && sk0) {";
 	result += "return true;\n";
 	result += "}\n";
 
 	result += "}\n";
-
+	
+	result += "vec4 r = imageLoad(data, ivec2(coord.x + 1, coord.y));\n";
+	result += "vec4 l = imageLoad(data, ivec2(coord.x - 1, coord.y));\n";
+	result += "vec4 r2 = imageLoad(data, ivec2(coord.x + 2, coord.y));\n";
+	
 	//Right Pixel
 	result += "if(coord.x + 2 <= 1200 && coord.x - 1 >= 0) {";
 
@@ -366,18 +408,28 @@ static inline std::string getEdgeFragSource42() {
 
 	result += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
 
-	result += "if(r.y != c.y && !sk) {";
+	result += "if(sign(r.x) != sign(c.x) && !sk) {";
 	result += "return true;\n";
 	result += "}\n";
 
-	result += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2 && abs(m) > mm*5;";
+	result += "float m10 = (c.y - l.y)/(c.z - l.z);";
+	result += "float m20 = (r2.y - r.y)/(r2.z - r.z);";
+	result += "float m0 = (r.y - c.y)/(r.z - c.z);";
 
-	result += "if(r.y == c.y && sk2) {";
+	result += "bool p10 = m10 > 0;";
+	result += "bool p20 = m20 > 0;";
+	result += "bool p0 = m0 > 0;";
+
+	result += "bool sk0 = p10 == p20 && p10 != p0 && abs(m0) > mm;";
+
+	result += "if(sign(r.x) == sign(c.x) && sign(r.y) != sign(c.y) && sk0) {";
 	result += "return true;\n";
 	result += "}\n";
 
 	result += "}\n";
-
+	
+	result += "vec4 l2 = imageLoad(data, ivec2(coord.x - 2, coord.y));\n";
+	
 	//Left Pixel
 	result += "if(coord.x + 1 <= 1200 && coord.x - 2 >= 0) {";
 
@@ -391,16 +443,24 @@ static inline std::string getEdgeFragSource42() {
 
 	result += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
 
-	result += "if(c.y != l.y && !sk) {";
+	result += "if(sign(c.x) != sign(l.x) && !sk) {";
 	result += "return true;\n";
 	result += "}\n";
 
-	result += "bool sk2 = p1 == p2 && p1 != p && abs(m) < mm2 && abs(m) > mm*5;";
+	result += "float m10 = (l.y - l2.y)/(l.z - l2.z);";
+	result += "float m20 = (r.y - c.y)/(r.z - c.z);";
+	result += "float m0 = (c.y - l.y)/(c.z - l.z);";
 
-	result += "if(c.y == l.y && sk2) {";
+	result += "bool p10 = m10 > 0;";
+	result += "bool p20 = m20 > 0;";
+	result += "bool p0 = m0 > 0;";
+
+	result += "bool sk0 = p10 == p20 && p10 != p0 && abs(m0) > mm;";
+
+	result += "if(sign(c.x) == sign(l.x) && sign(c.y) != sign(l.y) && sk0) {";
 	result += "return true;\n";
 	result += "}\n";
-
+	
 	result += "}\n";
 
 	result += "return false;\n";
