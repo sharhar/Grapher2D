@@ -21,7 +21,7 @@ typedef struct Node {
 
 String getNodeString(Node* node);
 
-GLGraph::GLGraph(Equation* e, bool gl42) {
+GLGraph::GLGraph(Equation* e, bool gl42, int portSize) {
 	String eqt = getNodeString((Node*)e->getRootNode());
 
 	calcShader = new GraphCalcShader(eqt.getstdstring(), gl42);
@@ -29,12 +29,12 @@ GLGraph::GLGraph(Equation* e, bool gl42) {
 	if (gl42) {
 		glGenTextures(1, &dtex);
 		glBindTexture(GL_TEXTURE_2D, dtex);
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG32F, 1200, 1200);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG32F, portSize, portSize);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		glGenTextures(1, &etex);
 		glBindTexture(GL_TEXTURE_2D, etex);
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG32F, 1200, 1200);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F, portSize, portSize);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	} else {
 		glGenFramebuffers(1, &efbo);
@@ -43,7 +43,7 @@ GLGraph::GLGraph(Equation* e, bool gl42) {
 
 		glGenTextures(1, &etex);
 		glBindTexture(GL_TEXTURE_2D, etex);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1200, 1200,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, portSize, portSize,
 			0, GL_RGBA, GL_FLOAT, NULL);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -60,7 +60,7 @@ GLGraph::GLGraph(Equation* e, bool gl42) {
 
 		glGenTextures(1, &dtex);
 		glBindTexture(GL_TEXTURE_2D, dtex);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1200, 1200,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, portSize, portSize,
 			0, GL_RGBA, GL_FLOAT, NULL);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -94,6 +94,9 @@ void GLGraph::calc33(float up, float down, float left, float right, float time, 
 }
 
 void GLGraph::cleanUp() {
+	glDeleteTextures(1, &dtex);
+	glDeleteTextures(1, &etex);
+
 	calcShader->cleanUp();
 	delete calcShader;
 }

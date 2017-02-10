@@ -9,7 +9,7 @@ class GLGraph {
 private:
 	GraphCalcShader* calcShader;
 public:
-	GLGraph(Equation* e, bool gl42);
+	GLGraph(Equation* e, bool gl42, int portSize);
 
 	void calc(float up, float down, float left, float right, float time, float atime);
 

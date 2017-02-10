@@ -32,7 +32,7 @@ private:
 public:
 	bool compiled;
 
-	GraphEdgeShader(bool gl42);
+	GraphEdgeShader(bool gl42, int portSize);
 
 	void bind();
 	void unbind();
@@ -49,7 +49,7 @@ private:
 public:
 	bool compiled;
 
-	GraphRenderShader(bool gl42);
+	GraphRenderShader(bool gl42, int portSize);
 
 	void bind();
 	void setUniforms(glui::Color graphColor);

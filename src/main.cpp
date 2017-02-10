@@ -15,6 +15,7 @@
 using namespace glui;
 
 #define ZOOM_PERCENT 0.025
+#define GRAPH_PORT_SIZE 1200
 
 double g_left  = -6;
 double g_right =  6;
@@ -600,7 +601,8 @@ int main() {
 
 	glGenTextures(1, &g_gtex);
 	glBindTexture(GL_TEXTURE_2D, g_gtex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1200, 1200,
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 
+		GRAPH_PORT_SIZE, GRAPH_PORT_SIZE,
 		0, GL_RGBA, GL_FLOAT, NULL);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -613,8 +615,8 @@ int main() {
 
 	GraphQuad::init();
     
-    GraphEdgeShader* edgeShader = new GraphEdgeShader(g_gl42);
-	GraphRenderShader* renderShader = new GraphRenderShader(g_gl42);
+    GraphEdgeShader* edgeShader = new GraphEdgeShader(g_gl42, GRAPH_PORT_SIZE);
+	GraphRenderShader* renderShader = new GraphRenderShader(g_gl42, GRAPH_PORT_SIZE);
 
     GLuint quadShader = getQuadShader();
     
@@ -663,17 +665,17 @@ int main() {
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         
 		glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
-		glViewport(0, 0, 1200, 1200);
+		glViewport(0, 0, GRAPH_PORT_SIZE, GRAPH_PORT_SIZE);
 		glClearColor(1.0, 1.0, 1.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		GraphQuad::bind();
 		glEnableVertexAttribArray(0);
 		glUseProgram(lineShader);
-		glUniform3f(lineColorLoc, 0.5f, 0.5f, 0.5f);
+		glUniform3f(lineColorLoc, 0.45f, 0.45f, 0.45f);
 		drawGrid(lineModel, lineModelLoc, g_left, g_right, g_down, g_up, 600, 600);
 		glUniform3f(lineColorLoc, 0, 0, 0);
-		drawAxes(lineModel, lineModelLoc, 600, 600);		
+		drawAxes(lineModel, lineModelLoc, 600, 600);
 		
 		float time = glfwGetTime();
 		
@@ -694,7 +696,7 @@ int main() {
                     continue;
                 }
                 glBindImageTexture(0, graphs[i]->glg->dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
-				glBindImageTexture(1, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
+				glBindImageTexture(1, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
                 glDrawArrays(GL_TRIANGLES, 0, 6);
             }
             edgeShader->unbind();
@@ -708,7 +710,7 @@ int main() {
                 }
                 
 				renderShader->setUniforms(g_colors[i % 5]);
-                glBindImageTexture(0, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
+                glBindImageTexture(0, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
                 glDrawArrays(GL_TRIANGLES, 0, 6);
             }
             renderShader->unbind();
@@ -875,7 +877,7 @@ int main() {
 
 			graphs[index]->del = false;
 
-			graphs[index]->glg = new GLGraph(equation, g_gl42);
+			graphs[index]->glg = new GLGraph(equation, g_gl42, GRAPH_PORT_SIZE);
 			graphs[index]->startTime = glfwGetTime();
 		} else {
 			std::string** chars = new std::string*[1];
@@ -1020,13 +1022,12 @@ int main() {
 		deleteGraph(i);
 	}
 
-	if (g_gl42) {
-		edgeShader->cleanUp();
-		renderShader->cleanUp();
-	}
-    
+	edgeShader->cleanUp();
+	renderShader->cleanUp();
+	
 	win.destroy();
 
 	GLUI::destroy();
+
 	return 0;
 }
