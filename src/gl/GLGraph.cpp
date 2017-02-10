@@ -29,7 +29,7 @@ GLGraph::GLGraph(Equation* e, bool gl42) {
 	if (gl42) {
 		glGenTextures(1, &dtex);
 		glBindTexture(GL_TEXTURE_2D, dtex);
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, 1200, 1200);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG32F, 1200, 1200);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		glGenTextures(1, &etex);
@@ -74,7 +74,7 @@ GLGraph::GLGraph(Equation* e, bool gl42) {
 }
 
 void GLGraph::calc(float up, float down, float left, float right, float time, float atime) {
-	glBindImageTexture(0, dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+	glBindImageTexture(0, dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
 
 	calcShader->bind();
 	calcShader->setUniforms(up, down, left, right, time, atime);

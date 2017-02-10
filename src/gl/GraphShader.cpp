@@ -34,7 +34,7 @@ static inline std::string getCalcFragSource42(std::string eq) {
 	result += "uniform float t;\n";
 	result += "uniform float at;\n";
 
-	result += "layout (rgba32f) uniform image2D data;\n";
+	result += "layout (rg32f) uniform image2D data;\n";
 
 	result += "const float e = 2.718281828459045;\n";
 	result += "const float pi = 3.141592653589793;\n";
@@ -73,8 +73,8 @@ static inline std::string getCalcFragSource42(std::string eq) {
 	result += "}\n";
 
 	result += "void main(void) {\n";
-	result += "float x = coord.x;\n";
-	result += "float y = coord.y;\n";
+	result += "float x0 = coord.x;\n";
+	result += "float y0 = coord.y;\n";
 
 	/**
 		This commented section is some code that I wrote to test polar coordinates. I'll add them later.
@@ -96,13 +96,18 @@ static inline std::string getCalcFragSource42(std::string eq) {
 	result += "x = x + pi*2;";
 	result += "}";
 	*/
+
+	result += "float x = x0;\n";
+	result += "float y = y0;\n";
+
 	result += "float total = " + eq + ";\n";
 
 	result += "y = 0;\n";
 
 	result += "float total0 = " + eq + ";\n";
 
-	result += "imageStore(data, ivec2(gl_FragCoord.xy), vec4(total, total0, x, y));\n";
+	result += "imageStore(data, ivec2(gl_FragCoord.xy), vec4(total, total0, 0.0, 0.0));\n";
+
 	result += "discard;\n";
 	result += "}\n";
 
@@ -258,6 +263,14 @@ GraphCalcShader::GraphCalcShader(std::string eq, bool gl42) {
 	rightLoc = glGetUniformLocation(shaderProgram, "right");
 	tLoc = glGetUniformLocation(shaderProgram, "t");
 	atLoc = glGetUniformLocation(shaderProgram, "at");
+
+	GLuint dataLoc = glGetUniformLocation(shaderProgram, "data");
+
+	glUseProgram(shaderProgram);
+
+	glUniform1i(dataLoc, 0);
+
+	glUseProgram(0);
 }
 
 void GraphCalcShader::setUniforms(float up, float down, float left, float right, float time, float atime) {
@@ -306,7 +319,7 @@ static inline std::string getEdgeFragSource42() {
 
 	result += "#version 420 core\n";
 
-	result += "layout (rgba32f) uniform image2D data;\n";
+	result += "layout (rg32f) uniform image2D data;\n";
 	result += "layout (rg32f) uniform image2D edge;\n";
 
 	result += "in vec2 coord;\n";
@@ -320,35 +333,32 @@ static inline std::string getEdgeFragSource42() {
 	result += "vec4 d = imageLoad(data, ivec2(coord.x, coord.y - 1));\n";
 	result += "vec4 u2 = imageLoad(data, ivec2(coord.x, coord.y + 2));\n";
 
-	result += "float mm = 10;";
-	result += "float mm2 = 50000;";
-
 	//Up Pixel
 	result += "if(coord.y + 2 <= 1200 && coord.y - 1 >= 0) {";
 
-	result += "float m1 = (c.x - d.x)/(c.z - d.z);";
-	result += "float m2 = (u2.x - u.x)/(u2.z - u.z);";
-	result += "float m = (u.x - c.x)/(u.z - c.z);";
+	result += "float m1 = (c.x - d.x);";
+	result += "float m2 = (u2.x - u.x);";
+	result += "float m = (u.x - c.x);";
 
 	result += "bool p1 = m1 > 0;";
 	result += "bool p2 = m2 > 0;";
 	result += "bool p = m > 0;";
 
-	result += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
+	result += "bool sk = p1 == p2 && p1 != p;";
 
 	result += "if(sign(u.x) != sign(c.x) && !sk) {";
 	result += "return true;\n";
 	result += "}\n";
 
-	result += "float m10 = (c.y - d.y)/(c.z - d.z);";
-	result += "float m20 = (u2.y - u.y)/(u2.z - u.z);";
-	result += "float m0 = (u.y - c.y)/(u.z - c.z);";
+	result += "float m10 = (c.y - d.y);";
+	result += "float m20 = (u2.y - u.y);";
+	result += "float m0 = (u.y - c.y);";
 
 	result += "bool p10 = m10 > 0;";
 	result += "bool p20 = m20 > 0;";
 	result += "bool p0 = m0 > 0;";
 
-	result += "bool sk0 = p10 == p20 && p10 != p0 && abs(m0) > mm;";
+	result += "bool sk0 = p10 == p20 && p10 != p0;";
 
 	result += "if(sign(u.x) == sign(c.x) && sign(u.y) != sign(c.y) && sk0) {";
 	result += "return true;\n";
@@ -361,29 +371,29 @@ static inline std::string getEdgeFragSource42() {
 	//Down Pixel
 	result += "if(coord.y + 1 <= 1200 && coord.y - 2 >= 0) {";
 
-	result += "float m1 = (d.x - d2.x)/(d.z - d2.z);";
-	result += "float m2 = (u.x - c.x)/(u.z - c.z);";
-	result += "float m = (c.x - d.x)/(c.z - d.z);";
+	result += "float m1 = (d.x - d2.x);";
+	result += "float m2 = (u.x - c.x);";
+	result += "float m = (c.x - d.x);";
 
 	result += "bool p1 = m1 > 0;";
 	result += "bool p2 = m2 > 0;";
 	result += "bool p = m > 0;";
 
-	result += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
+	result += "bool sk = p1 == p2 && p1 != p;";
 
 	result += "if(sign(c.x) != sign(d.x) && !sk) {";
 	result += "return true;\n";
 	result += "}\n";
 
-	result += "float m10 = (d.y - d2.y)/(d.z - d2.z);";
-	result += "float m20 = (u.y - c.y)/(u.z - c.z);";
-	result += "float m0 = (c.y - d.y)/(c.z - d.z);";
+	result += "float m10 = (d.y - d2.y);";
+	result += "float m20 = (u.y - c.y);";
+	result += "float m0 = (c.y - d.y);";
 
 	result += "bool p10 = m10 > 0;";
 	result += "bool p20 = m20 > 0;";
 	result += "bool p0 = m0 > 0;";
 
-	result += "bool sk0 = p10 == p20 && p10 != p0 && abs(m0) > mm;";
+	result += "bool sk0 = p10 == p20 && p10 != p0;";
 
 	result += "if(sign(c.x) == sign(d.x) && sign(c.y) != sign(d.y) && sk0) {";
 	result += "return true;\n";
@@ -398,29 +408,29 @@ static inline std::string getEdgeFragSource42() {
 	//Right Pixel
 	result += "if(coord.x + 2 <= 1200 && coord.x - 1 >= 0) {";
 
-	result += "float m1 = (c.x - l.x)/(c.z - l.z);";
-	result += "float m2 = (r2.x - r.x)/(r2.z - r.z);";
-	result += "float m = (r.x - c.x)/(r.z - c.z);";
+	result += "float m1 = (c.x - l.x);";
+	result += "float m2 = (r2.x - r.x);";
+	result += "float m = (r.x - c.x);";
 
 	result += "bool p1 = m1 > 0;";
 	result += "bool p2 = m2 > 0;";
 	result += "bool p = m > 0;";
 
-	result += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
+	result += "bool sk = p1 == p2 && p1 != p;";
 
 	result += "if(sign(r.x) != sign(c.x) && !sk) {";
 	result += "return true;\n";
 	result += "}\n";
 
-	result += "float m10 = (c.y - l.y)/(c.z - l.z);";
-	result += "float m20 = (r2.y - r.y)/(r2.z - r.z);";
-	result += "float m0 = (r.y - c.y)/(r.z - c.z);";
+	result += "float m10 = (c.y - l.y);";
+	result += "float m20 = (r2.y - r.y);";
+	result += "float m0 = (r.y - c.y);";
 
 	result += "bool p10 = m10 > 0;";
 	result += "bool p20 = m20 > 0;";
 	result += "bool p0 = m0 > 0;";
 
-	result += "bool sk0 = p10 == p20 && p10 != p0 && abs(m0) > mm;";
+	result += "bool sk0 = p10 == p20 && p10 != p0;";
 
 	result += "if(sign(r.x) == sign(c.x) && sign(r.y) != sign(c.y) && sk0) {";
 	result += "return true;\n";
@@ -433,29 +443,29 @@ static inline std::string getEdgeFragSource42() {
 	//Left Pixel
 	result += "if(coord.x + 1 <= 1200 && coord.x - 2 >= 0) {";
 
-	result += "float m1 = (l.x - l2.x)/(l.z - l2.z);";
-	result += "float m2 = (r.x - c.x)/(r.z - c.z);";
-	result += "float m = (c.x - l.x)/(c.z - l.z);";
+	result += "float m1 = (l.x - l2.x);";
+	result += "float m2 = (r.x - c.x);";
+	result += "float m = (c.x - l.x);";
 
 	result += "bool p1 = m1 > 0;";
 	result += "bool p2 = m2 > 0;";
 	result += "bool p = m > 0;";
 
-	result += "bool sk = p1 == p2 && p1 != p && abs(m) > mm;";
+	result += "bool sk = p1 == p2 && p1 != p;";
 
 	result += "if(sign(c.x) != sign(l.x) && !sk) {";
 	result += "return true;\n";
 	result += "}\n";
 
-	result += "float m10 = (l.y - l2.y)/(l.z - l2.z);";
-	result += "float m20 = (r.y - c.y)/(r.z - c.z);";
-	result += "float m0 = (c.y - l.y)/(c.z - l.z);";
+	result += "float m10 = (l.y - l2.y);";
+	result += "float m20 = (r.y - c.y);";
+	result += "float m0 = (c.y - l.y);";
 
 	result += "bool p10 = m10 > 0;";
 	result += "bool p20 = m20 > 0;";
 	result += "bool p0 = m0 > 0;";
 
-	result += "bool sk0 = p10 == p20 && p10 != p0 && abs(m0) > mm;";
+	result += "bool sk0 = p10 == p20 && p10 != p0;";
 
 	result += "if(sign(c.x) == sign(l.x) && sign(c.y) != sign(l.y) && sk0) {";
 	result += "return true;\n";

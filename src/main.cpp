@@ -693,8 +693,8 @@ int main() {
                 if (graphs[i] == NULL) {
                     continue;
                 }
-                glBindImageTexture(0, graphs[i]->glg->dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-                glBindImageTexture(1, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
+                glBindImageTexture(0, graphs[i]->glg->dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
+				glBindImageTexture(1, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
                 glDrawArrays(GL_TRIANGLES, 0, 6);
             }
             edgeShader->unbind();
