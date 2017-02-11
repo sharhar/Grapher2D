@@ -188,7 +188,8 @@ static inline std::string getCalcFragSource33(std::string eq) {
 	result += "float total = " + eq + ";\n";
 	result += "y = 0;\n";
 	result += "float total0 = " + eq + ";\n";
-	result += "out_color = vec4(total/2 + 0.5, (total*128.0)/2 + 0.5, 0.0, 1.0);\n";
+
+	result += "out_color = vec4(total, total0, 0.0, 1.0);\n";
 	result += "}\n";
 
 	return result;
@@ -519,17 +520,17 @@ static inline std::string getEdgeFragSource33(int portSize) {
 	result += std::to_string(portSize);
 	result += ".0;\n";
 
-	result += "vec2 getData(vec4 col) {\n";
-	result += "return vec2((col.x*2 - 1) + (col.y*2 - 1)/128.0, 0.0);\n";
-	result += "}\n";
-
 	result += "bool isColored(vec2 coord) {";
 
-	result += "vec2 c = getData(texture(data, coord));\n";
+	result += "vec4 c = texture(data, coord);\n";
 
-	result += "vec2 u = getData(texture(data, vec2(coord.x, coord.y - pxw)));\n";
-	result += "vec2 d = getData(texture(data, vec2(coord.x, coord.y + pxw)));\n";
-	result += "vec2 u2 = getData(texture(data, vec2(coord.x, coord.y - pxw*2)));\n";
+	result += "if(c.x == 0) {";
+	result += "return true;\n";
+	result += "}\n";
+
+	result += "vec4 u = texture(data, vec2(coord.x, coord.y - pxw));\n";
+	result += "vec4 d = texture(data, vec2(coord.x, coord.y + pxw));\n";
+	result += "vec4 u2 = texture(data, vec2(coord.x, coord.y - pxw*2));\n";
 	
 	//Up Pixel
 	result += "if(coord.y + pxw*2 <= 1.0 && coord.y - pxw >= 0.0) {";
@@ -560,7 +561,7 @@ static inline std::string getEdgeFragSource33(int portSize) {
 
 	result += "}\n";
 	
-	result += "vec2 d2 = getData(texture(data, vec2(coord.x, coord.y + pxw*2)));\n";
+	result += "vec4 d2 = texture(data, vec2(coord.x, coord.y + pxw*2));\n";
 
 	//Down Pixel
 	result += "if(coord.y + pxw*2 <= 1.0 && coord.y - pxw >= 0.0) {";
@@ -591,9 +592,9 @@ static inline std::string getEdgeFragSource33(int portSize) {
 
 	result += "}\n";
 	
-	result += "vec2 r = getData(texture(data, vec2(coord.x + pxw, coord.y)));\n";
-	result += "vec2 l = getData(texture(data, vec2(coord.x - pxw, coord.y)));\n";
-	result += "vec2 r2 = getData(texture(data, vec2(coord.x + pxw*2, coord.y)));\n";
+	result += "vec4 r = texture(data, vec2(coord.x + pxw, coord.y));\n";
+	result += "vec4 l = texture(data, vec2(coord.x - pxw, coord.y));\n";
+	result += "vec4 r2 = texture(data, vec2(coord.x + pxw*2, coord.y));\n";
 	
 	//Right Pixel
 	result += "if(coord.x + pxw*2 <= 1.0 && coord.x - pxw >= 0.0) {";
@@ -624,7 +625,7 @@ static inline std::string getEdgeFragSource33(int portSize) {
 
 	result += "}\n";
 	
-	result += "vec2 l2 = getData(texture(data, vec2(coord.x - pxw*2, coord.y)));\n";
+	result += "vec4 l2 = texture(data, vec2(coord.x - pxw*2, coord.y));\n";
 
 	//Left Pixel
 	result += "if(coord.x + pxw*2 <= 1.0 && coord.x - pxw >= 0.0) {";

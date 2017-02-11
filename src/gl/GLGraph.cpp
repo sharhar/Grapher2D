@@ -38,11 +38,11 @@ GLGraph::GLGraph(Equation* e, bool gl42, int portSize) {
 
 		glGenTextures(1, &dtex);
 		glBindTexture(GL_TEXTURE_2D, dtex);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, portSize, portSize,
-			0, GL_RGBA, GL_FLOAT, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, portSize, portSize,
+			0, GL_RG, GL_UNSIGNED_BYTE, NULL);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
 		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, dtex, 0);
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -56,11 +56,11 @@ GLGraph::GLGraph(Equation* e, bool gl42, int portSize) {
 
 	glGenTextures(1, &etex);
 	glBindTexture(GL_TEXTURE_2D, etex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, portSize, portSize,
-		0, GL_RGBA, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, portSize, portSize,
+		0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, etex, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);

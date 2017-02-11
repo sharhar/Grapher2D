@@ -22,7 +22,7 @@ double g_right =  6;
 double g_down  = -6;
 double g_up    =  6;
 
-bool g_gl42;
+bool g_gl42 = false;
 
 int g_windowWidth = 600;
 int g_windowHeight = 600;
@@ -558,7 +558,7 @@ int main() {
 
 	Window win("Grapher2D", 1000, 620, false, 1, windowIcon);
 
-	g_gl42 = GLAD_GL_VERSION_4_2 == 1;
+	g_gl42 = false;// GLAD_GL_VERSION_4_2 == 1;
     
 	Renderer::init(&win);
 	
