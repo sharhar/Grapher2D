@@ -186,7 +186,9 @@ static inline std::string getCalcFragSource33(std::string eq) {
 	result += "float x = coord.x;\n";
 	result += "float y = coord.y;\n";
 	result += "float total = " + eq + ";\n";
-	result += "out_color = vec4(sign(total)/2 + 0.5, 0.0, 0.0, 1.0);\n";
+	result += "y = 0;\n";
+	result += "float total0 = " + eq + ";\n";
+	result += "out_color = vec4(total/2 + 0.5, (total*128.0)/2 + 0.5, 0.0, 1.0);\n";
 	result += "}\n";
 
 	return result;
@@ -320,7 +322,6 @@ static inline std::string getEdgeFragSource42(int portSize) {
 	result += "#version 420 core\n";
 
 	result += "layout (rg32f) uniform image2D data;\n";
-	result += "layout (r32f) uniform image2D edge;\n";
 
 	result += "in vec2 coord;\n";
 	result += "out vec4 out_color;\n";
@@ -483,9 +484,9 @@ static inline std::string getEdgeFragSource42(int portSize) {
 
 	result += "void main(void) {\n";
 
-	result += "if(isColored(ivec2(gl_FragCoord.xy))) {imageStore(edge, ivec2(gl_FragCoord.xy), vec4(1.0, 0.0, 0.0, 0.0)); }";
-	result += "else {imageStore(edge, ivec2(gl_FragCoord.xy), vec4(0.0, 0.0, 0.0, 0.0));}";
-	result += "discard;";
+	result += "if(isColored(ivec2(gl_FragCoord.xy))) {out_color = vec4(1.0, 0.0, 0.0, 1.0);}";
+	result += "else {out_color = vec4(0.0, 0.0, 0.0, 1.0);}";
+
 	result += "}\n";
 
 	return result;
@@ -518,19 +519,149 @@ static inline std::string getEdgeFragSource33(int portSize) {
 	result += std::to_string(portSize);
 	result += ".0;\n";
 
-	result += "void main(void) {\n";
-    
-	result += "vec4 ct = texture(data, coord);\n";
-	result += "float c = (ct.x-0.5)*2;\n";
-	result += "float r = (texture(data, vec2(coord.x + pxw, coord.y)).x-0.5)*2;\n";
-	result += "float u = (texture(data, vec2(coord.x, coord.y + pxw)).x-0.5)*2;\n";
-	result += "float l = (texture(data, vec2(coord.x - pxw, coord.y)).x-0.5)*2;\n";
-	result += "float d = (texture(data, vec2(coord.x, coord.y - pxw)).x-0.5)*2;\n";
-	result += "if(c == 0 || (coord.x + pxw <= 1.0 && c != r) || (coord.y + pxw <= 1.0 && c != u) ||";
-	result += "	(coord.x - pxw >= 0.0 && c != l) || (coord.y - pxw >= 0.0 && c != d)) {out_color = vec4(1.0, 0.0, 0.0, 1.0); return;}\n";
-    
-	result += "out_color = vec4(0.0, 0.0, 0.0, 1.0);";
+	result += "vec2 getData(vec4 col) {\n";
+	result += "return vec2((col.x*2 - 1) + (col.y*2 - 1)/128.0, 0.0);\n";
+	result += "}\n";
 
+	result += "bool isColored(vec2 coord) {";
+
+	result += "vec2 c = getData(texture(data, coord));\n";
+
+	result += "vec2 u = getData(texture(data, vec2(coord.x, coord.y - pxw)));\n";
+	result += "vec2 d = getData(texture(data, vec2(coord.x, coord.y + pxw)));\n";
+	result += "vec2 u2 = getData(texture(data, vec2(coord.x, coord.y - pxw*2)));\n";
+	
+	//Up Pixel
+	result += "if(coord.y + pxw*2 <= 1.0 && coord.y - pxw >= 0.0) {";
+
+	result += "float m1 = (c.x - d.x);";
+	result += "float m2 = (u2.x - u.x);";
+	result += "float m = (u.x - c.x);";
+
+	result += "bool p1 = m1 > 0;";
+	result += "bool p2 = m2 > 0;";
+	result += "bool p = m > 0;";
+
+	result += "bool sk = p1 == p2 && p1 != p;";
+
+	result += "float m1n = -(c.x - d.x);";
+	result += "float m2n = -(u2.x - u.x);";
+	result += "float mn = -(u.x - c.x);";
+
+	result += "bool p1n = m1n > 0;";
+	result += "bool p2n = m2n > 0;";
+	result += "bool pn = mn > 0;";
+
+	result += "bool skn = p1n == p2n && p1n != pn;";
+
+	result += "if(sign(u.x) != sign(c.x) && !sk && !skn) {";
+	result += "return true;\n";
+	result += "}\n";
+
+	result += "}\n";
+	
+	result += "vec2 d2 = getData(texture(data, vec2(coord.x, coord.y + pxw*2)));\n";
+
+	//Down Pixel
+	result += "if(coord.y + pxw*2 <= 1.0 && coord.y - pxw >= 0.0) {";
+
+	result += "float m1 = (d.x - d2.x);";
+	result += "float m2 = (u.x - c.x);";
+	result += "float m = (c.x - d.x);";
+
+	result += "bool p1 = m1 > 0;";
+	result += "bool p2 = m2 > 0;";
+	result += "bool p = m > 0;";
+
+	result += "bool sk = p1 == p2 && p1 != p;";
+
+	result += "float m1n = -(d.x - d2.x);";
+	result += "float m2n = -(u.x - c.x);";
+	result += "float mn = -(c.x - d.x);";
+
+	result += "bool p1n = m1n > 0;";
+	result += "bool p2n = m2n > 0;";
+	result += "bool pn = mn > 0;";
+
+	result += "bool skn = p1n == p2n && p1n != pn;";
+
+	result += "if(sign(c.x) != sign(d.x) && !sk && !skn) {";
+	result += "return true;\n";
+	result += "}\n";
+
+	result += "}\n";
+	
+	result += "vec2 r = getData(texture(data, vec2(coord.x + pxw, coord.y)));\n";
+	result += "vec2 l = getData(texture(data, vec2(coord.x - pxw, coord.y)));\n";
+	result += "vec2 r2 = getData(texture(data, vec2(coord.x + pxw*2, coord.y)));\n";
+	
+	//Right Pixel
+	result += "if(coord.x + pxw*2 <= 1.0 && coord.x - pxw >= 0.0) {";
+
+	result += "float m1 = (c.x - l.x);";
+	result += "float m2 = (r2.x - r.x);";
+	result += "float m = (r.x - c.x);";
+
+	result += "bool p1 = m1 > 0;";
+	result += "bool p2 = m2 > 0;";
+	result += "bool p = m > 0;";
+
+	result += "bool sk = p1 == p2 && p1 != p;";
+
+	result += "float m1n = -(c.x - l.x);";
+	result += "float m2n = -(r2.x - r.x);";
+	result += "float mn = -(r.x - c.x);";
+
+	result += "bool p1n = m1n > 0;";
+	result += "bool p2n = m2n > 0;";
+	result += "bool pn = mn > 0;";
+
+	result += "bool skn = p1n == p2n && p1n != pn;";
+
+	result += "if(sign(r.x) != sign(c.x) && !sk && !skn) {";
+	result += "return true;\n";
+	result += "}\n";
+
+	result += "}\n";
+	
+	result += "vec2 l2 = getData(texture(data, vec2(coord.x - pxw*2, coord.y)));\n";
+
+	//Left Pixel
+	result += "if(coord.x + pxw*2 <= 1.0 && coord.x - pxw >= 0.0) {";
+
+	result += "float m1 = (l.x - l2.x);";
+	result += "float m2 = (r.x - c.x);";
+	result += "float m = (c.x - l.x);";
+
+	result += "bool p1 = m1 > 0;";
+	result += "bool p2 = m2 > 0;";
+	result += "bool p = m > 0;";
+
+	result += "bool sk = p1 == p2 && p1 != p;";
+
+	result += "float m1n = -(l.x - l2.x);";
+	result += "float m2n = -(r.x - c.x);";
+	result += "float mn = -(c.x - l.x);";
+
+	result += "bool p1n = m1n > 0;";
+	result += "bool p2n = m2n > 0;";
+	result += "bool pn = mn > 0;";
+
+	result += "bool skn = p1n == p2n && p1n != pn;";
+
+	result += "if(sign(c.x) != sign(l.x) && !sk && !skn) {";
+	result += "return true;\n";
+	result += "}\n";
+
+	result += "}\n";
+
+	result += "return false;\n";
+
+	result += "}";
+
+	result += "void main(void) {\n";
+	result += "if(isColored(coord)) {out_color = vec4(1.0, 0.0, 0.0, 1.0); return;}\n";
+	result += "out_color = vec4(0.0, 0.0, 0.0, 1.0);";
 	result += "}\n";
 
 	return result;
@@ -602,12 +733,12 @@ GraphEdgeShader::GraphEdgeShader(bool gl42, int portSize) {
 	glValidateProgram(shaderProgram);
 
 	dataLoc = glGetUniformLocation(shaderProgram, "data");
-	edgeLoc = glGetUniformLocation(shaderProgram, "edge");
+	//edgeLoc = glGetUniformLocation(shaderProgram, "edge");
 
 	bind();
 
 	glUniform1i(dataLoc, 0);
-	glUniform1i(edgeLoc, 1);
+	//glUniform1i(edgeLoc, 1);
 
 	unbind();
 }
@@ -630,52 +761,7 @@ void GraphEdgeShader::cleanUp() {
 	glDeleteProgram(shaderProgram);
 }
 
-static inline std::string getRenderVertSource42() {
-	std::string result = "";
-
-	result += "#version 420 core\n";
-	result += "out vec2 coord;\n";
-	result += "in vec2 position;\n";
-	result += "void main(void) {\n";
-	result += "gl_Position = vec4(position.xy, 0, 1);\n";
-	result += "coord = position/2.0 + 0.5;\n";
-	result += "}\n";
-
-	return result;
-}
-
-static inline std::string getRenderFragSource42() {
-	std::string result = "";
-
-	result += "#version 420 core\n";
-
-	result += "layout (r32f) uniform image2D edge;\n";
-	result += "uniform vec3 g_color;\n";
-
-	result += "in vec2 coord;\n";
-	result += "out vec4 out_color;\n";
-
-	result += "void main(void) {\n";
-
-	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
-
-	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x + 1, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x - 1, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y + 1)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y - 1)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
-
-	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x + 2, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x - 2, gl_FragCoord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y + 2)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
-	result += "if(imageLoad(edge, ivec2(gl_FragCoord.x, gl_FragCoord.y - 2)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}";
-
-	result += "discard;";
-	result += "}\n";
-
-	return result;
-}
-
-static inline std::string getRenderVertSource33() {
+static inline std::string getRenderVertSource() {
 	std::string result = "";
 
 	result += "#version 330 core\n";
@@ -689,7 +775,7 @@ static inline std::string getRenderVertSource33() {
 	return result;
 }
 
-static inline std::string getRenderFragSource33(int portSize) {
+static inline std::string getRenderFragSource(int portSize) {
 	std::string result = "";
 
 	result += "#version 330 core\n";
@@ -723,18 +809,12 @@ static inline std::string getRenderFragSource33(int portSize) {
 	return result;
 }
 
-GraphRenderShader::GraphRenderShader(bool gl42, int portSize) {
+GraphRenderShader::GraphRenderShader(int portSize) {
 	std::string vertSource;
 	std::string fragSource;
 
-	if (gl42) {
-		vertSource = getRenderVertSource42();
-		fragSource = getRenderFragSource42();
-	}
-	else {
-		vertSource = getRenderVertSource33();
-		fragSource = getRenderFragSource33(portSize);
-	}
+	vertSource = getRenderVertSource();
+	fragSource = getRenderFragSource(portSize);
 
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);

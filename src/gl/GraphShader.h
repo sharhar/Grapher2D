@@ -49,7 +49,7 @@ private:
 public:
 	bool compiled;
 
-	GraphRenderShader(bool gl42, int portSize);
+	GraphRenderShader(int portSize);
 
 	void bind();
 	void setUniforms(glui::Color graphColor);

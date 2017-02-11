@@ -616,7 +616,7 @@ int main() {
 	GraphQuad::init();
     
     GraphEdgeShader* edgeShader = new GraphEdgeShader(g_gl42, GRAPH_PORT_SIZE);
-	GraphRenderShader* renderShader = new GraphRenderShader(g_gl42, GRAPH_PORT_SIZE);
+	GraphRenderShader* renderShader = new GraphRenderShader(GRAPH_PORT_SIZE);
 
     GLuint quadShader = getQuadShader();
     
@@ -695,25 +695,12 @@ int main() {
                 if (graphs[i] == NULL) {
                     continue;
                 }
+				glBindFramebuffer(GL_FRAMEBUFFER, graphs[i]->glg->efbo);
+				glClear(GL_COLOR_BUFFER_BIT);
                 glBindImageTexture(0, graphs[i]->glg->dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
-				glBindImageTexture(1, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
                 glDrawArrays(GL_TRIANGLES, 0, 6);
             }
             edgeShader->unbind();
-
-			glDeleteSync(glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0));
-
-            renderShader->bind();
-            for (int i = 0; i < graphs.size(); i++) {
-                if (graphs[i] == NULL) {
-                    continue;
-                }
-                
-				renderShader->setUniforms(g_colors[i % 5]);
-                glBindImageTexture(0, graphs[i]->glg->etex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-                glDrawArrays(GL_TRIANGLES, 0, 6);
-            }
-            renderShader->unbind();
 		} else {
 			for (int i = 0; i < graphs.size(); i++) {
 				if (graphs[i] == NULL) {
@@ -722,7 +709,7 @@ int main() {
 
 				graphs[i]->glg->calc33(g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
 			}
-            
+
 			edgeShader->bind();
 			for (int i = 0; i < graphs.size(); i++) {
 				if (graphs[i] == NULL) {
@@ -736,26 +723,26 @@ int main() {
 				glDrawArrays(GL_TRIANGLES, 0, 6);
 			}
 			edgeShader->unbind();
-            
-			glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
-
-			renderShader->bind();
-			for (int i = 0; i < graphs.size(); i++) {
-				if (graphs[i] == NULL) {
-					continue;
-				}
-
-				renderShader->setUniforms(g_colors[i % 5]);
-				glBindTexture(GL_TEXTURE_2D, graphs[i]->glg->etex);
-				glActiveTexture(GL_TEXTURE0);
-				glDrawArrays(GL_TRIANGLES, 0, 6);
-			}
-			renderShader->unbind();
+			
 		}
-        
+		
+		glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
+
+		renderShader->bind();
+		for (int i = 0; i < graphs.size(); i++) {
+			if (graphs[i] == NULL) {
+				continue;
+			}
+
+			renderShader->setUniforms(g_colors[i % 5]);
+			glBindTexture(GL_TEXTURE_2D, graphs[i]->glg->etex);
+			glActiveTexture(GL_TEXTURE0);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
+		renderShader->unbind();
+
         glDisableVertexAttribArray(0);
         GraphQuad::unbind();
-
         
         Renderer::beginDraw();
         glUseProgram(numberShader);

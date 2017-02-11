@@ -31,29 +31,7 @@ GLGraph::GLGraph(Equation* e, bool gl42, int portSize) {
 		glBindTexture(GL_TEXTURE_2D, dtex);
 		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG32F, portSize, portSize);
 		glBindTexture(GL_TEXTURE_2D, 0);
-
-		glGenTextures(1, &etex);
-		glBindTexture(GL_TEXTURE_2D, etex);
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F, portSize, portSize);
-		glBindTexture(GL_TEXTURE_2D, 0);
 	} else {
-		glGenFramebuffers(1, &efbo);
-		glBindFramebuffer(GL_FRAMEBUFFER, efbo);
-		glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-		glGenTextures(1, &etex);
-		glBindTexture(GL_TEXTURE_2D, etex);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, portSize, portSize,
-			0, GL_RGBA, GL_FLOAT, NULL);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, etex, 0);
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 		glGenFramebuffers(1, &dfbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, dfbo);
 		glDrawBuffer(GL_COLOR_ATTACHMENT0);
@@ -71,6 +49,23 @@ GLGraph::GLGraph(Equation* e, bool gl42, int portSize) {
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
+
+	glGenFramebuffers(1, &efbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, efbo);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+	glGenTextures(1, &etex);
+	glBindTexture(GL_TEXTURE_2D, etex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, portSize, portSize,
+		0, GL_RGBA, GL_FLOAT, NULL);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, etex, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void GLGraph::calc(float up, float down, float left, float right, float time, float atime) {
