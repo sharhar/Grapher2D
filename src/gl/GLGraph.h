@@ -9,11 +9,9 @@ class GLGraph {
 private:
 	GraphCalcShader* calcShader;
 public:
-	GLGraph(Equation* e, bool gl42, int portSize);
+	GLGraph(Equation* e, int portSize);
 
 	void calc(float up, float down, float left, float right, float time, float atime);
-
-	void calc33(float up, float down, float left, float right, float time, float atime);
 	void cleanUp();
 
 	GLuint dtex, etex;

@@ -14,7 +14,7 @@ private:
 public:
 	bool compiled;
 
-	GraphCalcShader(std::string eq, bool gl42);
+	GraphCalcShader(std::string eq);
 
 	void bind();
 	void unbind();
@@ -32,7 +32,7 @@ private:
 public:
 	bool compiled;
 
-	GraphEdgeShader(bool gl42, int portSize);
+	GraphEdgeShader(int portSize);
 
 	void bind();
 	void unbind();

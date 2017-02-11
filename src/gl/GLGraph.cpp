@@ -21,34 +21,27 @@ typedef struct Node {
 
 String getNodeString(Node* node);
 
-GLGraph::GLGraph(Equation* e, bool gl42, int portSize) {
+GLGraph::GLGraph(Equation* e, int portSize) {
 	String eqt = getNodeString((Node*)e->getRootNode());
 
-	calcShader = new GraphCalcShader(eqt.getstdstring(), gl42);
+	calcShader = new GraphCalcShader(eqt.getstdstring());
 
-	if (gl42) {
-		glGenTextures(1, &dtex);
-		glBindTexture(GL_TEXTURE_2D, dtex);
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG32F, portSize, portSize);
-		glBindTexture(GL_TEXTURE_2D, 0);
-	} else {
-		glGenFramebuffers(1, &dfbo);
-		glBindFramebuffer(GL_FRAMEBUFFER, dfbo);
-		glDrawBuffer(GL_COLOR_ATTACHMENT0);
+	glGenFramebuffers(1, &dfbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, dfbo);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
-		glGenTextures(1, &dtex);
-		glBindTexture(GL_TEXTURE_2D, dtex);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, portSize, portSize,
-			0, GL_RG, GL_UNSIGNED_BYTE, NULL);
+	glGenTextures(1, &dtex);
+	glBindTexture(GL_TEXTURE_2D, dtex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, portSize, portSize,
+		0, GL_RG, GL_UNSIGNED_BYTE, NULL);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, dtex, 0);
-		glBindTexture(GL_TEXTURE_2D, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, dtex, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glGenFramebuffers(1, &efbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, efbo);
@@ -69,15 +62,6 @@ GLGraph::GLGraph(Equation* e, bool gl42, int portSize) {
 }
 
 void GLGraph::calc(float up, float down, float left, float right, float time, float atime) {
-	glBindImageTexture(0, dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
-
-	calcShader->bind();
-	calcShader->setUniforms(up, down, left, right, time, atime);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-	calcShader->unbind();
-}
-
-void GLGraph::calc33(float up, float down, float left, float right, float time, float atime) {
 	glBindFramebuffer(GL_FRAMEBUFFER, dfbo);
     
     glClear(GL_COLOR_BUFFER_BIT);
@@ -162,7 +146,7 @@ String getNodeString(Node* node) {
 		if (name == "ln") {
 			result = "log(" + arg + ")";
 		} else if (name == "log") {
-			result = "(log(" + arg + ")/log(10))";
+			result = "(log(" + arg + ")/log(10.0))";
 		} else if (name == "cot") {
 			result = "(1/tan(" + arg + "))";
 		} else if (name == "csc") {

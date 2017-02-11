@@ -22,8 +22,6 @@ double g_right =  6;
 double g_down  = -6;
 double g_up    =  6;
 
-bool g_gl42 = false;
-
 int g_windowWidth = 600;
 int g_windowHeight = 600;
 
@@ -557,8 +555,6 @@ int main() {
 	GLFWimage* windowIcon = genIcon();
 
 	Window win("Grapher2D", 1000, 620, false, 1, windowIcon);
-
-	g_gl42 = false;// GLAD_GL_VERSION_4_2 == 1;
     
 	Renderer::init(&win);
 	
@@ -615,7 +611,7 @@ int main() {
 
 	GraphQuad::init();
     
-    GraphEdgeShader* edgeShader = new GraphEdgeShader(g_gl42, GRAPH_PORT_SIZE);
+    GraphEdgeShader* edgeShader = new GraphEdgeShader(GRAPH_PORT_SIZE);
 	GraphRenderShader* renderShader = new GraphRenderShader(GRAPH_PORT_SIZE);
 
     GLuint quadShader = getQuadShader();
@@ -679,52 +675,27 @@ int main() {
 		
 		float time = glfwGetTime();
 		
-		if (g_gl42) {
-			for (int i = 0; i < graphs.size(); i++) {
-				if (graphs[i] == NULL) {
-					continue;
-				}
-
-				graphs[i]->glg->calc(g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
+		for (int i = 0; i < graphs.size(); i++) {
+			if (graphs[i] == NULL) {
+				continue;
 			}
 
-			glDeleteSync(glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0));
-			
-			edgeShader->bind();
-            for (int i = 0; i < graphs.size(); i++) {
-                if (graphs[i] == NULL) {
-                    continue;
-                }
-				glBindFramebuffer(GL_FRAMEBUFFER, graphs[i]->glg->efbo);
-				glClear(GL_COLOR_BUFFER_BIT);
-                glBindImageTexture(0, graphs[i]->glg->dtex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
-                glDrawArrays(GL_TRIANGLES, 0, 6);
-            }
-            edgeShader->unbind();
-		} else {
-			for (int i = 0; i < graphs.size(); i++) {
-				if (graphs[i] == NULL) {
-					continue;
-				}
-
-				graphs[i]->glg->calc33(g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
-			}
-
-			edgeShader->bind();
-			for (int i = 0; i < graphs.size(); i++) {
-				if (graphs[i] == NULL) {
-					continue;
-				}
-
-				glBindFramebuffer(GL_FRAMEBUFFER, graphs[i]->glg->efbo);
-                glClear(GL_COLOR_BUFFER_BIT);
-				glBindTexture(GL_TEXTURE_2D, graphs[i]->glg->dtex);
-				glActiveTexture(GL_TEXTURE0);
-				glDrawArrays(GL_TRIANGLES, 0, 6);
-			}
-			edgeShader->unbind();
-			
+			graphs[i]->glg->calc(g_up, g_down, g_left, g_right, time - graphs[i]->startTime, time);
 		}
+
+		edgeShader->bind();
+		for (int i = 0; i < graphs.size(); i++) {
+			if (graphs[i] == NULL) {
+				continue;
+			}
+
+			glBindFramebuffer(GL_FRAMEBUFFER, graphs[i]->glg->efbo);
+            glClear(GL_COLOR_BUFFER_BIT);
+			glBindTexture(GL_TEXTURE_2D, graphs[i]->glg->dtex);
+			glActiveTexture(GL_TEXTURE0);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
+		edgeShader->unbind();
 		
 		glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
 
@@ -864,7 +835,7 @@ int main() {
 
 			graphs[index]->del = false;
 
-			graphs[index]->glg = new GLGraph(equation, g_gl42, GRAPH_PORT_SIZE);
+			graphs[index]->glg = new GLGraph(equation, GRAPH_PORT_SIZE);
 			graphs[index]->startTime = glfwGetTime();
 		} else {
 			std::string** chars = new std::string*[1];
