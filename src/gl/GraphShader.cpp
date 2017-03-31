@@ -73,12 +73,18 @@ static inline std::string getCalcFragSource(std::string eq) {
 	result += "void main(void) {\n";
 	result += "float x = coord.x;\n";
 	result += "float y = coord.y;\n";
-	result += "float total = " + eq + ";\n";
+	
+	result += "float result = " + eq + ";\n";
+	result += "float total = result;\n";
+
 	result += "y = 0;\n";
-	result += "float total0 = " + eq + ";\n";
+	result += "result = " + eq + ";\n";
+	result += "float total0 = result;\n";
 
 	result += "out_color = vec4(total, total0, 0.0, 1.0);\n";
 	result += "}\n";
+
+	std::cout << result << "\n";
 
 	return result;
 }

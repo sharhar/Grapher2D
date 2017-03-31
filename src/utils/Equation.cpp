@@ -256,6 +256,12 @@ void loadDefaults(Equation* e) {
 		return floor(input[0]);
 	};
 
+	Function* funcSigma = (Function*)malloc(sizeof(Function));
+	funcSigma->name = new String((char*)"sigma");
+	funcSigma->func = [](int len, double* input)->double {
+		return floor(input[0]);
+	};
+
 	e->addFunction(funcTan);
 	e->addFunction(funcSin);
 	e->addFunction(funcCos);
@@ -279,6 +285,7 @@ void loadDefaults(Equation* e) {
 	e->addFunction(funcSqrt);
 	e->addFunction(funcSign);
 	e->addFunction(funcFloor);
+	e->addFunction(funcSigma);
 
 	e->createVariable("e")->value = 2.718281828459045;
 	e->createVariable("pi")->value = 3.141592653589793;
@@ -317,7 +324,7 @@ String* Equation::parse() {
 	int tempType;
 	int lastType = 0;
 	String tempString;
-	for (int i = 0; i < m_string.length; i++) {
+	for (int i = 0; i < m_string.len; i++) {
 		char c = m_string[i];
 		if (c == ' ') {
 			continue;
@@ -377,8 +384,8 @@ String* Equation::parse() {
 
 	std::vector<Token*> stack;
 	for (Token* t : tempStack) {
-		if ((t->type == TK_TYPE_OPP || t->type == TK_TYPE_FOP || t->type == TK_TYPE_FCL || t->type == TK_TYPE_FSP) && t->value->length > 1) {
-			for (int i = 0; i < t->value->length; i++) {
+		if ((t->type == TK_TYPE_OPP || t->type == TK_TYPE_FOP || t->type == TK_TYPE_FCL || t->type == TK_TYPE_FSP) && t->value->len > 1) {
+			for (int i = 0; i < t->value->len; i++) {
 				Token* temp = (Token*)malloc(sizeof(Token));
 				temp->type = t->type;
 				String* value = new String(t->value->buff[0]);
@@ -400,7 +407,7 @@ String* Equation::parse() {
 		if (t->type == TK_TYPE_NUM) {
 			std::string tempString;
 			String val = *(t->value);
-			for (int i = 0; i < val.length; i++) {
+			for (int i = 0; i < val.len; i++) {
 				tempString.push_back(val.buff[i]);
 			}
 			std::string::size_type sz;

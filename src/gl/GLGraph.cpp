@@ -19,12 +19,14 @@ typedef struct Node {
 	void** value;
 } Node;
 
-String getNodeString(Node* node);
+void getNodeString(Node* node, String* pString, int pos);
 
 GLGraph::GLGraph(Equation* e, int portSize) {
-	String eqt = getNodeString((Node*)e->getRootNode());
+	String* eqt = new String("");
 
-	calcShader = new GraphCalcShader(eqt.getstdstring());
+	getNodeString((Node*)e->getRootNode(), eqt, 0);
+
+	calcShader = new GraphCalcShader(eqt->getstdstring());
 
 	glGenFramebuffers(1, &dfbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, dfbo);
@@ -80,94 +82,100 @@ void GLGraph::cleanUp() {
 	delete calcShader;
 }
 
-String getNodeString(Node* node) {
+void getNodeString(Node* node, String* pString, int pos) {
 	if (node->type == NODE_TYPE_ZRO) {
-		return (char*)"0";
-	}
-	else if (node->type == NODE_TYPE_NUM) {
-		return String(std::to_string(((double*)(node->value[0]))[0]));
-	}
-	else if (node->type == NODE_TYPE_VAR) {
+		pString->insert((char*)"0", pos);
+	} else if (node->type == NODE_TYPE_NUM) {
+		pString->insert(std::to_string(((double*)(node->value[0]))[0]), pos);
+	} else if (node->type == NODE_TYPE_VAR) {
 		Variable* var = (Variable*)node->value[0];
-		return *var->name;
-	}
-	else if (node->type == NODE_TYPE_OPP) {
+		pString->insert(*var->name, pos);
+	} else if (node->type == NODE_TYPE_OPP) {
 		Operator* op = (Operator*)node->value[1];
 		Node* prev = node->children[0];
 		Node* next = node->children[1];
 
-		String prevVal = getNodeString(prev);
-		String nextVal = getNodeString(next);
-
-		String result;
-
 		if (op->name == '+') {
-			result = "(" + prevVal + ")+(" + nextVal + ")";
+			pString->insert("()+()", pos);
+			getNodeString(next, pString, pos + 4);
+			getNodeString(prev, pString, pos + 1);
 		}
 		else if (op->name == '-') {
-			result = "(" + prevVal + ")-(" + nextVal + ")";
+			pString->insert("()-()", pos);
+			getNodeString(next, pString, pos + 4);
+			getNodeString(prev, pString, pos + 1);
 		}
 		else if (op->name == '*') {
-			result = "(" + prevVal + ")*(" + nextVal + ")";
+			pString->insert("()*()", pos);
+			getNodeString(next, pString, pos + 4);
+			getNodeString(prev, pString, pos + 1);
 		}
 		else if (op->name == '/') {
-			result = "(" + prevVal + ")/(" + nextVal + ")";
+			pString->insert("()/()", pos);
+			getNodeString(next, pString, pos + 4);
+			getNodeString(prev, pString, pos + 1);
 		}
 		else if (op->name == '=') {
-			result = "(" + prevVal + ")-(" + nextVal + ")";
+			pString->insert("()-()", pos);
+			getNodeString(next, pString, pos + 4);
+			getNodeString(prev, pString, pos + 1);
 		}
 		else if (op->name == '^') {
-			result = "pow_c(" + prevVal + "," + nextVal + ")";
+			pString->insert("pow_c(,)", pos);
+			getNodeString(next, pString, pos + 7);
+			getNodeString(prev, pString, pos + 6);
 		}
-		return result;
-	}
-	else if (node->type == NODE_TYPE_FFN) {
+		
+	} else if (node->type == NODE_TYPE_FFN) {
 		Function* func = (Function*)node->value[0];
 		if (func == NULL) {
-			return getNodeString(node->children[0]);
+			getNodeString(node->children[0], pString, pos);
+			return;
 		}
-
-		String* values = new String[node->childNum];
-
-		for (int i = 0; i < node->childNum; i++) {
-			values[i] = getNodeString(node->children[i]);
-		}
-
-		String arg = "";
-		for (int i = 0; i < node->childNum - 1; i++) {
-			arg = arg + values[i] + ",";
-		}
-
-		arg = arg + values[node->childNum - 1];
-
+		
 		String name = *func->name;
-		String result = "";
-
+		
 		if (name == "ln") {
-			result = "log(" + arg + ")";
+			pString->insert("log()", pos);
+			getNodeString(node->children[0], pString, pos + 4);
 		} else if (name == "log") {
-			result = "(log(" + arg + ")/log(10.0))";
+			pString->insert("(log()/log(10.0))", pos);
+			getNodeString(node->children[0], pString, pos + 5);
 		} else if (name == "cot") {
-			result = "(1/tan(" + arg + "))";
+			pString->insert("(1/tan())", pos);
+			getNodeString(node->children[0], pString, pos + 7);
 		} else if (name == "csc") {
-			result = "(1/sin(" + arg + "))";
+			pString->insert("(1/sin())", pos);
+			getNodeString(node->children[0], pString, pos + 7);
 		} else if (name == "sec") {
-			result = "(1/cos(" + arg + "))";
+			pString->insert("(1/cos())", pos);
+			getNodeString(node->children[0], pString, pos + 7);
 		} else if (name == "acot") {
-			result = "atan(1/(" + arg + "))";
+			pString->insert("atan(1/())", pos);
+			getNodeString(node->children[0], pString, pos + 8);
 		} else if (name == "acsc") {
-			result = "asin(1/(" + arg + "))";
+			pString->insert("asin(1/())", pos);
+			getNodeString(node->children[0], pString, pos + 8);
 		} else if (name == "asec") {
-			result = "acos(1/(" + arg + "))";
+			pString->insert("acos(1/())", pos);
+			getNodeString(node->children[0], pString, pos + 8);
 		} else if (name == "pow") {
-			result = "pow_c(" + arg + ")";
+			pString->insert("pow_c()", pos);
+			getNodeString(node->children[0], pString, pos + 6);
+		} else if (name == "min") {
+			pString->insert("min(,)", pos);
+			getNodeString(node->children[1], pString, pos + 5);
+			getNodeString(node->children[0], pString, pos + 4);
+		} else if (name == "max") {
+			pString->insert("max(,)", pos);
+			getNodeString(node->children[1], pString, pos + 5);
+			getNodeString(node->children[0], pString, pos + 4);
+		} else if (name == "sigma") {
+			pString->insert("()", pos);
+			getNodeString(node->children[0], pString, pos + 1);
+		} else {
+			pString->insert(name + "()", pos);
+			getNodeString(node->children[0], pString, pos + name.len + 1);
 		}
-		else {
-			result = name + "(" + arg + ")";
-		}
-
-		return result;
 	}
-
-	return "";
 }
