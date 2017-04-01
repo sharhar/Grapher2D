@@ -8,8 +8,9 @@
 class GLGraph {
 private:
 	GraphCalcShader* calcShader;
+	bool inited;
 public:
-	GLGraph(Equation* e, int portSize);
+	GLGraph(Equation* e, int portSize, String** error);
 
 	void calc(float up, float down, float left, float right, float time, float atime);
 	void cleanUp();

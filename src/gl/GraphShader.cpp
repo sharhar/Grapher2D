@@ -96,7 +96,7 @@ static inline std::string getCalcFragSource(std::string funcs, std::string eq) {
 	result += "out_color = vec4(total, total0, 0.0, 1.0);\n";
 	result += "}\n";
 
-	//std::cout << result << "\n";
+	std::cout << result << "\n";
 
 	return result;
 }

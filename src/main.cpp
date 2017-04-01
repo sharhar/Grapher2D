@@ -835,8 +835,38 @@ int main() {
 
 			graphs[index]->del = false;
 
-			graphs[index]->glg = new GLGraph(equation, GRAPH_PORT_SIZE);
+			String** pResult = new String*[1];
+			pResult[0] = NULL;
+
+			graphs[index]->glg = new GLGraph(equation, GRAPH_PORT_SIZE , pResult);
 			graphs[index]->startTime = glfwGetTime();
+
+			if (pResult[0] != NULL) {
+				std::string** chars = new std::string*[1];
+				chars[0] = new std::string("Ok");
+
+				std::string text = "Error parsing expression: \n" +
+					std::string(1, '"') + eq + std::string(1, '"') +
+					"\n\n" +
+					"Error: " + pResult[0]->getstdstring();
+
+				PopupDescriptor pDesc = {};
+				pDesc.width = 300;
+				pDesc.height = 200;
+				pDesc.title = new std::string("Parsing Error!");
+				pDesc.text = &text;
+				pDesc.btnNum = 1;
+				pDesc.btnText = chars;
+				pDesc.bodyTextStyle = &textStyle;
+				pDesc.buttonTextStyle = &popupButtonStyle;
+				pDesc.icon = windowIcon;
+				pDesc.iconNum = 1;
+
+				win.popup(pDesc, &theme);
+
+				delete result;
+				deleteGraph(index);
+			}
 		} else {
 			std::string** chars = new std::string*[1];
 			chars[0] = new std::string("Ok");
@@ -844,7 +874,7 @@ int main() {
 			std::string text = "Error parsing expression: \n" + 
 				std::string(1, '"') + eq + std::string(1, '"') + 
 				"\n\n" + 
-				"Error: " + (*result).getstdstring();
+				"Error: " + result->getstdstring();
 
 			PopupDescriptor pDesc = {};
 			pDesc.width = 300;

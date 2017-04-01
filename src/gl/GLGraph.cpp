@@ -19,14 +19,50 @@ typedef struct Node {
 	void** value;
 } Node;
 
-void getNodeString(Node* node, String* pString, String* pFuncsString, int pos, int* funcID);
+typedef struct VarNode {
+	String* name;
+	int id;
+	VarNode* next;
+};
 
-GLGraph::GLGraph(Equation* e, int portSize) {
+void getNodeString(Node* node, String* pString, String* pFuncsString, int pos, int* funcID, VarNode* currentVars, std::vector<String*>* pError);
+
+GLGraph::GLGraph(Equation* e, int portSize, String** error) {
+	inited = false;
+	
 	String* eqt = new String("");
 	String* funcs = new String("");
 	int funcNum = 0;
 
-	getNodeString((Node*)e->getRootNode(), eqt, funcs, 0, &funcNum);
+	std::vector<String*>* errors = new std::vector<String*>();
+
+	VarNode* tVarNode = (VarNode*)malloc(sizeof(VarNode));
+	tVarNode->name = new String("t");
+	tVarNode->id = 0;
+	tVarNode->next = NULL;
+
+	VarNode* atVarNode = (VarNode*)malloc(sizeof(VarNode));
+	atVarNode->name = new String("at");
+	atVarNode->id = 1;
+	atVarNode->next = tVarNode;
+
+	VarNode* xVarNode = (VarNode*)malloc(sizeof(VarNode));
+	xVarNode->name = new String("x");
+	xVarNode->id = 2;
+	xVarNode->next = atVarNode;
+
+	VarNode* yVarNode = (VarNode*)malloc(sizeof(VarNode));
+	yVarNode->name = new String("y");
+	yVarNode->id = 3;
+	yVarNode->next = xVarNode;
+
+	getNodeString((Node*)e->getRootNode(), eqt, funcs, 0, &funcNum, yVarNode, errors);
+
+	if (errors->size() != 0) {
+		String** errorsData = errors->data();
+		error[0] = errorsData[0];
+		return;
+	}
 
 	calcShader = new GraphCalcShader(funcs->getstdstring(), eqt->getstdstring());
 
@@ -63,6 +99,8 @@ GLGraph::GLGraph(Equation* e, int portSize) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	inited = true;
 }
 
 void GLGraph::calc(float up, float down, float left, float right, float time, float atime) {
@@ -77,21 +115,36 @@ void GLGraph::calc(float up, float down, float left, float right, float time, fl
 }
 
 void GLGraph::cleanUp() {
-	glDeleteTextures(1, &dtex);
-	glDeleteTextures(1, &etex);
+	if (inited) {
+		glDeleteTextures(1, &dtex);
+		glDeleteTextures(1, &etex);
 
-	calcShader->cleanUp();
-	delete calcShader;
+		calcShader->cleanUp();
+		delete calcShader;
+	}
 }
 
-void getNodeString(Node* node, String* pString, String* pFuncsString, int pos, int* funcID) {
+void getNodeString(Node* node, String* pString, String* pFuncsString, int pos, int* funcID, VarNode* currentVars, std::vector<String*>* pError) {
 	if (node->type == NODE_TYPE_ZRO) {
 		pString->insert((char*)"0", pos);
 	} else if (node->type == NODE_TYPE_NUM) {
 		pString->insert(std::to_string(((double*)(node->value[0]))[0]), pos);
 	} else if (node->type == NODE_TYPE_VAR) {
 		Variable* var = (Variable*)node->value[0];
-		pString->insert(*var->name, pos);
+		String variableName = *var->name;
+
+		VarNode* cVar = currentVars;
+		for (int i = 0; i < currentVars->id + 1;i++) {
+			if (cVar->name->equals(variableName)) {
+				pString->insert(variableName, pos);
+				return;
+			}
+
+			cVar = cVar->next;
+		}
+
+		pString->insert(variableName, pos);
+		pError->push_back(new String("Unkown Variable: " + variableName));
 	} else if (node->type == NODE_TYPE_OPP) {
 		Operator* op = (Operator*)node->value[1];
 		Node* prev = node->children[0];
@@ -99,40 +152,40 @@ void getNodeString(Node* node, String* pString, String* pFuncsString, int pos, i
 
 		if (op->name == '+') {
 			pString->insert("()+()", pos);
-			getNodeString(next, pString, pFuncsString, pos + 4, funcID);
-			getNodeString(prev, pString, pFuncsString, pos + 1, funcID);
+			getNodeString(next, pString, pFuncsString, pos + 4, funcID, currentVars, pError);
+			getNodeString(prev, pString, pFuncsString, pos + 1, funcID, currentVars, pError);
 		}
 		else if (op->name == '-') {
 			pString->insert("()-()", pos);
-			getNodeString(next, pString, pFuncsString, pos + 4, funcID);
-			getNodeString(prev, pString, pFuncsString, pos + 1, funcID);
+			getNodeString(next, pString, pFuncsString, pos + 4, funcID, currentVars, pError);
+			getNodeString(prev, pString, pFuncsString, pos + 1, funcID, currentVars, pError);
 		}
 		else if (op->name == '*') {
 			pString->insert("()*()", pos);
-			getNodeString(next, pString, pFuncsString, pos + 4, funcID);
-			getNodeString(prev, pString, pFuncsString, pos + 1, funcID);
+			getNodeString(next, pString, pFuncsString, pos + 4, funcID, currentVars, pError);
+			getNodeString(prev, pString, pFuncsString, pos + 1, funcID, currentVars, pError);
 		}
 		else if (op->name == '/') {
 			pString->insert("()/()", pos);
-			getNodeString(next, pString, pFuncsString, pos + 4, funcID);
-			getNodeString(prev, pString, pFuncsString, pos + 1, funcID);
+			getNodeString(next, pString, pFuncsString, pos + 4, funcID, currentVars, pError);
+			getNodeString(prev, pString, pFuncsString, pos + 1, funcID, currentVars, pError);
 		}
 		else if (op->name == '=') {
 			pString->insert("()-()", pos);
-			getNodeString(next, pString, pFuncsString, pos + 4, funcID);
-			getNodeString(prev, pString, pFuncsString, pos + 1, funcID);
+			getNodeString(next, pString, pFuncsString, pos + 4, funcID, currentVars, pError);
+			getNodeString(prev, pString, pFuncsString, pos + 1, funcID, currentVars, pError);
 		}
 		else if (op->name == '^') {
 			pString->insert("pow_c(,)", pos);
-			getNodeString(next, pString, pFuncsString, pos + 7, funcID);
-			getNodeString(prev, pString, pFuncsString, pos + 6, funcID);
+			getNodeString(next, pString, pFuncsString, pos + 7, funcID, currentVars, pError);
+			getNodeString(prev, pString, pFuncsString, pos + 6, funcID, currentVars, pError);
 		}
 		
 	}
 	else if (node->type == NODE_TYPE_FFN) {
 		Function* func = (Function*)node->value[0];
 		if (func == NULL) {
-			getNodeString(node->children[0], pString, pFuncsString, pos, funcID);
+			getNodeString(node->children[0], pString, pFuncsString, pos, funcID, currentVars, pError);
 			return;
 		}
 
@@ -140,49 +193,49 @@ void getNodeString(Node* node, String* pString, String* pFuncsString, int pos, i
 
 		if (name == "ln") {
 			pString->insert("log()", pos);
-			getNodeString(node->children[0], pString, pFuncsString, pos + 4, funcID);
+			getNodeString(node->children[0], pString, pFuncsString, pos + 4, funcID, currentVars, pError);
 		}
 		else if (name == "log") {
 			pString->insert("(log()/log(10.0))", pos);
-			getNodeString(node->children[0], pString, pFuncsString, pos + 5, funcID);
+			getNodeString(node->children[0], pString, pFuncsString, pos + 5, funcID, currentVars, pError);
 		}
 		else if (name == "cot") {
 			pString->insert("(1/tan())", pos);
-			getNodeString(node->children[0], pString, pFuncsString, pos + 7, funcID);
+			getNodeString(node->children[0], pString, pFuncsString, pos + 7, funcID, currentVars, pError);
 		}
 		else if (name == "csc") {
 			pString->insert("(1/sin())", pos);
-			getNodeString(node->children[0], pString, pFuncsString, pos + 7, funcID);
+			getNodeString(node->children[0], pString, pFuncsString, pos + 7, funcID, currentVars, pError);
 		}
 		else if (name == "sec") {
 			pString->insert("(1/cos())", pos);
-			getNodeString(node->children[0], pString, pFuncsString, pos + 7, funcID);
+			getNodeString(node->children[0], pString, pFuncsString, pos + 7, funcID, currentVars, pError);
 		}
 		else if (name == "acot") {
 			pString->insert("atan(1/())", pos);
-			getNodeString(node->children[0], pString, pFuncsString, pos + 8, funcID);
+			getNodeString(node->children[0], pString, pFuncsString, pos + 8, funcID, currentVars, pError);
 		}
 		else if (name == "acsc") {
 			pString->insert("asin(1/())", pos);
-			getNodeString(node->children[0], pString, pFuncsString, pos + 8, funcID);
+			getNodeString(node->children[0], pString, pFuncsString, pos + 8, funcID, currentVars, pError);
 		}
 		else if (name == "asec") {
 			pString->insert("acos(1/())", pos);
-			getNodeString(node->children[0], pString, pFuncsString, pos + 8, funcID);
+			getNodeString(node->children[0], pString, pFuncsString, pos + 8, funcID, currentVars, pError);
 		}
 		else if (name == "pow") {
 			pString->insert("pow_c()", pos);
-			getNodeString(node->children[0], pString, pFuncsString, pos + 6, funcID);
+			getNodeString(node->children[0], pString, pFuncsString, pos + 6, funcID, currentVars, pError);
 		}
 		else if (name == "min") {
 			pString->insert("min(,)", pos);
-			getNodeString(node->children[1], pString, pFuncsString, pos + 5, funcID);
-			getNodeString(node->children[0], pString, pFuncsString, pos + 4, funcID);
+			getNodeString(node->children[1], pString, pFuncsString, pos + 5, funcID, currentVars, pError);
+			getNodeString(node->children[0], pString, pFuncsString, pos + 4, funcID, currentVars, pError);
 		}
 		else if (name == "max") {
 			pString->insert("max(,)", pos);
-			getNodeString(node->children[1], pString, pFuncsString, pos + 5, funcID);
-			getNodeString(node->children[0], pString, pFuncsString, pos + 4, funcID);
+			getNodeString(node->children[1], pString, pFuncsString, pos + 5, funcID, currentVars, pError);
+			getNodeString(node->children[0], pString, pFuncsString, pos + 4, funcID, currentVars, pError);
 		}
 		else if (name == "sigma") {
 			std::string addFunctionName = "custom_math_func_" + std::to_string(*funcID);
@@ -193,9 +246,21 @@ void getNodeString(Node* node, String* pString, String* pFuncsString, int pos, i
 
 			String* tempFuncString = new String("");
 
-			getNodeString(node->children[0], incrementName, tempFuncString, 0, funcID);
-			getNodeString(node->children[1], incrementStart, tempFuncString, 0, funcID);
-			getNodeString(node->children[2], incrementEnd, tempFuncString, 0, funcID);
+			if (node->children[0]->type == NODE_TYPE_VAR) {
+				Variable* var = (Variable*)node->children[0]->value[0];
+				incrementName->insert(*var->name, 0);
+			} else {
+				pError->push_back(new String("Increment argument of sigma function was not a variable!"));
+				return;
+			}
+
+			VarNode* tempVarNode = (VarNode*)malloc(sizeof(VarNode));
+			tempVarNode->name = incrementName;
+			tempVarNode->id = currentVars->id + 1;
+			tempVarNode->next = currentVars;
+
+			getNodeString(node->children[1], incrementStart, tempFuncString, 0, funcID, tempVarNode, pError);
+			getNodeString(node->children[2], incrementEnd, tempFuncString, 0, funcID, tempVarNode, pError);
 
 			std::string addFunctionStringPre = "";
 			addFunctionStringPre += "float " + addFunctionName + "(float x, float y) {\n";
@@ -217,13 +282,13 @@ void getNodeString(Node* node, String* pString, String* pFuncsString, int pos, i
 			*funcID = *funcID + 1;
 
 			pFuncsString->insert(addFunctionStringPre + addFunctionStringPost, 0);
-			getNodeString(node->children[3], pFuncsString, tempFuncString, addFunctionStringPre.size(), funcID);
+			getNodeString(node->children[3], pFuncsString, tempFuncString, addFunctionStringPre.size(), funcID, tempVarNode, pError);
 			pFuncsString->insert(*tempFuncString, 0);
 
 			pString->insert(addFunctionName + "(x, y)", pos);
 		} else {
 			pString->insert(name + "()", pos);
-			getNodeString(node->children[0], pString, pFuncsString, pos + name.len + 1, funcID);
+			getNodeString(node->children[0], pString, pFuncsString, pos + name.len + 1, funcID, currentVars, pError);
 		}
 	}
 }
