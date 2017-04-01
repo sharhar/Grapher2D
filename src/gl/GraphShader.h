@@ -14,7 +14,7 @@ private:
 public:
 	bool compiled;
 
-	GraphCalcShader(std::string eq);
+	GraphCalcShader(std::string funcs, std::string eq);
 
 	void bind();
 	void unbind();

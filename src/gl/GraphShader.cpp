@@ -27,7 +27,7 @@ static inline std::string getCalcVertSource() {
 	return result;
 }
 
-static inline std::string getCalcFragSource(std::string eq) {
+static inline std::string getCalcFragSource(std::string funcs, std::string eq) {
 	std::string result = "";
 
 	result += "#version 330 core\n";
@@ -50,6 +50,16 @@ static inline std::string getCalcFragSource(std::string eq) {
 	result += "return sign(b)*pow(abs(b), p);";
 	result += "}\n";
 
+	result += "float fact(float num) {";
+	result += "float result = 1;";
+
+	result += "for(float i = 2; i <= num; i++) {";
+	result += "result *= i;";
+	result += "}";
+
+	result += "return result;";
+	result += "}\n";
+
 	result += "float pow_c(float b, float p) {\n";
 
 	result += "int pi = int(p);";
@@ -70,6 +80,8 @@ static inline std::string getCalcFragSource(std::string eq) {
 
 	result += "}\n";
 
+	result += funcs;
+
 	result += "void main(void) {\n";
 	result += "float x = coord.x;\n";
 	result += "float y = coord.y;\n";
@@ -84,18 +96,17 @@ static inline std::string getCalcFragSource(std::string eq) {
 	result += "out_color = vec4(total, total0, 0.0, 1.0);\n";
 	result += "}\n";
 
-	std::cout << result << "\n";
+	//std::cout << result << "\n";
 
 	return result;
 }
 
-GraphCalcShader::GraphCalcShader(std::string eq) {
-	
+GraphCalcShader::GraphCalcShader(std::string funcs, std::string eq) {
 	std::string vertSource;
 	std::string fragSource;
 
 	vertSource = getCalcVertSource();
-	fragSource = getCalcFragSource(eq);
+	fragSource = getCalcFragSource(funcs, eq);
 
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);

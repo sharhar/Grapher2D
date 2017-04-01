@@ -262,6 +262,18 @@ void loadDefaults(Equation* e) {
 		return floor(input[0]);
 	};
 
+	Function* funcFact = (Function*)malloc(sizeof(Function));
+	funcFact->name = new String((char*)"fact");
+	funcFact->func = [](int len, double* input)->double {
+		return floor(input[0]);
+	};
+
+	Function* funcPI = (Function*)malloc(sizeof(Function));
+	funcPI->name = new String((char*)"PI");
+	funcPI->func = [](int len, double* input)->double {
+		return floor(input[0]);
+	};
+
 	e->addFunction(funcTan);
 	e->addFunction(funcSin);
 	e->addFunction(funcCos);
@@ -286,6 +298,8 @@ void loadDefaults(Equation* e) {
 	e->addFunction(funcSign);
 	e->addFunction(funcFloor);
 	e->addFunction(funcSigma);
+	e->addFunction(funcFact);
+	e->addFunction(funcPI);
 
 	e->createVariable("e")->value = 2.718281828459045;
 	e->createVariable("pi")->value = 3.141592653589793;
@@ -483,7 +497,8 @@ String* Equation::parse() {
 				}
 
 				if (tempNode->value[0] == NULL) {
-					return new String("Unknown variable: " + *t->value);
+					tempNode->value[0] = createVariable(*t->value);
+					//return new String("Unknown variable: " + *t->value);
 				}
 
 				unsortedNodes.push_back(tempNode);
@@ -523,7 +538,8 @@ String* Equation::parse() {
 				}
 
 				if (tempNode->value[0] == NULL) {
-					return new String("Unknown variable: " + *t->value);
+					tempNode->value[0] = createVariable(*t->value);
+					//return new String("Unknown variable: " + *t->value);
 				}
 
 				unsortedNodes.push_back(tempNode);
