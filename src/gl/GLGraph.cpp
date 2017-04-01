@@ -36,24 +36,39 @@ GLGraph::GLGraph(Equation* e, int portSize, String** error) {
 
 	std::vector<String*>* errors = new std::vector<String*>();
 
+	VarNode* piVarNode = (VarNode*)malloc(sizeof(VarNode));
+	piVarNode->name = new String("pi");
+	piVarNode->id = 0;
+	piVarNode->next = NULL;
+
+	VarNode* tauVarNode = (VarNode*)malloc(sizeof(VarNode));
+	tauVarNode->name = new String("tau");
+	tauVarNode->id = 1;
+	tauVarNode->next = piVarNode;
+
+	VarNode* eVarNode = (VarNode*)malloc(sizeof(VarNode));
+	eVarNode->name = new String("e");
+	eVarNode->id = 2;
+	eVarNode->next = tauVarNode;
+
 	VarNode* tVarNode = (VarNode*)malloc(sizeof(VarNode));
 	tVarNode->name = new String("t");
-	tVarNode->id = 0;
-	tVarNode->next = NULL;
+	tVarNode->id = 3;
+	tVarNode->next = eVarNode;
 
 	VarNode* atVarNode = (VarNode*)malloc(sizeof(VarNode));
 	atVarNode->name = new String("at");
-	atVarNode->id = 1;
+	atVarNode->id = 4;
 	atVarNode->next = tVarNode;
 
 	VarNode* xVarNode = (VarNode*)malloc(sizeof(VarNode));
 	xVarNode->name = new String("x");
-	xVarNode->id = 2;
+	xVarNode->id = 5;
 	xVarNode->next = atVarNode;
 
 	VarNode* yVarNode = (VarNode*)malloc(sizeof(VarNode));
 	yVarNode->name = new String("y");
-	yVarNode->id = 3;
+	yVarNode->id = 6;
 	yVarNode->next = xVarNode;
 
 	getNodeString((Node*)e->getRootNode(), eqt, funcs, 0, &funcNum, yVarNode, errors);
@@ -266,7 +281,7 @@ void getNodeString(Node* node, String* pString, String* pFuncsString, int pos, i
 			std::string addVarCall = "";
 
 			VarNode* cVar = currentVars;
-			for (int i = 0; i < currentVars->id - 3; i++) {
+			for (int i = 0; i < currentVars->id - 6; i++) {
 				addVarArgs += ", float " + cVar->name->getstdstring();
 				addVarCall += ", " + cVar->name->getstdstring();
 
@@ -299,10 +314,83 @@ void getNodeString(Node* node, String* pString, String* pFuncsString, int pos, i
 			pString->insert(addFunctionName + "(x, y" + addVarCall + ")", pos);
 		}
 		else if (name == "integral") {
-			pString->insert("integral(,,)", pos);
-			getNodeString(node->children[2], pString, pFuncsString, pos + 11, funcID, currentVars, pError);
-			getNodeString(node->children[1], pString, pFuncsString, pos + 10, funcID, currentVars, pError);
-			getNodeString(node->children[0], pString, pFuncsString, pos + 9, funcID, currentVars, pError);
+			std::string addFunctionName = "custom_math_func_" + std::to_string(*funcID);
+
+			String* integrationVar = new String("");
+			String* integrationStart = new String("");
+			String* integrationEnd = new String("");
+			String* integrationDivisions = new String("");
+
+			String* tempFuncString = new String("");
+
+			if (node->children[0]->type == NODE_TYPE_VAR) {
+				Variable* var = (Variable*)node->children[0]->value[0];
+				integrationVar->insert(*var->name, 0);
+			}
+			else {
+				pError->push_back(new String("Increment argument of sigma function was not a variable!"));
+				return;
+			}
+
+			VarNode* tempVarNode = (VarNode*)malloc(sizeof(VarNode));
+			tempVarNode->name = integrationVar;
+			tempVarNode->id = currentVars->id + 1;
+			tempVarNode->next = currentVars;
+
+			getNodeString(node->children[1], integrationStart, tempFuncString, 0, funcID, currentVars, pError);
+			getNodeString(node->children[2], integrationEnd, tempFuncString, 0, funcID, currentVars, pError);
+			getNodeString(node->children[3], integrationDivisions, tempFuncString, 0, funcID, currentVars, pError);
+
+			std::string addVarArgs = "";
+			std::string addVarCall = "";
+
+			VarNode* cVar = currentVars;
+			for (int i = 0; i < currentVars->id - 6; i++) {
+				addVarArgs += ", float " + cVar->name->getstdstring();
+				addVarCall += ", " + cVar->name->getstdstring();
+
+				cVar = cVar->next;
+			}
+
+			*funcID = *funcID + 1;
+
+			String* pFuncName = new String("");
+
+			getNodeString(node->children[4], pFuncName, tempFuncString, 0, funcID, tempVarNode, pError);
+
+			std::string addFunctionString = "";
+			addFunctionString += "float " + addFunctionName + "(float x, float y" + addVarArgs + ") {\n";
+			
+			addFunctionString += "float result0_ = 0;\n";
+			addFunctionString += "float result1_ = 0;\n";
+
+			addFunctionString += "float a_ = " + integrationStart->getstdstring() + ";\n";
+			addFunctionString += "float b_ = " + integrationEnd->getstdstring() + ";\n";
+			addFunctionString += "float n_ = " + integrationDivisions->getstdstring() + ";\n";
+
+			addFunctionString += "float dx_ = (b_ - a_)/n_;\n";
+
+			addFunctionString += "float " + integrationVar->getstdstring() + " = a_;\n";
+
+			addFunctionString += "result0_ += " + pFuncName->getstdstring() + ";\n";
+			
+			addFunctionString += integrationVar->getstdstring() + " = b_;\n";
+
+			addFunctionString += "result0_ += " + pFuncName->getstdstring() + ";\n";
+
+			addFunctionString += "for(float k_ = 1; k_ < n_; k_++) {\n";
+			addFunctionString += integrationVar->getstdstring() + " = a_+(k_*dx_);\n";
+			addFunctionString += "result1_ += 2*" + pFuncName->getstdstring() + ";\n";
+			addFunctionString += "}\n";
+
+			addFunctionString += "return (dx_/2)*(result0_ + result1_);;\n";
+
+			addFunctionString += "\n}\n";
+
+			pFuncsString->insert(addFunctionString, 0);
+			pFuncsString->insert(*tempFuncString, 0);
+
+			pString->insert(addFunctionName + "(x, y" + addVarCall + ")", pos);
 		}
 		else {
 			pString->insert(name + "()", pos);

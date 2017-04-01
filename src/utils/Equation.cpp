@@ -280,6 +280,12 @@ void loadDefaults(Equation* e) {
 		return floor(input[0]);
 	};
 
+	Function* funcGamma = (Function*)malloc(sizeof(Function));
+	funcGamma->name = new String((char*)"gamma");
+	funcGamma->func = [](int len, double* input)->double {
+		return floor(input[0]);
+	};
+
 	e->addFunction(funcTan);
 	e->addFunction(funcSin);
 	e->addFunction(funcCos);
@@ -307,6 +313,7 @@ void loadDefaults(Equation* e) {
 	e->addFunction(funcFact);
 	e->addFunction(funcPI);
 	e->addFunction(funcIntegral);
+	e->addFunction(funcGamma);
 
 	e->createVariable("e")->value = 2.718281828459045;
 	e->createVariable("pi")->value = 3.141592653589793;

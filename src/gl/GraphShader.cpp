@@ -60,23 +60,6 @@ static inline std::string getCalcFragSource(std::string funcs, std::string eq) {
 	result += "return result;";
 	result += "}\n";
 
-	result += "float integral(float a, float b, float n) {\n";
-	result += "float result0 = 0;\n";
-	result += "float result1 = 0;\n";
-
-	result += "float dx = (b - a)/n;\n";
-
-	result += "result0 += sin(a) + sin(b);\n";
-
-	result += "for(float k = 1; k < n; k++) {\n";
-	result += "result1 += 2*sin(a+(k*dx));\n";
-	result += "}\n";
-
-	result += "float result = (dx/2)*(result0 + result1);\n";
-
-	result += "return result;\n";
-	result += "}\n";
-
 	result += "float pow_c(float b, float p) {\n";
 
 	result += "int pi = int(p);";
@@ -97,6 +80,35 @@ static inline std::string getCalcFragSource(std::string funcs, std::string eq) {
 
 	result += "}\n";
 
+	result += "float gamma(float x) {\n";
+
+	result += "float num = x+1;\n";
+
+	result += "float result0_ = 0;\n";
+	result += "float result1_ = 0;\n";
+
+	result += "float a_ = 0;\n";
+	result += "float b_ = num*25;\n";
+	result += "float n_ = 250;\n";
+
+	result += "float dx_ = (b_ - a_)/n_;\n";
+
+	result += "float h = a_;\n";
+
+	result += "result0_ += pow_c(h, (num-1))*exp(-h);\n";
+
+	result += "h = b_;\n";
+
+	result += "result0_ += pow_c(h, (num-1))*exp(-h);\n";
+
+	result += "for(float k_ = 1; k_ < n_; k_++) {\n";
+	result += "h = a_+(k_*dx_);\n";
+	result += "result1_ += 2*pow_c(h, (num-1))*exp(-h);\n";
+	result += "}\n";
+
+	result += "return (dx_/2)*(result0_ + result1_)/x;\n";
+	result += "\n}\n";
+
 	result += funcs;
 
 	result += "void main(void) {\n";
@@ -113,7 +125,7 @@ static inline std::string getCalcFragSource(std::string funcs, std::string eq) {
 	result += "out_color = vec4(total, total0, 0.0, 1.0);\n";
 	result += "}\n";
 
-	std::cout << result << "\n";
+	//std::cout << result << "\n";
 
 	return result;
 }
@@ -637,4 +649,3 @@ void GraphRenderShader::cleanUp() {
 	glDeleteShader(fragmentShader);
 	glDeleteProgram(shaderProgram);
 }
-
