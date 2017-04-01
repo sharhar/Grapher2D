@@ -60,6 +60,23 @@ static inline std::string getCalcFragSource(std::string funcs, std::string eq) {
 	result += "return result;";
 	result += "}\n";
 
+	result += "float integral(float a, float b, float n) {\n";
+	result += "float result0 = 0;\n";
+	result += "float result1 = 0;\n";
+
+	result += "float dx = (b - a)/n;\n";
+
+	result += "result0 += sin(a) + sin(b);\n";
+
+	result += "for(float k = 1; k < n; k++) {\n";
+	result += "result1 += 2*sin(a+(k*dx));\n";
+	result += "}\n";
+
+	result += "float result = (dx/2)*(result0 + result1);\n";
+
+	result += "return result;\n";
+	result += "}\n";
+
 	result += "float pow_c(float b, float p) {\n";
 
 	result += "int pi = int(p);";

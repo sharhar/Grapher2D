@@ -274,6 +274,12 @@ void loadDefaults(Equation* e) {
 		return floor(input[0]);
 	};
 
+	Function* funcIntegral = (Function*)malloc(sizeof(Function));
+	funcIntegral->name = new String((char*)"integral");
+	funcIntegral->func = [](int len, double* input)->double {
+		return floor(input[0]);
+	};
+
 	e->addFunction(funcTan);
 	e->addFunction(funcSin);
 	e->addFunction(funcCos);
@@ -300,6 +306,7 @@ void loadDefaults(Equation* e) {
 	e->addFunction(funcSigma);
 	e->addFunction(funcFact);
 	e->addFunction(funcPI);
+	e->addFunction(funcIntegral);
 
 	e->createVariable("e")->value = 2.718281828459045;
 	e->createVariable("pi")->value = 3.141592653589793;

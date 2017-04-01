@@ -297,7 +297,14 @@ void getNodeString(Node* node, String* pString, String* pFuncsString, int pos, i
 			pFuncsString->insert(*tempFuncString, 0);
 
 			pString->insert(addFunctionName + "(x, y" + addVarCall + ")", pos);
-		} else {
+		}
+		else if (name == "integral") {
+			pString->insert("integral(,,)", pos);
+			getNodeString(node->children[2], pString, pFuncsString, pos + 11, funcID, currentVars, pError);
+			getNodeString(node->children[1], pString, pFuncsString, pos + 10, funcID, currentVars, pError);
+			getNodeString(node->children[0], pString, pFuncsString, pos + 9, funcID, currentVars, pError);
+		}
+		else {
 			pString->insert(name + "()", pos);
 			getNodeString(node->children[0], pString, pFuncsString, pos + name.len + 1, funcID, currentVars, pError);
 		}
