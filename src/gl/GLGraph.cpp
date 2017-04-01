@@ -261,9 +261,20 @@ void getNodeString(Node* node, String* pString, String* pFuncsString, int pos, i
 
 			getNodeString(node->children[1], incrementStart, tempFuncString, 0, funcID, tempVarNode, pError);
 			getNodeString(node->children[2], incrementEnd, tempFuncString, 0, funcID, tempVarNode, pError);
+			
+			std::string addVarArgs = "";
+			std::string addVarCall = "";
+
+			VarNode* cVar = currentVars;
+			for (int i = 0; i < currentVars->id - 3; i++) {
+				addVarArgs += ", float " + cVar->name->getstdstring();
+				addVarCall += ", " + cVar->name->getstdstring();
+
+				cVar = cVar->next;
+			}
 
 			std::string addFunctionStringPre = "";
-			addFunctionStringPre += "float " + addFunctionName + "(float x, float y) {\n";
+			addFunctionStringPre += "float " + addFunctionName + "(float x, float y" + addVarArgs + ") {\n";
 			addFunctionStringPre += "float result = 0;\n";
 			addFunctionStringPre += "for(float "
 				+ incrementName->getstdstring() + " = "
@@ -285,7 +296,7 @@ void getNodeString(Node* node, String* pString, String* pFuncsString, int pos, i
 			getNodeString(node->children[3], pFuncsString, tempFuncString, addFunctionStringPre.size(), funcID, tempVarNode, pError);
 			pFuncsString->insert(*tempFuncString, 0);
 
-			pString->insert(addFunctionName + "(x, y)", pos);
+			pString->insert(addFunctionName + "(x, y" + addVarCall + ")", pos);
 		} else {
 			pString->insert(name + "()", pos);
 			getNodeString(node->children[0], pString, pFuncsString, pos + name.len + 1, funcID, currentVars, pError);
