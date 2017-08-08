@@ -1,0 +1,4 @@
+[submodule "SWin"]
+	path = SWin
+	url = https://github.com/sharhar/SWin.git
+	branch = master
