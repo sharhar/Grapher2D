@@ -1,6 +1,10 @@
 #include <swin/SWin.h>
 #include <glad/glad.h>
+#ifndef __APPLE__
 #include <malloc.h>
+#else
+void* malloc(size_t);
+#endif
 
 typedef struct Entry {
 	STextField* textField;
