@@ -1,7 +1,7 @@
-#include <swin/SWin.h>
-#include <glad/glad.h>
+#include "stdhdr.h"
 #include "utils.h"
 #include "equation.h"
+#include "glUtils.h"
 #include <stdio.h>
 
 void* malloc(size_t);
@@ -15,6 +15,7 @@ typedef struct Entry {
 	SButton* submitButton;
 	SButton* deleteButton;
 
+	int ID;
 	struct Entry* next;
 } Entry;
 
@@ -44,15 +45,20 @@ Color g_colors[COLOR_NUM];
 GLuint g_gtex;
 GLuint g_fbo;
 
-void submitCallback(Entry* entry) {
-	printf("%s\n", swGetTextFromTextField(entry->textField));
+inline double abs_c(double n1) {
+	return n1 > 0 ? n1 : -(n1);
 }
 
-void createEntry(UIState* uiState) {
+void submitCallback(Entry* entry) {
+	printf("%d: %s\n", entry->ID, swGetTextFromTextField(entry->textField));
+}
+
+void createEntry(UIState* uiState, int ID) {
 	Entry* entry = malloc(sizeof(Entry));
 	entry->textField = swCreateTextField(uiState->rootView, swMakeRect(10, 580 - uiState->y * 40, 285, 30), "");
 	entry->submitButton = swCreateButton(uiState->rootView, swMakeRect(305, 580 - uiState->y * 40, 75, 30), "Submit", &submitCallback, entry);
 	entry->deleteButton = NULL;
+	entry->ID = ID;
 	entry->next = NULL;
 
 	if (uiState->first) {
@@ -65,6 +71,94 @@ void createEntry(UIState* uiState) {
 	}
 
 	uiState->y++;
+}
+
+void drawAxes(float* modelMat, GLuint modelLoc, int width, int height) {
+	double l = abs_c(g_left);
+	double r = abs_c(g_right);
+
+	double xoff = (l / (r + l))* width;
+
+	if (g_left < 0 && g_right > 0) {
+		getModelviewMatrix(modelMat, xoff, 300, 1, 600);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMat);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+	}
+
+	double d = abs_c(g_down);
+	double u = abs_c(g_up);
+
+	double yoff = (d / (u + d))* height;
+
+	if (g_up > 0 && g_down < 0) {
+		getModelviewMatrix(modelMat, 300, yoff, 600, 1);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMat);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+	}
+}
+
+void drawGrid(float* modelMat, GLuint modelLoc, double xl, double xr, double yd, double yu, int width, int height) {
+	double xratio = width / (xr - xl);
+
+	double xlen = xr - xl;
+	double xlog = log10(xlen);
+	double xfloor = floor(xlog);
+	double xmag = pow(10, xfloor);
+
+	if (floor(xlog - 0.25) < xfloor) {
+		xmag /= 2;
+	}
+
+	if (floor(xlog - 0.5) < xfloor) {
+		xmag /= 2;
+	}
+
+	double xlr = round(xl / xmag)*xmag;
+	double xrr = round(xr / xmag)*xmag;
+
+	double xNum = (xrr - xlr) / xmag;
+	for (int i = 0; i < xNum + 1;i++) {
+		double tx = (xlr - xl + xmag*i)*xratio;
+
+		if (tx  < 0 || tx > width) {
+			continue;
+		}
+
+		getModelviewMatrix(modelMat, tx, 300, 0.25f, 600);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMat);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+	}
+
+	double yratio = height / (yu - yd);
+
+	double ylen = yu - yd;
+	double ylog = log10(ylen);
+	double yfloor = floor(ylog);
+	double ymag = pow(10, yfloor);
+
+	if (floor(ylog - 0.25) < yfloor) {
+		ymag /= 2;
+	}
+
+	if (floor(ylog - 0.5) < yfloor) {
+		ymag /= 2;
+	}
+
+	double ylr = round(yd / ymag)*ymag;
+	double yrr = round(yu / ymag)*ymag;
+
+	double yNum = (yrr - ylr) / ymag;
+
+	for (int i = 0; i < yNum * 2; i++) {
+		double ty = (ylr - yd + ymag*i)*yratio;
+
+		if (ty < 0 || ty > height) {
+			continue;
+		}
+		getModelviewMatrix(modelMat, 300, ty, 600, 0.25f);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMat);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+	}
 }
 
 int main() {
@@ -86,25 +180,13 @@ int main() {
 	state->first = 1;
 	state->rootView = rootView;
 
-	createEntry(state);
-	createEntry(state);
-	createEntry(state);
-	createEntry(state);
-	createEntry(state);
-	createEntry(state);
-	createEntry(state);
-	createEntry(state);
-	createEntry(state);
-	createEntry(state);
-	createEntry(state);
-	createEntry(state);
-	createEntry(state);
-	createEntry(state);
-	createEntry(state);
+	for (int i = 0; i < 15; i++) {
+		createEntry(state, i);
+	}
 
 	ParsingInfo* parseInfo = eqGetDefaultParseInfo();
 	
-	char* eq = "cos(sin(x)) + y = y*x";
+	char* eq = "integral(n, 0, 1, 10, sigma(k, 0, 10, n*k))";
 	char* error = NULL;
 
 	char* ffeq = "";
@@ -112,7 +194,7 @@ int main() {
 	
 	eqConvert(parseInfo, eq, &feq, &ffeq, &error);
 
-	printf("eq    = %s\nfeq   = %s\nffeq  = %s\nerror = %s\n", eq, feq, ffeq, error);
+	//printf("eq    = %s\nfeq   = %s\nffeq  = %s\nerror = %s\n", eq, feq, ffeq, error);
 
 	swMakeContextCurrent(glView);
 
@@ -123,10 +205,40 @@ int main() {
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
+	GLMesh* quad = createQuadMesh();
+	GLShader* quadShader = createQuadShader();
+	GLShader* lineShader = createLineShader();
+
+	float* lineModel = malloc(sizeof(float) * 16);
+	getModelviewMatrix(lineModel, 0, 0, 1, 1);
+
+	float* lineProj = malloc(sizeof(float) * 16);
+	getOrthoMatrix(lineProj, 0, 600, 0, 600, -1, 1);
+
+	glUseProgram(lineShader->program);
+
+	glUniformMatrix4fv(lineShader->uniformLocs[0], 1, GL_FALSE, lineProj);
+	glUniformMatrix4fv(lineShader->uniformLocs[1], 1, GL_FALSE, lineModel);
+
+	glUseProgram(0);
+
 	while (!swCloseRequested(window)) {
 		swPollEvents();
 
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		glBindVertexArray(quad->vao);
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+
+		glUseProgram(lineShader->program);
+
+		glUniform3f(lineShader->uniformLocs[2], 0.45f, 0.45f, 0.45f);
+		drawGrid(lineModel, lineShader->uniformLocs[1], g_left, g_right, g_down, g_up, 600, 600);
+		glUniform3f(lineShader->uniformLocs[2], 0, 0, 0);
+		drawAxes(lineModel, lineShader->uniformLocs[1], 600, 600);
+
+		//glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		swSwapBufers(glView);
 		swDraw(window);
