@@ -244,10 +244,14 @@ Node* parseSimpleExpression(Node** nodes, int nodeLength, char** error) {
 						prev->type = NODE_TYPE_ZRO;
 					}
 					else {
+						if (*error != NULL) {
+							return NULL;
+						}
+
 						char* prefix = "Left side of operator '";
 						char* sufix = "' is blank";
 
-						int totalLength = strlen(prefix) + 1 + strlen(sufix);
+						int totalLength = strlen(prefix) + strlen(node->value) + strlen(sufix);
 
 						char* finalError = malloc_c(sizeof(char) * (totalLength + 1));
 
@@ -284,10 +288,14 @@ Node* parseSimpleExpression(Node** nodes, int nodeLength, char** error) {
 				Node* next = parseSimpleExpression(temp2, temp2Pos, error);
 
 				if (next == NULL) {
+					if (*error != NULL) {
+						return NULL;
+					}
+
 					char* prefix = "Right side of operator '";
 					char* sufix = "' is blank";
 
-					int totalLength = strlen(prefix) + 1 + strlen(sufix);
+					int totalLength = strlen(prefix) + strlen(node->value) + strlen(sufix);
 
 					char* finalError = malloc_c(sizeof(char) * (totalLength + 1));
 
@@ -318,6 +326,8 @@ Node* parseSimpleExpression(Node** nodes, int nodeLength, char** error) {
 			}
 		}
 	}
+
+	*error = "Missing opperator";
 
 	return NULL;
 }
@@ -400,6 +410,7 @@ void** parseExpression(Node** nodes, int nodeLength, char** error) {
 		for (long j = 1; j <= partLen;j++) {
 			vec[j-1] = (Node*)part[j];
 		}
+
 		Node* simplePart = parseSimpleExpression(vec, partLen, error);
 
 		if (simplePart == NULL) {
@@ -418,6 +429,16 @@ char* strInsert(char* src, char* regex, int pos) {
 	memcpy(result, src, sizeof(char) * pos);
 	strcat(result, regex);
 	strcat(result, src + sizeof(char) * pos);
+
+	return result;
+}
+
+char* strConcat(char* str1, char* str2) {
+	int totalLength = strlen(str1) + strlen(str2);
+
+	char* result = malloc_c(sizeof(char) * (totalLength + 1));
+	strcat(result, str1);
+	strcat(result, str2);
 
 	return result;
 }
@@ -541,12 +562,13 @@ void getNodeString(Node* node, char** pString, char** pFuncsString, int pos, int
 			getNodeString(node->children[1], pString, pFuncsString, pos + 5, funcID, currentVars, pError);
 			getNodeString(node->children[0], pString, pFuncsString, pos + 4, funcID, currentVars, pError);
 		}
-		/*
 		else if (strcmp(name, "sigma") == 0) {
 			char* prefixAddFuncName = "custom_math_func_";
 			int numLen = (int)ceil(log10(fmax(*funcID, 1.2f)));
 			char* numStr = malloc_c(sizeof(char) * (numLen + 1));
 			sprintf(numStr, "%d", *funcID);
+
+			*funcID = *funcID + 1;
 
 			int addFunctionNameLen = strlen(numStr) + strlen(prefixAddFuncName);
 
@@ -580,56 +602,67 @@ void getNodeString(Node* node, char** pString, char** pFuncsString, int pos, int
 
 			VarNode* cVar = currentVars;
 			for (int i = 0; i < currentVars->id - 6; i++) {
-				addVarArgs = strInsert(addVarArgs, ", float ", strlen(addVarArgs) - 1);
-				addVarArgs = strInsert(addVarArgs, cVar->name, strlen(addVarArgs) - 1);
+				addVarArgs = strConcat(addVarArgs, ", float ");
+				addVarArgs = strConcat(addVarArgs, cVar->name);
 
-				addVarCall = strInsert(addVarCall, ", ", strlen(addVarCall) - 1);
-				addVarCall = strInsert(addVarCall, cVar->name, strlen(addVarCall) - 1);
+				addVarCall = strConcat(addVarCall, ", ");
+				addVarCall = strConcat(addVarCall, cVar->name);
 
 				cVar = cVar->next;
 			}
 
-			std::string addFunctionStringPre = "";
-			addFunctionStringPre += "float " + addFunctionName + "(float x, float y" + addVarArgs + ") {\n";
-			addFunctionStringPre += "float result = 0;\n";
-			addFunctionStringPre += "for(float "
-				+ incrementName->getstdstring() + " = "
-				+ incrementStart->getstdstring() + "; "
-				+ incrementName->getstdstring() + " < "
-				+ incrementEnd->getstdstring() + "; "
-				+ incrementName->getstdstring() + "++) {\n";
-			addFunctionStringPre += "result += ";
+			char* addFunctionStringPre = "float ";
+			addFunctionStringPre = strConcat(addFunctionStringPre, addFunctionName);
+			addFunctionStringPre = strConcat(addFunctionStringPre, "(float x, float y");
+			addFunctionStringPre = strConcat(addFunctionStringPre, addVarArgs);
+			addFunctionStringPre = strConcat(addFunctionStringPre, ") {\n");
+			addFunctionStringPre = strConcat(addFunctionStringPre, "float result = 0;\n");
+			addFunctionStringPre = strConcat(addFunctionStringPre, "for(float ");
+			addFunctionStringPre = strConcat(addFunctionStringPre, incrementName);
+			addFunctionStringPre = strConcat(addFunctionStringPre, " = ");
+			addFunctionStringPre = strConcat(addFunctionStringPre, incrementStart);
+			addFunctionStringPre = strConcat(addFunctionStringPre, "; ");
+			addFunctionStringPre = strConcat(addFunctionStringPre, incrementName);
+			addFunctionStringPre = strConcat(addFunctionStringPre, " < ");
+			addFunctionStringPre = strConcat(addFunctionStringPre, incrementEnd);
+			addFunctionStringPre = strConcat(addFunctionStringPre, "; ");
+			addFunctionStringPre = strConcat(addFunctionStringPre, incrementName);
+			addFunctionStringPre = strConcat(addFunctionStringPre, "++) {\n");
+			addFunctionStringPre = strConcat(addFunctionStringPre, "result += ");
 
-			std::string addFunctionStringPost = "";
-			addFunctionStringPost += ";\n";
-			addFunctionStringPost += "}\n";
-			addFunctionStringPost += "return result;";
-			addFunctionStringPost += "\n}\n";
+			char* addFunctionStringPost = ";\n}\nreturn result;\n}\n";
+
+			*pFuncsString = strInsert(*pFuncsString, strConcat(addFunctionStringPre, addFunctionStringPost), 0);
+			getNodeString(node->children[3], pFuncsString, &tempFuncString, strlen(addFunctionStringPre), funcID, tempVarNode, pError);
+			*pFuncsString = strInsert(*pFuncsString, tempFuncString, 0);
+
+			*pString = strInsert(*pString, strConcat(strConcat(addFunctionName, "(x, y"), strConcat(addVarCall, ")")), pos);
+		}
+		else if (strcmp(name, "integral") == 0) {
+			char* prefixAddFuncName = "custom_math_func_";
+			int numLen = (int)ceil(log10(fmax(*funcID, 1.2f)));
+			char* numStr = malloc_c(sizeof(char) * (numLen + 1));
+			sprintf(numStr, "%d", *funcID);
 
 			*funcID = *funcID + 1;
 
-			pFuncsString->insert(addFunctionStringPre + addFunctionStringPost, 0);
-			getNodeString(node->children[3], pFuncsString, tempFuncString, addFunctionStringPre.size(), funcID, tempVarNode, pError);
-			pFuncsString->insert(*tempFuncString, 0);
+			int addFunctionNameLen = strlen(numStr) + strlen(prefixAddFuncName);
 
-			pString->insert(addFunctionName + "(x, y" + addVarCall + ")", pos);
-		}
-		else if (strcmp(name, "integral") == 0) {
-			std::string addFunctionName = "custom_math_func_" + std::to_string(*funcID);
+			char* addFunctionName = malloc_c(sizeof(char) * (addFunctionNameLen + 1));
+			strcat(addFunctionName, prefixAddFuncName);
+			strcat(addFunctionName, numStr);
 
-			String* integrationVar = new String("");
-			String* integrationStart = new String("");
-			String* integrationEnd = new String("");
-			String* integrationDivisions = new String("");
+			char* integrationVar = "";
+			char* integrationStart = "";
+			char* integrationEnd = "";
+			char* integrationDivisions = "";
 
-			String* tempFuncString = new String("");
+			char* tempFuncString = "";
 
 			if (node->children[0]->type == NODE_TYPE_VAR) {
-				Variable* var = (Variable*)node->children[0]->value[0];
-				integrationVar->insert(*var->name, 0);
-			}
-			else {
-				pError->push_back(new String("Increment argument of sigma function was not a variable!"));
+				integrationVar = node->children[0]->value;
+			} else {
+				*pError = "Integration variable was not a variable!";
 				return;
 			}
 
@@ -638,62 +671,70 @@ void getNodeString(Node* node, char** pString, char** pFuncsString, int pos, int
 			tempVarNode->id = currentVars->id + 1;
 			tempVarNode->next = currentVars;
 
-			getNodeString(node->children[1], integrationStart, tempFuncString, 0, funcID, currentVars, pError);
-			getNodeString(node->children[2], integrationEnd, tempFuncString, 0, funcID, currentVars, pError);
-			getNodeString(node->children[3], integrationDivisions, tempFuncString, 0, funcID, currentVars, pError);
+			getNodeString(node->children[1], &integrationStart, &tempFuncString, 0, funcID, currentVars, pError);
+			getNodeString(node->children[2], &integrationEnd, &tempFuncString, 0, funcID, currentVars, pError);
+			getNodeString(node->children[3], &integrationDivisions, &tempFuncString, 0, funcID, currentVars, pError);
 
-			std::string addVarArgs = "";
-			std::string addVarCall = "";
+			char* addVarArgs = "";
+			char* addVarCall = "";
 
 			VarNode* cVar = currentVars;
 			for (int i = 0; i < currentVars->id - 6; i++) {
-				addVarArgs += ", float " + cVar->name->getstdstring();
-				addVarCall += ", " + cVar->name->getstdstring();
+				addVarArgs = strConcat(addVarArgs, ", float ");
+				addVarArgs = strConcat(addVarArgs, cVar->name);
+
+				addVarCall = strConcat(addVarCall, ", ");
+				addVarCall = strConcat(addVarCall, cVar->name);
 
 				cVar = cVar->next;
 			}
 
-			*funcID = *funcID + 1;
+			char* pFuncName = "";
 
-			String* pFuncName = new String("");
+			getNodeString(node->children[4], &pFuncName, &tempFuncString, 0, funcID, tempVarNode, pError);
 
-			getNodeString(node->children[4], pFuncName, tempFuncString, 0, funcID, tempVarNode, pError);
+			char* addFunctionString = "float ";
+			addFunctionString = strConcat(addFunctionString, addFunctionName);
+			addFunctionString = strConcat(addFunctionString, "(float x, float y");
+			addFunctionString = strConcat(addFunctionString, addVarArgs);
+			addFunctionString = strConcat(addFunctionString, ") {\n");
+			addFunctionString = strConcat(addFunctionString, "float result0_ = 0;\nfloat result1_ = 0;\n");
+			addFunctionString = strConcat(addFunctionString, "float a_ = ");
+			addFunctionString = strConcat(addFunctionString, integrationStart);
+			addFunctionString = strConcat(addFunctionString, ";\n");
+			addFunctionString = strConcat(addFunctionString, "float b_ = ");
+			addFunctionString = strConcat(addFunctionString, integrationEnd);
+			addFunctionString = strConcat(addFunctionString, ";\n");
+			addFunctionString = strConcat(addFunctionString, "float n_ = ");
+			addFunctionString = strConcat(addFunctionString, integrationDivisions);
+			addFunctionString = strConcat(addFunctionString, ";\n");
+			addFunctionString = strConcat(addFunctionString, "float dx_ = (b_ - a_)/n_;\n");
+			addFunctionString = strConcat(addFunctionString, "float ");
+			addFunctionString = strConcat(addFunctionString, integrationVar);
+			addFunctionString = strConcat(addFunctionString, " = a_;\n");
+			addFunctionString = strConcat(addFunctionString, "result0_ += ");
+			addFunctionString = strConcat(addFunctionString, pFuncName);
+			addFunctionString = strConcat(addFunctionString, ";\n");
+			addFunctionString = strConcat(addFunctionString, integrationVar);
+			addFunctionString = strConcat(addFunctionString, " = b_;\n");
+			addFunctionString = strConcat(addFunctionString, "result0_ += ");
+			addFunctionString = strConcat(addFunctionString, pFuncName);
+			addFunctionString = strConcat(addFunctionString, ";\n");
+			addFunctionString = strConcat(addFunctionString, "for(float k_ = 1; k_ < n_; k_++) {\n");
+			addFunctionString = strConcat(addFunctionString, integrationVar);
+			addFunctionString = strConcat(addFunctionString, " = a_+(k_*dx_);\n");
+			addFunctionString = strConcat(addFunctionString, "result1_ += 2*");
+			addFunctionString = strConcat(addFunctionString, pFuncName);
+			addFunctionString = strConcat(addFunctionString, ";\n");
+			addFunctionString = strConcat(addFunctionString, "}\n");
+			addFunctionString = strConcat(addFunctionString, "return (dx_/2)*(result0_ + result1_);\n");
+			addFunctionString = strConcat(addFunctionString, "\n}\n");
 
-			std::string addFunctionString = "";
-			addFunctionString += "float " + addFunctionName + "(float x, float y" + addVarArgs + ") {\n";
+			*pFuncsString = strInsert(*pFuncsString, addFunctionString, 0);
+			*pFuncsString = strInsert(*pFuncsString, tempFuncString, 0);
 
-			addFunctionString += "float result0_ = 0;\n";
-			addFunctionString += "float result1_ = 0;\n";
-
-			addFunctionString += "float a_ = " + integrationStart->getstdstring() + ";\n";
-			addFunctionString += "float b_ = " + integrationEnd->getstdstring() + ";\n";
-			addFunctionString += "float n_ = " + integrationDivisions->getstdstring() + ";\n";
-
-			addFunctionString += "float dx_ = (b_ - a_)/n_;\n";
-
-			addFunctionString += "float " + integrationVar->getstdstring() + " = a_;\n";
-
-			addFunctionString += "result0_ += " + pFuncName->getstdstring() + ";\n";
-
-			addFunctionString += integrationVar->getstdstring() + " = b_;\n";
-
-			addFunctionString += "result0_ += " + pFuncName->getstdstring() + ";\n";
-
-			addFunctionString += "for(float k_ = 1; k_ < n_; k_++) {\n";
-			addFunctionString += integrationVar->getstdstring() + " = a_+(k_*dx_);\n";
-			addFunctionString += "result1_ += 2*" + pFuncName->getstdstring() + ";\n";
-			addFunctionString += "}\n";
-
-			addFunctionString += "return (dx_/2)*(result0_ + result1_);;\n";
-
-			addFunctionString += "\n}\n";
-
-			pFuncsString->insert(addFunctionString, 0);
-			pFuncsString->insert(*tempFuncString, 0);
-
-			pString->insert(addFunctionName + "(x, y" + addVarCall + ")", pos);
+			*pString = strInsert(*pString, strConcat(strConcat(addFunctionName, "(x, y"), strConcat(addVarCall, ")")), pos);
 		}
-		*/
 		else {
 			char* nameCall = malloc_c(sizeof(char) * (strlen(name) + 3));
 			strcat(nameCall, name);
@@ -947,6 +988,10 @@ void eqConvert(ParsingInfo* parseInfo, char* text, char** body, char** funcs, ch
 
 	if (parseResult == NULL) {
 		if (*error != NULL) {
+			char* preError = *error;
+			*error = malloc(sizeof(char) * (strlen(preError) + 1));
+			memset(*error, 0, sizeof(char) * (strlen(preError) + 1));
+			strcat(*error, preError);
 			cleanUp();
 			return NULL;
 		}
@@ -1007,6 +1052,13 @@ void eqConvert(ParsingInfo* parseInfo, char* text, char** body, char** funcs, ch
 
 	*body = result;
 	*funcs = funcResult;
+
+	if (*error != NULL) {
+		char* preError = *error;
+		*error = malloc(sizeof(char) * (strlen(preError) + 1));
+		memset(*error, 0, sizeof(char) * (strlen(preError) + 1));
+		strcat(*error, preError);
+	}
 
 	cleanUp();
 }

@@ -104,13 +104,13 @@ int main() {
 
 	ParsingInfo* parseInfo = eqGetDefaultParseInfo();
 	
-	char* eq = "sin(x*47.4823)^y = y + 34634.7562 - t + 77";
+	char* eq = "cos(sin(x)) + y = y*x";
 	char* error = NULL;
 
-	char* ffeq;
-	char* feq;
+	char* ffeq = "";
+	char* feq = "";
 	
-	eqConvert(parseInfo, eq, & feq, &ffeq, &error);
+	eqConvert(parseInfo, eq, &feq, &ffeq, &error);
 
 	printf("eq    = %s\nfeq   = %s\nffeq  = %s\nerror = %s\n", eq, feq, ffeq, error);
 
