@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stdhdr.h"
+#include "utils.h"
 
 typedef struct GLShader {
 	GLuint vertShader;
