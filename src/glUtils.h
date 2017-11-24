@@ -20,5 +20,8 @@ typedef struct GLMesh {
 GLShader* createShader(char* vertSource, char* fragSource, char** attribs, uint32_t attribsCount, char** uniforms, uint32_t uniformCount);
 GLShader* createQuadShader();
 GLShader* createLineShader();
+GLShader* createCalcShader(char* funcs, char* eq);
+GLShader* createEdgeShader();
+GLShader* createRenderShader();
 GLMesh* createQuadMesh();
 

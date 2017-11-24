@@ -745,11 +745,30 @@ void getNodeString(Node* node, char** pString, char** pFuncsString, int pos, int
 	}
 }
 
-void eqConvert(ParsingInfo* parseInfo, char* text, char** body, char** funcs, char** error) {
+void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs, char** error) {
 	allocationLogNum = 0;
 	allocationLogSize = 0;
 
-	int textLength = strlen(text);
+	int preTextLength = strlen(pre_text);
+
+	char* text = NULL;
+	int textLength = 0;
+
+	for (int i = 0; i < preTextLength;i++) {
+		if (pre_text[i] == '=') {
+			text = pre_text;
+			textLength = preTextLength;
+			break;
+		}
+	}
+
+	if (text == NULL) {
+		text = malloc_c(sizeof(char) * preTextLength + 3);
+		memset(text, 0, sizeof(char) * preTextLength + 3);
+		strcat(text, pre_text);
+		strcat(text, "=y");
+		textLength = preTextLength + 2;
+	}
 
 	char* tempStr = "";
 	int tempType;

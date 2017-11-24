@@ -3,6 +3,7 @@
 #include <swin/SWin.h>
 #include <glad/glad.h>
 #include <math.h>
+#include <string.h>
 
 extern double g_left;
 extern double g_right;
