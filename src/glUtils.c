@@ -439,8 +439,6 @@ discard;\n\
 
 	char* attribs[1] = { "position" };
 	char* uniforms[2] = { "edge" , "g_color" };
-    
-    printf("%s\n", fragSource);
 
 	return createShader(vertSource, fragSource, attribs, 1, uniforms, 2);
 }

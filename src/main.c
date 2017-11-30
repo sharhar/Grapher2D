@@ -52,7 +52,7 @@ int main() {
 
 	ParsingInfo* parseInfo = eqGetDefaultParseInfo();
 	
-	char* eq = "sin(x)";
+	char* eq = "tan(x)^2 + cos(y)^2 = sin(x*y)";
 	char* error = NULL;
 
 	char* ffeq = "";
