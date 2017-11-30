@@ -148,7 +148,7 @@ void drawGrid(float* modelMat, GLuint modelLoc, double xl, double xr, double yd,
 			continue;
 		}
 
-		getModelviewMatrix(modelMat, tx, 300, 0.25f, 600);
+		getModelviewMatrix(modelMat, tx, 300, 0.5f, 600);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMat);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
@@ -179,7 +179,7 @@ void drawGrid(float* modelMat, GLuint modelLoc, double xl, double xr, double yd,
 		if (ty < 0 || ty > height) {
 			continue;
 		}
-		getModelviewMatrix(modelMat, 300, ty, 600, 0.25f);
+		getModelviewMatrix(modelMat, 300, ty, 600, 0.5f);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMat);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
