@@ -52,7 +52,7 @@ int main() {
 
 	ParsingInfo* parseInfo = eqGetDefaultParseInfo();
 	
-	char* eq = "tan(x)";
+	char* eq = "tan(x)^tan(x)=y^tan(x+t)";
 	char* error = NULL;
 
 	char* ffeq = "";
@@ -151,6 +151,8 @@ int main() {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	float time = 0;
+
 	while (!swCloseRequested(window)) {
 		swPollEvents();
 
@@ -185,11 +187,14 @@ int main() {
 		glUniform1f(calcShader->uniformLocs[1], g_down);
 		glUniform1f(calcShader->uniformLocs[2], g_left);
 		glUniform1f(calcShader->uniformLocs[3], g_right);
-		glUniform1f(calcShader->uniformLocs[4], 0);
+		glUniform1f(calcShader->uniformLocs[4], time);
 		glUniform1f(calcShader->uniformLocs[5], 0);
+
+		time += 1.0f / 60.0f;
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
+		
 		glBindFramebuffer(GL_FRAMEBUFFER, efbo);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glViewport(0, 0, 1200, 1200);
@@ -198,7 +203,7 @@ int main() {
 		glBindTexture(GL_TEXTURE_2D, dtex);
 		glActiveTexture(GL_TEXTURE0);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-
+		
 		glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
 
 		glViewport(0, 0, GRAPH_PORT_SIZE, GRAPH_PORT_SIZE);
@@ -208,7 +213,7 @@ int main() {
 		glBindTexture(GL_TEXTURE_2D, etex);
 		glActiveTexture(GL_TEXTURE0);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-
+		
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, 600, 600);
 		glClear(GL_COLOR_BUFFER_BIT);
