@@ -21,7 +21,7 @@ GLShader* createShader(char* vertSource, char* fragSource, char** attribs, uint3
 GLShader* createQuadShader();
 GLShader* createLineShader();
 GLShader* createCalcShader(char* funcs, char* eq);
-GLShader* createEdgeShader();
-GLShader* createRenderShader();
+GLShader* createEdgeShader(int port);
+GLShader* createRenderShader(int port);
 GLMesh* createQuadMesh();
 

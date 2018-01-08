@@ -7,7 +7,7 @@ void* malloc(size_t);
 
 #define COLOR_NUM 5
 #define ZOOM_PERCENT 0.025
-#define GRAPH_PORT_SIZE 1200
+#define GRAPH_PORT_SIZE 600
 
 double g_left = -6;
 double g_right = 6;
@@ -52,7 +52,7 @@ int main() {
 
 	ParsingInfo* parseInfo = eqGetDefaultParseInfo();
 	
-	char* eq = "tan(x)^tan(x)=y^tan(x+t)";
+	char* eq = "tan(x)^2 + sin(x)^2 = cos(x*y)";
 	char* error = NULL;
 
 	char* ffeq = "";
@@ -75,8 +75,8 @@ int main() {
 	GLShader* quadShader = createQuadShader();
 	GLShader* lineShader = createLineShader();
 	GLShader* calcShader = createCalcShader(feq, ffeq);
-	GLShader* edgeShader = createEdgeShader();
-	GLShader* renderShader = createRenderShader();
+	GLShader* edgeShader = createEdgeShader(GRAPH_PORT_SIZE);
+	GLShader* renderShader = createRenderShader(GRAPH_PORT_SIZE);
 
 	float* lineModel = malloc(sizeof(float) * 16);
 	getModelviewMatrix(lineModel, 0, 0, 1, 1);
@@ -105,11 +105,11 @@ int main() {
 
 	glGenTextures(1, &dtex);
 	glBindTexture(GL_TEXTURE_2D, dtex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, 1200, 1200,
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, GRAPH_PORT_SIZE, GRAPH_PORT_SIZE,
 		0, GL_RG, GL_UNSIGNED_BYTE, NULL);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, dtex, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -122,11 +122,11 @@ int main() {
 
 	glGenTextures(1, &etex);
 	glBindTexture(GL_TEXTURE_2D, etex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, 1200, 1200,
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, GRAPH_PORT_SIZE, GRAPH_PORT_SIZE,
 		0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, etex, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -150,19 +150,26 @@ int main() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    
+    int fps = 0;
 
 	float time = 0;
 
 	while (!swCloseRequested(window)) {
 		swPollEvents();
+        
+        //printf("%d\n", fps);
+        
+        //fps++;
 
 		mouseUpdate(mouseState, &preMouseState, glViewBounds);
 
+        
 		glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glViewport(0, 0, 1200, 1200);
+		glViewport(0, 0, GRAPH_PORT_SIZE, GRAPH_PORT_SIZE);
 
 		glBindVertexArray(quad->vao);
 		glEnableVertexAttribArray(0);
@@ -179,7 +186,7 @@ int main() {
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glViewport(0, 0, 1200, 1200);
+		glViewport(0, 0, GRAPH_PORT_SIZE, GRAPH_PORT_SIZE);
 
 		glUseProgram(calcShader->program);
 
@@ -197,7 +204,7 @@ int main() {
 		
 		glBindFramebuffer(GL_FRAMEBUFFER, efbo);
 		glClear(GL_COLOR_BUFFER_BIT);
-		glViewport(0, 0, 1200, 1200);
+		glViewport(0, 0, GRAPH_PORT_SIZE, GRAPH_PORT_SIZE);
 
 		glUseProgram(edgeShader->program);
 		glBindTexture(GL_TEXTURE_2D, dtex);

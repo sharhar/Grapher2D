@@ -241,7 +241,7 @@ out_color = vec4(total, total0, 0.0, 1.0);\n\
 	return createShader(vertSource, fragSource, attribs, 1, uniforms, 6);
 }
 
-GLShader* createEdgeShader() {
+GLShader* createEdgeShader(int port) {
 	char* vertSource = "#version 330 core\n\
 out vec2 coord;\n\
 in vec2 position;\n\
@@ -250,11 +250,13 @@ gl_Position = vec4(position.xy, 0, 1);\n\
 coord = position/2.0 + 0.5;\n\
 }\n";
 
-	char* fragSource = "#version 330 core\n\
+	char* preFragSource0 = "#version 330 core\n\
 uniform sampler2D data;\n\
 in vec2 coord;\n\
 out vec4 out_color;\n\
-const float pxw = 1.0/1200.0;\n\
+    const float pxw = 1.0/";
+    
+    char* preFragSource1 = ".0;\n\
 bool isColored(vec2 coord) {\
 vec4 c = texture(data, coord);\n\
 if(c.x == 0) {\
@@ -363,13 +365,31 @@ if(isColored(coord)) {out_color = vec4(1.0, 0.0, 0.0, 1.0); return;}\n\
 out_color = vec4(0.0, 0.0, 0.0, 1.0);\
 }\n";
 	
+    char* portstr = malloc(sizeof(char) * 8);
+    memset(portstr, 0, sizeof(char) * 8);
+    
+    sprintf(portstr, "%d", port);
+    
+    int pfs0l = strlen(preFragSource0);
+    int pfs1l = strlen(preFragSource1);
+    int fl = strlen(portstr);
+    
+    int fsl = pfs0l + fl + pfs1l;
+    
+    char* fragSource = malloc(sizeof(char) * fsl + 1);
+    memset(fragSource, 0, sizeof(char) * fsl + 1);
+    
+    strcat(fragSource, preFragSource0);
+    strcat(fragSource, portstr);
+    strcat(fragSource, preFragSource1);
+    
 	char* attribs[1] = { "position" };
 	char* uniforms[1] = { "data" };
 
 	return createShader(vertSource, fragSource, attribs, 1, uniforms, 1);
 }
 
-GLShader* createRenderShader() {
+GLShader* createRenderShader(int port) {
 	char* vertSource = "#version 330 core\n\
 out vec2 coord;\n\
 in vec2 position;\n\
@@ -378,24 +398,44 @@ gl_Position = vec4(position.xy, 0, 1);\n\
 coord = position/2.0 + 0.5;\n\
 }\n";
 
-	char* fragSource = "#version 330 core\n\
+	char* preFragSource0 = "#version 330 core\n\
 uniform sampler2D edge;\n\
 uniform vec3 g_color;\n\
 in vec2 coord;\n\
 out vec4 out_color;\n\
-const float pw = 1.0/1200.0;\n\
+    const float pw = 1.0/";
+    
+    char* preFragSource1 = ".0;\n\
 void main(void) {\n\
-if(texture(edge, vec2(coord.x, coord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}\
-if(texture(edge, vec2(coord.x + pw, coord.y)).x == 1.0 && coord.x + pw <= 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}\
-if(texture(edge, vec2(coord.x - pw, coord.y)).x == 1.0 && coord.x - pw >= 0.0) {out_color = vec4(g_color.xyz, 1.0); return;}\
-if(texture(edge, vec2(coord.x, coord.y + pw)).x == 1.0 && coord.y + pw <= 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}\
-if(texture(edge, vec2(coord.x, coord.y - pw)).x == 1.0 && coord.y - pw >= 0.0) {out_color = vec4(g_color.xyz, 1.0); return;}\
-if(texture(edge, vec2(coord.x + pw*2, coord.y)).x == 1.0 && coord.x + pw*2 <= 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}\
-if(texture(edge, vec2(coord.x - pw*2, coord.y)).x == 1.0 && coord.x - pw*2 >= 0.0) {out_color = vec4(g_color.xyz, 1.0); return;}\
-if(texture(edge, vec2(coord.x, coord.y + pw*2)).x == 1.0 && coord.y + pw*2 <= 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}\
-if(texture(edge, vec2(coord.x, coord.y - pw*2)).x == 1.0 && coord.y - pw*2 >= 0.0) {out_color = vec4(g_color.xyz, 1.0); return;}\
-discard;\
+if(texture(edge, vec2(coord.x, coord.y)).x == 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}\n\
+if(texture(edge, vec2(coord.x + pw, coord.y)).x == 1.0 && coord.x + pw <= 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}\n\
+if(texture(edge, vec2(coord.x - pw, coord.y)).x == 1.0 && coord.x - pw >= 0.0) {out_color = vec4(g_color.xyz, 1.0); return;}\n\
+if(texture(edge, vec2(coord.x, coord.y + pw)).x == 1.0 && coord.y + pw <= 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}\n\
+if(texture(edge, vec2(coord.x, coord.y - pw)).x == 1.0 && coord.y - pw >= 0.0) {out_color = vec4(g_color.xyz, 1.0); return;}\n\
+if(texture(edge, vec2(coord.x + pw*2, coord.y)).x == 1.0 && coord.x + pw*2 <= 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}\n\
+if(texture(edge, vec2(coord.x - pw*2, coord.y)).x == 1.0 && coord.x - pw*2 >= 0.0) {out_color = vec4(g_color.xyz, 1.0); return;}\n\
+if(texture(edge, vec2(coord.x, coord.y + pw*2)).x == 1.0 && coord.y + pw*2 <= 1.0) {out_color = vec4(g_color.xyz, 1.0); return;}\n\
+if(texture(edge, vec2(coord.x, coord.y - pw*2)).x == 1.0 && coord.y - pw*2 >= 0.0) {out_color = vec4(g_color.xyz, 1.0); return;}\n\
+discard;\n\
 }\n";
+    
+    char* portstr = malloc(sizeof(char) * 8);
+    memset(portstr, 0, sizeof(char) * 8);
+    
+    sprintf(portstr, "%d", port);
+    
+    int pfs0l = strlen(preFragSource0);
+    int pfs1l = strlen(preFragSource1);
+    int fl = strlen(portstr);
+    
+    int fsl = pfs0l + fl + pfs1l;
+    
+    char* fragSource = malloc(sizeof(char) * fsl + 1);
+    memset(fragSource, 0, sizeof(char) * fsl + 1);
+    
+    strcat(fragSource, preFragSource0);
+    strcat(fragSource, portstr);
+    strcat(fragSource, preFragSource1);
 
 	char* attribs[1] = { "position" };
 	char* uniforms[2] = { "edge" , "g_color" };
