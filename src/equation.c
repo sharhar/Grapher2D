@@ -5,36 +5,7 @@
 void* malloc(size_t);
 void free(void*);
 
-size_t allocationLogNum = 0;
-size_t allocationLogSize = 0;
-void** allocationLog;
-
-void* malloc_c(size_t size) {
-	void* result = malloc(size);
-	memset(result, 0, size);
-	allocationLogNum += size;
-	
-	void** newLog = malloc(sizeof(void*) * (allocationLogSize + 1));
-	memcpy(newLog, allocationLog, sizeof(void*) * allocationLogSize);
-	newLog[allocationLogSize] = result;
-	allocationLogSize++;
-	free(allocationLog);
-
-	allocationLog = newLog;
-
-	return result;
-}
-
-void cleanUp() {
-	printf("Allocated: %d bytes\n", allocationLogNum);
-	printf("Allocations: %d\n", allocationLogSize);
-
-	for (int i = 0; i < allocationLogSize;i++) {
-		free(allocationLog[i]);
-	}
-
-	free(allocationLog);
-}
+AllocationLog* g_log = NULL;
 
 #define TK_TYPE_OPP 1
 #define TK_TYPE_NUM 2
@@ -117,8 +88,8 @@ ParsingInfo* eqGetDefaultParseInfo() {
 
 void*** getParts(Node** nodes, int nodeLength) {
 	if (nodeLength == 0) {
-		void*** result = malloc_c(sizeof(void**));
-		result[0] = malloc_c(sizeof(void*));
+		void*** result = malloc_c(g_log, sizeof(void**));
+		result[0] = malloc_c(g_log, sizeof(void*));
 		result[0][0] = 0;
 		return result;
 	}
@@ -130,7 +101,7 @@ void*** getParts(Node** nodes, int nodeLength) {
 		}
 	}
 
-	int* partSize = malloc_c(sizeof(int) * (sepNum + 1));
+	int* partSize = malloc_c(g_log, sizeof(int) * (sepNum + 1));
 	int part = 0;
 
 	for (int i = 0; i < nodeLength; i++) {
@@ -142,10 +113,10 @@ void*** getParts(Node** nodes, int nodeLength) {
 	}
 
 
-	Node*** parts = malloc_c(sizeof(Node**) * (sepNum + 1));
+	Node*** parts = malloc_c(g_log, sizeof(Node**) * (sepNum + 1));
 
 	for (int i = 0; i < sepNum + 1;i++) {
-		parts[i] = malloc_c(sizeof(Node*) * partSize[i]);
+		parts[i] = malloc_c(g_log, sizeof(Node*) * partSize[i]);
 	}
 
 	int sep = 0;
@@ -163,13 +134,13 @@ void*** getParts(Node** nodes, int nodeLength) {
 
 	void*** result;
 
-	result = malloc_c(sizeof(void**) * (sepNum + 2));
-	result[0] = malloc_c(sizeof(void*));
+	result = malloc_c(g_log, sizeof(void**) * (sepNum + 2));
+	result[0] = malloc_c(g_log, sizeof(void*));
 	result[0][0] = (void*)(sepNum + 1);
 
 	for (int i = 1; i <= sepNum + 1; i++) {
 		int length = partSize[i - 1];
-		void** arr = malloc_c(sizeof(void*) * (length + 1));
+		void** arr = malloc_c(g_log, sizeof(void*) * (length + 1));
 		arr[0] = (void*)length;
 		for (int j = 1; j <= length; j++) {
 			arr[j] = (void*)parts[i - 1][j - 1];
@@ -222,7 +193,7 @@ Node* parseSimpleExpression(Node** nodes, int nodeLength, char** error) {
 		}
 	}
 
-	Node** tempVec = malloc_c(sizeof(Node*) * nodeLength);
+	Node** tempVec = malloc_c(g_log, sizeof(Node*) * nodeLength);
 	int tempVecPos = 0;
 	for (int i = 0; i < nodeLength;i++) {
 		Node* node = nodes[i];
@@ -240,7 +211,7 @@ Node* parseSimpleExpression(Node** nodes, int nodeLength, char** error) {
 
 				if (prev == NULL) {
 					if (node->value[0] == '-') {
-						prev = (Node*)malloc_c(sizeof(Node));
+						prev = (Node*)malloc_c(g_log, sizeof(Node));
 						prev->type = NODE_TYPE_ZRO;
 					}
 					else {
@@ -253,7 +224,7 @@ Node* parseSimpleExpression(Node** nodes, int nodeLength, char** error) {
 
 						int totalLength = strlen(prefix) + strlen(node->value) + strlen(sufix);
 
-						char* finalError = malloc_c(sizeof(char) * (totalLength + 1));
+						char* finalError = malloc_c(g_log, sizeof(char) * (totalLength + 1));
 
 						strcat(finalError, prefix);
 						strcat(finalError, node->value);
@@ -265,7 +236,7 @@ Node* parseSimpleExpression(Node** nodes, int nodeLength, char** error) {
 					}
 				}
 
-				Node** temp2 = malloc_c(sizeof(Node*) * nodeLength);
+				Node** temp2 = malloc_c(g_log, sizeof(Node*) * nodeLength);
 				int temp2Pos = 0;
 				int loc = -1;
 				for (int j = i + 1; j < nodeLength; j++) {
@@ -297,7 +268,7 @@ Node* parseSimpleExpression(Node** nodes, int nodeLength, char** error) {
 
 					int totalLength = strlen(prefix) + strlen(node->value) + strlen(sufix);
 
-					char* finalError = malloc_c(sizeof(char) * (totalLength + 1));
+					char* finalError = malloc_c(g_log, sizeof(char) * (totalLength + 1));
 
 					strcat(finalError, prefix);
 					strcat(finalError, node->value);
@@ -309,7 +280,7 @@ Node* parseSimpleExpression(Node** nodes, int nodeLength, char** error) {
 				}
 
 				node->childNum = 2;
-				node->children = malloc_c(sizeof(Node*) * 2);
+				node->children = malloc_c(g_log, sizeof(Node*) * 2);
 				node->children[0] = prev;
 				node->children[1] = next;
 
@@ -333,10 +304,10 @@ Node* parseSimpleExpression(Node** nodes, int nodeLength, char** error) {
 }
 
 void** parseExpression(Node** nodes, int nodeLength, char** error) {
-	Node** simple = malloc_c(sizeof(Node*) * nodeLength);
+	Node** simple = malloc_c(g_log, sizeof(Node*) * nodeLength);
 	int simplePos = 0;
 
-	Node** funcTemp = malloc_c(sizeof(Node*) * nodeLength);
+	Node** funcTemp = malloc_c(g_log, sizeof(Node*) * nodeLength);
 	int funcTempPos = 0;
 
 	char* curFunc = NULL;
@@ -371,12 +342,12 @@ void** parseExpression(Node** nodes, int nodeLength, char** error) {
 
 				Node* funcNode = NULL;
 				
-				funcNode = (Node*)malloc_c(sizeof(Node));
+				funcNode = (Node*)malloc_c(g_log, sizeof(Node));
 				long argc = (long)funcNodeArr[0];
 				funcNode->type = NODE_TYPE_FFN;
 				funcNode->value = curFunc;
 				funcNode->childNum = argc;
-				funcNode->children = malloc_c(sizeof(Node*) * argc);
+				funcNode->children = malloc_c(g_log, sizeof(Node*) * argc);
 				
 				for (long i = 0; i < argc; i++) {
 					funcNode->children[i] = (Node*)funcNodeArr[i + 1];
@@ -399,14 +370,14 @@ void** parseExpression(Node** nodes, int nodeLength, char** error) {
 
 	long partNum = (long)parts[0][0];
 
-	void** result = malloc_c(sizeof(void*) * (partNum + 1));
+	void** result = malloc_c(g_log, sizeof(void*) * (partNum + 1));
 
 	result[0] = (void*)partNum;
 
 	for (long i = 1; i <= partNum;i++) {
 		void** part = parts[i];
 		long partLen = (long)part[0];
-		Node** vec = malloc_c(sizeof(Node*)  * partLen);
+		Node** vec = malloc_c(g_log, sizeof(Node*)  * partLen);
 		for (long j = 1; j <= partLen;j++) {
 			vec[j-1] = (Node*)part[j];
 		}
@@ -425,7 +396,7 @@ void** parseExpression(Node** nodes, int nodeLength, char** error) {
 char* strInsert(char* src, char* regex, int pos) {
 	int totalLength = strlen(src) + strlen(regex);
 
-	char* result = malloc_c(sizeof(char) * (totalLength + 1));
+	char* result = malloc_c(g_log, sizeof(char) * (totalLength + 1));
 	memcpy(result, src, sizeof(char) * pos);
 	strcat(result, regex);
 	strcat(result, src + sizeof(char) * pos);
@@ -436,7 +407,7 @@ char* strInsert(char* src, char* regex, int pos) {
 char* strConcat(char* str1, char* str2) {
 	int totalLength = strlen(str1) + strlen(str2);
 
-	char* result = malloc_c(sizeof(char) * (totalLength + 1));
+	char* result = malloc_c(g_log, sizeof(char) * (totalLength + 1));
 	strcat(result, str1);
 	strcat(result, str2);
 
@@ -467,7 +438,7 @@ void getNodeString(Node* node, char** pString, char** pFuncsString, int pos, int
 
 		int totalLength = strlen(prefix) + strlen(node->value);
 
-		char* finalError = malloc_c(sizeof(char) * (totalLength + 1));
+		char* finalError = malloc_c(g_log, sizeof(char) * (totalLength + 1));
 		strcat(finalError, prefix);
 		strcat(finalError, node->value);
 
@@ -565,14 +536,14 @@ void getNodeString(Node* node, char** pString, char** pFuncsString, int pos, int
 		else if (strcmp(name, "sigma") == 0) {
 			char* prefixAddFuncName = "custom_math_func_";
 			int numLen = (int)ceil(log10(fmax(*funcID, 1.2f)));
-			char* numStr = malloc_c(sizeof(char) * (numLen + 1));
+			char* numStr = malloc_c(g_log, sizeof(char) * (numLen + 1));
 			sprintf(numStr, "%d", *funcID);
 
 			*funcID = *funcID + 1;
 
 			int addFunctionNameLen = strlen(numStr) + strlen(prefixAddFuncName);
 
-			char* addFunctionName = malloc_c(sizeof(char) * (addFunctionNameLen + 1));
+			char* addFunctionName = malloc_c(g_log, sizeof(char) * (addFunctionNameLen + 1));
 			strcat(addFunctionName, prefixAddFuncName);
 			strcat(addFunctionName, numStr);
 
@@ -641,14 +612,14 @@ void getNodeString(Node* node, char** pString, char** pFuncsString, int pos, int
 		else if (strcmp(name, "integral") == 0) {
 			char* prefixAddFuncName = "custom_math_func_";
 			int numLen = (int)ceil(log10(fmax(*funcID, 1.2f)));
-			char* numStr = malloc_c(sizeof(char) * (numLen + 1));
+			char* numStr = malloc_c(g_log, sizeof(char) * (numLen + 1));
 			sprintf(numStr, "%d", *funcID);
 
 			*funcID = *funcID + 1;
 
 			int addFunctionNameLen = strlen(numStr) + strlen(prefixAddFuncName);
 
-			char* addFunctionName = malloc_c(sizeof(char) * (addFunctionNameLen + 1));
+			char* addFunctionName = malloc_c(g_log, sizeof(char) * (addFunctionNameLen + 1));
 			strcat(addFunctionName, prefixAddFuncName);
 			strcat(addFunctionName, numStr);
 
@@ -736,7 +707,7 @@ void getNodeString(Node* node, char** pString, char** pFuncsString, int pos, int
 			*pString = strInsert(*pString, strConcat(strConcat(addFunctionName, "(x, y"), strConcat(addVarCall, ")")), pos);
 		}
 		else {
-			char* nameCall = malloc_c(sizeof(char) * (strlen(name) + 3));
+			char* nameCall = malloc_c(g_log, sizeof(char) * (strlen(name) + 3));
 			strcat(nameCall, name);
 			strcat(nameCall, "()");
 			*pString = strInsert(*pString, nameCall, pos);
@@ -746,8 +717,7 @@ void getNodeString(Node* node, char** pString, char** pFuncsString, int pos, int
 }
 
 void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs, char** error) {
-	allocationLogNum = 0;
-	allocationLogSize = 0;
+	g_log = createAllocationLog();
 
 	int preTextLength = strlen(pre_text);
 
@@ -763,7 +733,7 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 	}
 
 	if (text == NULL) {
-		text = malloc_c(sizeof(char) * preTextLength + 3);
+		text = malloc_c(g_log, sizeof(char) * preTextLength + 3);
 		memset(text, 0, sizeof(char) * preTextLength + 3);
 		strcat(text, pre_text);
 		strcat(text, "=y");
@@ -774,7 +744,7 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 	int tempType;
 	int lastType = 0;
 
-	Token** tokenStack = malloc_c(sizeof(Token*) * (textLength + 1));
+	Token** tokenStack = malloc_c(g_log, sizeof(Token*) * (textLength + 1));
 	memset(tokenStack, 0, sizeof(Token*) * (textLength + 1));
 	int tokenStackPos = 0;
 
@@ -815,7 +785,7 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 
 		if (lastType == 0) {
 			int prevLen = strlen(tempStr);
-			char* reserve = malloc_c(sizeof(char) * (prevLen + 2));
+			char* reserve = malloc_c(g_log, sizeof(char) * (prevLen + 2));
 			memset(reserve, 0, sizeof(char) * (prevLen + 2));
 			memcpy(reserve, tempStr, sizeof(char) * prevLen);
 			reserve[sizeof(char) * prevLen] = c;
@@ -826,7 +796,7 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 		}
 		else if (lastType == tempType) {
 			int prevLen = strlen(tempStr);
-			char* reserve = malloc_c(sizeof(char) * (prevLen + 2));
+			char* reserve = malloc_c(g_log, sizeof(char) * (prevLen + 2));
 			memset(reserve, 0, sizeof(char) * (prevLen + 2));
 			memcpy(reserve, tempStr, sizeof(char) * prevLen);
 			reserve[sizeof(char) * prevLen] = c;
@@ -835,11 +805,11 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 		}
 		else {
 			int prevLen = strlen(tempStr);
-			char* valueStr = malloc_c(sizeof(char) * (prevLen + 1));
+			char* valueStr = malloc_c(g_log, sizeof(char) * (prevLen + 1));
 			memset(valueStr, 0, sizeof(char) * (prevLen + 1));
 			memcpy(valueStr, tempStr, sizeof(char) * prevLen);
 
-			Token* tempT = (Token*)malloc_c(sizeof(Token));
+			Token* tempT = (Token*)malloc_c(g_log, sizeof(Token));
 			tempT->type = lastType;
 			tempT->value = valueStr;
 
@@ -848,13 +818,13 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 
 			lastType = tempType;
 
-			tempStr = malloc_c(sizeof(char) * 2);
+			tempStr = malloc_c(g_log, sizeof(char) * 2);
 			tempStr[0] = c;
 			tempStr[1] = '\0';
 		}
 	}
 
-	Token* tempT = (Token*)malloc_c(sizeof(Token));
+	Token* tempT = (Token*)malloc_c(g_log, sizeof(Token));
 	tempT->type = lastType;
 	tempT->value = tempStr;
 	tokenStack[tokenStackPos] = tempT;
@@ -873,7 +843,7 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 		}
 	}
 
-	Token** stack = malloc_c(sizeof(Token*) * trueTokenNum);
+	Token** stack = malloc_c(g_log, sizeof(Token*) * trueTokenNum);
 	int stackPos = 0;
 
 	for (int i = 0; i < tokenStackPos;i++) {
@@ -882,9 +852,9 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 		if ((t->type == TK_TYPE_OPP || t->type == TK_TYPE_FOP || t->type == TK_TYPE_FCL || t->type == TK_TYPE_FSP) && strlen(t->value) > 1) {
 			int repeatLen = strlen(t->value);
 			for (int i = 0; i < repeatLen; i++) {
-				Token* temp = (Token*)malloc_c(sizeof(Token));
+				Token* temp = (Token*)malloc_c(g_log, sizeof(Token));
 				temp->type = t->type;
-				char* value = malloc_c(sizeof(char) * 2);
+				char* value = malloc_c(g_log, sizeof(char) * 2);
 				value[0] = t->value[0];
 				value[1] = '\0';
 				temp->value = value;
@@ -899,40 +869,40 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 		}
 	}
 
-	Node** unsortedNodes = malloc_c(sizeof(Node*) * stackPos);
+	Node** unsortedNodes = malloc_c(g_log, sizeof(Node*) * stackPos);
 	int nodePos = 0;
 	for (int i = 0; i < stackPos; i++) {
 		Token* t = stack[i];
 		
 		if (t->type == TK_TYPE_NUM) {
-			Node* tempNode = (Node*)malloc_c(sizeof(Node));
+			Node* tempNode = (Node*)malloc_c(g_log, sizeof(Node));
 			tempNode->type = NODE_TYPE_NUM;
 			tempNode->value = t->value;
 			unsortedNodes[nodePos] = tempNode;
 			nodePos++;
 		}
 		else if (t->type == TK_TYPE_OPP) {
-			Node* tempNode = (Node*)malloc_c(sizeof(Node));
+			Node* tempNode = (Node*)malloc_c(g_log, sizeof(Node));
 			tempNode->type = NODE_TYPE_OPP;
 			tempNode->value = t->value;
 			unsortedNodes[nodePos] = tempNode;
 			nodePos++;
 		}
 		else if (t->type == TK_TYPE_FSP) {
-			Node* tempNode = (Node*)malloc_c(sizeof(Node));
+			Node* tempNode = (Node*)malloc_c(g_log, sizeof(Node));
 			tempNode->type = NODE_TYPE_FSP;
 			unsortedNodes[nodePos] = tempNode;
 			nodePos++;
 		}
 		else if (t->type == TK_TYPE_FCL) {
-			Node* tempNode = (Node*)malloc_c(sizeof(Node));
+			Node* tempNode = (Node*)malloc_c(g_log, sizeof(Node));
 			tempNode->type = NODE_TYPE_FCL;
 			unsortedNodes[nodePos] = tempNode;
 			nodePos++;
 		}
 		else if (t->type == TK_TYPE_FOP) {
 			if (i == 0) {
-				Node* tempNode = (Node*)malloc_c(sizeof(Node));
+				Node* tempNode = (Node*)malloc_c(g_log, sizeof(Node));
 				tempNode->type = NODE_TYPE_FUN;
 				tempNode->value = NULL;
 
@@ -940,7 +910,7 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 				nodePos++;
 			}
 			else if (stack[i - 1]->type != TK_TYPE_STR) {
-				Node* tempNode = (Node*)malloc_c(sizeof(Node));
+				Node* tempNode = (Node*)malloc_c(g_log, sizeof(Node));
 				tempNode->type = NODE_TYPE_FUN;
 				tempNode->value = NULL;
 				unsortedNodes[nodePos] = tempNode;
@@ -949,7 +919,7 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 		}
 		else {
 			if (i == stackPos - 1) {
-				Node* tempNode = (Node*)malloc_c(sizeof(Node));
+				Node* tempNode = (Node*)malloc_c(g_log, sizeof(Node));
 				tempNode->type = NODE_TYPE_VAR;
 				tempNode->value = t->value;
 				unsortedNodes[nodePos] = tempNode;
@@ -960,7 +930,7 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 			Token* next = stack[i + 1];
 
 			if (next->type == TK_TYPE_FOP) {
-				Node* tempNode = (Node*)malloc_c(sizeof(Node));
+				Node* tempNode = (Node*)malloc_c(g_log, sizeof(Node));
 				tempNode->type = NODE_TYPE_FUN;
 				tempNode->value = t->value;
 
@@ -985,7 +955,9 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 
 					*error = errorResult;
 
-					cleanUp();
+					cleanUp(g_log);
+					free(g_log);
+					g_log = NULL;
 
 					return NULL;
 				}
@@ -994,7 +966,7 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 				nodePos++;
 			}
 			else {
-				Node* tempNode = (Node*)malloc_c(sizeof(Node));
+				Node* tempNode = (Node*)malloc_c(g_log, sizeof(Node));
 				tempNode->type = NODE_TYPE_VAR;
 				tempNode->value = t->value;
 				unsortedNodes[nodePos] = tempNode;
@@ -1011,11 +983,15 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 			*error = malloc(sizeof(char) * (strlen(preError) + 1));
 			memset(*error, 0, sizeof(char) * (strlen(preError) + 1));
 			strcat(*error, preError);
-			cleanUp();
+			cleanUp(g_log);
+			free(g_log);
+			g_log = NULL;
 			return NULL;
 		}
 		else {
-			cleanUp();
+			cleanUp(g_log);
+			free(g_log);
+			g_log = NULL;
 			*error = "Unkown error";
 			return NULL;
 		}
@@ -1079,5 +1055,7 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 		strcat(*error, preError);
 	}
 
-	cleanUp();
+	cleanUp(g_log);
+	free(g_log);
+	g_log = NULL;
 }

@@ -9,6 +9,9 @@ GLShader* createShader(char* vertSource, char* fragSource, char** attribs, uint3
 
 	result->vertShader = glCreateShader(GL_VERTEX_SHADER);
 	result->fragShader = glCreateShader(GL_FRAGMENT_SHADER);
+	result->program = glCreateProgram();
+	result->uniformCount = uniformCount;
+	result->uniformLocs = malloc(sizeof(GLuint) * uniformCount);
 
 	glShaderSource(result->vertShader, 1, &vertSource, 0);
 	glShaderSource(result->fragShader, 1, &fragSource, 0);
@@ -27,8 +30,9 @@ GLShader* createShader(char* vertSource, char* fragSource, char** attribs, uint3
 		printf("Vertex Shader failed to compile:\n");
 		printf("%s\n", message);
 
-		glDeleteShader(result->vertShader);
-		free(result);
+		free(message);
+
+		deleteShader(result);
 		return NULL;
 	}
 
@@ -45,12 +49,11 @@ GLShader* createShader(char* vertSource, char* fragSource, char** attribs, uint3
 		printf("Fragment Shader failed to compile:\n");
 		printf("%s\n", message);
 
-		glDeleteShader(result->fragShader);
-		free(result);
+		free(message);
+
+		deleteShader(result);
 		return NULL;
 	}
-
-	result->program = glCreateProgram();
 
 	glAttachShader(result->program, result->vertShader);
 	glAttachShader(result->program, result->fragShader);
@@ -62,9 +65,6 @@ GLShader* createShader(char* vertSource, char* fragSource, char** attribs, uint3
 	glLinkProgram(result->program);
 	glValidateProgram(result->program);
 
-	result->uniformCount = uniformCount;
-	result->uniformLocs = malloc(sizeof(GLuint) * uniformCount);
-
 	glUseProgram(result->program);
 
 	for (uint32_t i = 0; i < uniformCount; i++) {
@@ -74,6 +74,14 @@ GLShader* createShader(char* vertSource, char* fragSource, char** attribs, uint3
 	glUseProgram(0);
 
 	return result;
+}
+
+void deleteShader(GLShader* shader) {
+	glDeleteProgram(shader->program);
+	glDeleteShader(shader->vertShader);
+	glDeleteShader(shader->fragShader);
+	free(shader->uniformLocs);
+	free(shader);
 }
 
 GLShader* createQuadShader() {
@@ -504,4 +512,89 @@ GLMesh* createQuadMesh() {
 	glBindVertexArray(0);
 
 	return result;
+}
+
+GLGraph* createGraph(char* eq, char* funcs, GLsizei xSize, GLsizei ySize) {
+	GLGraph* result = malloc(sizeof(GLGraph));
+
+	result->calcShader = createCalcShader(eq, funcs);
+	result->xSize = xSize;
+	result->ySize = ySize;
+
+	glGenFramebuffers(1, &result->dfbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, result->dfbo);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+	glGenTextures(1, &result->dtex);
+	glBindTexture(GL_TEXTURE_2D, result->dtex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, xSize, ySize,
+		0, GL_RG, GL_UNSIGNED_BYTE, NULL);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, result->dtex, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glGenFramebuffers(1, &result->efbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, result->efbo);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+	glGenTextures(1, &result->etex);
+	glBindTexture(GL_TEXTURE_2D, result->etex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, xSize, ySize,
+		0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, result->etex, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	return result;
+}
+
+void deleteGraph(GLGraph* graph) {
+	glDeleteTextures(1, &graph->dtex);
+	glDeleteTextures(1, &graph->etex);
+	glDeleteFramebuffers(1, &graph->dfbo);
+	glDeleteFramebuffers(1, &graph->efbo);
+
+	deleteShader(graph->calcShader);
+
+	free(graph);
+}
+
+void drawGraphData(GLGraph* graph, float relativeTime, float absoluteTime) {
+	glBindFramebuffer(GL_FRAMEBUFFER, graph->dfbo);
+
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glViewport(0, 0, graph->xSize, graph->ySize);
+
+	glUseProgram(graph->calcShader->program);
+
+	glUniform1f(graph->calcShader->uniformLocs[0], g_up);
+	glUniform1f(graph->calcShader->uniformLocs[1], g_down);
+	glUniform1f(graph->calcShader->uniformLocs[2], g_left);
+	glUniform1f(graph->calcShader->uniformLocs[3], g_right);
+	glUniform1f(graph->calcShader->uniformLocs[4], relativeTime);
+	glUniform1f(graph->calcShader->uniformLocs[5], absoluteTime);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void drawGraphEdges(GLGraph* graph) {
+	glBindTexture(GL_TEXTURE_2D, graph->dtex);
+	glActiveTexture(GL_TEXTURE0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, graph->efbo);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glViewport(0, 0, graph->xSize, graph->ySize);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 }

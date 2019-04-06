@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <math.h>
 #include <string.h>
+#include "glUtils.h"
 
 extern double g_left;
 extern double g_right;
@@ -13,10 +14,18 @@ extern double g_up;
 extern int g_windowWidth;
 extern int g_windowHeight;
 
+typedef struct AllocationLog {
+	size_t num;
+	size_t size;
+	void** log;
+} AllocationLog;
+
 typedef struct Entry {
 	STextField* textField;
 	SButton* submitButton;
 	SButton* deleteButton;
+	GLGraph* graph;
+	uint8_t active;
 
 	int ID;
 	struct Entry* next;
@@ -35,6 +44,9 @@ typedef struct Color {
 	float r, g, b;
 } Color;
 
+AllocationLog* createAllocationLog();
+void* malloc_c(AllocationLog* log, size_t size);
+void cleanUp(AllocationLog* log);
 void getModelviewMatrix(float* vals, float x, float y, float w, float h);
 void getModelviewMatrixR(float* vals, float x, float y, float w, float h, float r);
 void getOrthoMatrix(float* vals, float left, float right, float bottom, float top, float near, float far);

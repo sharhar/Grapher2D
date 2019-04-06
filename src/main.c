@@ -7,12 +7,13 @@ void* malloc(size_t);
 
 #define COLOR_NUM 5
 #define ZOOM_PERCENT 0.025
-#define GRAPH_PORT_SIZE 600
+#define GRAPH_PORT_SIZE 1200
 
 double g_left = -6;
 double g_right = 6;
 double g_down = -6;
 double g_up = 6;
+ParsingInfo* g_parseInfo;
 
 int g_windowWidth = 600;
 int g_windowHeight = 600;
@@ -23,7 +24,33 @@ GLuint g_gtex;
 GLuint g_fbo;
 
 void submitCallback(Entry* entry) {
-	printf("%d: %s\n", entry->ID, swGetTextFromTextField(entry->textField));
+	//printf("%d: %s\n", entry->ID, swGetTextFromTextField(entry->textField));
+	char* text = swGetTextFromTextField(entry->textField);
+	if (strlen(text) == 0) {
+		if (entry->graph != NULL) {
+			deleteGraph(entry->graph);
+		}
+		
+		entry->graph = NULL;
+		entry->active = 0;
+	}
+	else {
+		if (entry->graph != NULL) {
+			deleteGraph(entry->graph);
+		}
+
+		char* error = NULL;
+
+		char* ffeq = "";
+		char* feq = "";
+		eqConvert(g_parseInfo, text, &feq, &ffeq, &error);
+		printf("eq    = %s\nfeq   = %s\nffeq  = %s\nerror = %s\n", text, feq, ffeq, error);
+		entry->graph = createGraph(feq, ffeq, GRAPH_PORT_SIZE, GRAPH_PORT_SIZE);
+		free(error);
+		free(feq);
+		free(ffeq);
+		entry->active = 1;
+	}
 }
 
 int main() {
@@ -50,17 +77,26 @@ int main() {
 		createEntry(state, i);
 	}
 
-	ParsingInfo* parseInfo = eqGetDefaultParseInfo();
-	
-	char* eq = "tan(x)^2 + sin(x)^2 = cos(x*y)";
-	char* error = NULL;
+	g_parseInfo = eqGetDefaultParseInfo();
+	g_colors[0].r = 0.8f;
+	g_colors[0].g = 0.2f;
+	g_colors[0].b = 0.2f;
 
-	char* ffeq = "";
-	char* feq = "";
-	
-	eqConvert(parseInfo, eq, &feq, &ffeq, &error);
+	g_colors[1].r = 0.1f;
+	g_colors[1].g = 0.6f;
+	g_colors[1].b = 0.1f;
 
-	printf("eq    = %s\nfeq   = %s\nffeq  = %s\nerror = %s\n", eq, feq, ffeq, error);
+	g_colors[2].r = 0.2f;
+	g_colors[2].g = 0.2f;
+	g_colors[2].b = 0.9f;
+
+	g_colors[3].r = 0.9f;
+	g_colors[3].g = 0.65f;
+	g_colors[3].b = 0.2f;
+
+	g_colors[4].r = 0.8f;
+	g_colors[4].g = 0.2f;
+	g_colors[4].b = 0.8f;
 
 	swMakeContextCurrent(glView);
 
@@ -74,7 +110,6 @@ int main() {
 	GLMesh* quad = createQuadMesh();
 	GLShader* quadShader = createQuadShader();
 	GLShader* lineShader = createLineShader();
-	GLShader* calcShader = createCalcShader(feq, ffeq);
 	GLShader* edgeShader = createEdgeShader(GRAPH_PORT_SIZE);
 	GLShader* renderShader = createRenderShader(GRAPH_PORT_SIZE);
 
@@ -95,43 +130,10 @@ int main() {
 	preMouseState.x = 0;
 	preMouseState.y = 0;
 	preMouseState.ldown = 0;
+	preMouseState.scroll = 0;
 	SMouseState* mouseState = swGetMouseState(window);
 
-	GLuint dfbo, dtex, efbo, etex, g_fbo, g_gtex;
-
-	glGenFramebuffers(1, &dfbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, dfbo);
-	glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-	glGenTextures(1, &dtex);
-	glBindTexture(GL_TEXTURE_2D, dtex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, GRAPH_PORT_SIZE, GRAPH_PORT_SIZE,
-		0, GL_RG, GL_UNSIGNED_BYTE, NULL);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, dtex, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	glGenFramebuffers(1, &efbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, efbo);
-	glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-	glGenTextures(1, &etex);
-	glBindTexture(GL_TEXTURE_2D, etex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, GRAPH_PORT_SIZE, GRAPH_PORT_SIZE,
-		0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, etex, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	GLuint g_fbo, g_gtex;
 
 	glGenFramebuffers(1, &g_fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
@@ -155,16 +157,18 @@ int main() {
 
 	float time = 0;
 
+	uint8_t i_color = 0;
+
 	while (!swCloseRequested(window)) {
 		swPollEvents();
-        
-        //printf("%d\n", fps);
-        
-        //fps++;
+
+		//printf("%d\n", fps);
+
+		//fps++;
 
 		mouseUpdate(mouseState, &preMouseState, glViewBounds);
+		time += 1.0f / 60.0f;
 
-        
 		glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
 
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -176,51 +180,49 @@ int main() {
 		glEnableVertexAttribArray(1);
 
 		glUseProgram(lineShader->program);
-		
+
 		glUniform3f(lineShader->uniformLocs[2], 0.45f, 0.45f, 0.45f);
 		drawGrid(lineModel, lineShader->uniformLocs[1], g_left, g_right, g_down, g_up, 600, 600);
 		glUniform3f(lineShader->uniformLocs[2], 0, 0, 0);
 		drawAxes(lineModel, lineShader->uniformLocs[1], 600, 600);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, dfbo);
-
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		glViewport(0, 0, GRAPH_PORT_SIZE, GRAPH_PORT_SIZE);
-
-		glUseProgram(calcShader->program);
-
-		glUniform1f(calcShader->uniformLocs[0], g_up);
-		glUniform1f(calcShader->uniformLocs[1], g_down);
-		glUniform1f(calcShader->uniformLocs[2], g_left);
-		glUniform1f(calcShader->uniformLocs[3], g_right);
-		glUniform1f(calcShader->uniformLocs[4], time);
-		glUniform1f(calcShader->uniformLocs[5], 0);
-
-		time += 1.0f / 60.0f;
-
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-
-		
-		glBindFramebuffer(GL_FRAMEBUFFER, efbo);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glViewport(0, 0, GRAPH_PORT_SIZE, GRAPH_PORT_SIZE);
+		Entry* currentEntry = state->root;
+		while (currentEntry != NULL) {
+			if (currentEntry->active) {
+				drawGraphData(currentEntry->graph, time, 0);
+			}
+			currentEntry = currentEntry->next;
+		}
 
 		glUseProgram(edgeShader->program);
-		glBindTexture(GL_TEXTURE_2D, dtex);
-		glActiveTexture(GL_TEXTURE0);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
 		
+		currentEntry = state->root;
+		while (currentEntry != NULL) {
+			if (currentEntry->active) {
+				drawGraphEdges(currentEntry->graph);
+			}
+			currentEntry = currentEntry->next;
+		}
+
 		glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
 
 		glViewport(0, 0, GRAPH_PORT_SIZE, GRAPH_PORT_SIZE);
 
 		glUseProgram(renderShader->program);
-		glUniform3f(renderShader->uniformLocs[1], 1, 0, 1);
-		glBindTexture(GL_TEXTURE_2D, etex);
-		glActiveTexture(GL_TEXTURE0);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		
+
+		i_color = 0;
+		currentEntry = state->root;
+		while (currentEntry != NULL) {
+			if (currentEntry->active) {
+				glUniform3f(renderShader->uniformLocs[1], g_colors[i_color % COLOR_NUM].r, g_colors[i_color % COLOR_NUM].g, g_colors[i_color % COLOR_NUM].b);
+				glBindTexture(GL_TEXTURE_2D, currentEntry->graph->etex);
+				glActiveTexture(GL_TEXTURE0);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+			}
+			i_color++;
+			currentEntry = currentEntry->next;
+		}
+
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, 600, 600);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -229,8 +231,6 @@ int main() {
 		glBindTexture(GL_TEXTURE_2D, g_gtex);
 		glActiveTexture(GL_TEXTURE0);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-
-		//printf("x: %f\ny: %f\nl: %d\n", mouseState->x, mouseState->y, mouseState->ldown);
 
 		swSwapBufers(glView);
 		swDraw(window);

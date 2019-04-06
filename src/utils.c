@@ -2,6 +2,50 @@
 #include <math.h>
 
 #define DEG_TO_RAD 0.0174532925199
+#define ZOOM_PERCENT 0.025
+
+AllocationLog* createAllocationLog() {
+	AllocationLog* result = malloc(sizeof(AllocationLog));
+
+	result->log = NULL;
+	result->num = 0;
+	result->size = 0;
+
+	return result;
+}
+
+void* malloc_c(AllocationLog* log, size_t size) {
+	void* result = malloc(size);
+	memset(result, 0, size);
+	log->num += size;
+
+	void** newLog = malloc(sizeof(void*) * (log->size + 1));
+	if (log->log != NULL) {
+		memcpy(newLog, log->log, sizeof(void*) * log->size);
+		free(log->log);
+	}
+	newLog[log->size] = result;
+	log->size++;
+
+	log->log = newLog;
+
+	return result;
+}
+
+void cleanUp(AllocationLog* log) {
+	printf("Allocated: %d bytes\n", log->num);
+	printf("Allocations: %d\n", log->size);
+
+	for (int i = 0; i < log->size; i++) {
+		free(log->log[i]);
+	}
+
+	free(log->log);
+
+	log->log = NULL;
+	log->size = 0;
+	log->num = 0;
+}
 
 void getModelviewMatrix(float* vals, float x, float y, float w, float h) {
 	vals[0] = w;
@@ -83,6 +127,8 @@ void createEntry(UIState* uiState, int ID) {
 	entry->deleteButton = NULL;
 	entry->ID = ID;
 	entry->next = NULL;
+	entry->graph = NULL;
+	entry->active = 0;
 
 	if (uiState->first) {
 		uiState->root = entry;
@@ -199,6 +245,8 @@ void mouseUpdate(SMouseState* state, SMouseState* preState, SRect* bounds) {
 	posx -= bounds->x;
 	posy -= (620 - (bounds->y + bounds->height));
 
+	int32_t scrollDiff = state->scroll - preState->scroll;
+
 	if (hovering) {
 		if (preState->x != posx || preState->y != posy || preState->ldown != down) {
 
@@ -226,6 +274,45 @@ void mouseUpdate(SMouseState* state, SMouseState* preState, SRect* bounds) {
 				g_down += moveY;
 				g_up += moveY;
 			}
+		}
+
+		if (scrollDiff != 0) {
+			
+			double x1 = 0;
+			double y1 = 0;
+			double x2 = g_right - g_left;
+			double y2 = g_up - g_down;
+
+			double w1 = (posx / 600.0)*x2;
+			double w2 = x2 - w1;
+
+			if (scrollDiff > 0) {
+				x1 = 2 * ZOOM_PERCENT*w1;
+				x2 = x2 - 2 * ZOOM_PERCENT*w2;
+			}
+			else if (scrollDiff < 0) {
+				x1 = -2 * ZOOM_PERCENT*w1;
+				x2 = x2 + 2 * ZOOM_PERCENT*w2;
+			}
+
+			double h1 = ((600.0 - posy) / 600.0)*(y2);
+			double h2 = y2 - ((600.0 - posy) / 600.0)*(y2);
+
+			if (scrollDiff > 0) {
+				y1 = 2 * ZOOM_PERCENT*h1;
+				y2 = y2 - 2 * ZOOM_PERCENT*h2;
+			}
+			else if (scrollDiff < 0) {
+				y1 = -2 * ZOOM_PERCENT*h1;
+				y2 = y2 + 2 * ZOOM_PERCENT*h2;
+			}
+
+			g_right = g_left + x2;
+			g_left = g_left + x1;
+			g_up = g_down + y2;
+			g_down = g_down + y1;
+
+			preState->scroll = state->scroll;
 		}
 	}
 
