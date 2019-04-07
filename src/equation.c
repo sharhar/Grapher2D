@@ -959,7 +959,7 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 					free(g_log);
 					g_log = NULL;
 
-					return NULL;
+					return;
 				}
 
 				unsortedNodes[nodePos] = tempNode;
@@ -986,14 +986,14 @@ void eqConvert(ParsingInfo* parseInfo, char* pre_text, char** body, char** funcs
 			cleanUp(g_log);
 			free(g_log);
 			g_log = NULL;
-			return NULL;
+			return;
 		}
 		else {
 			cleanUp(g_log);
 			free(g_log);
 			g_log = NULL;
 			*error = "Unkown error";
-			return NULL;
+			return;
 		}
 	}
 
