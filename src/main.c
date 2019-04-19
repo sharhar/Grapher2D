@@ -44,8 +44,15 @@ void submitCallback(Entry* entry) {
 		char* ffeq = "";
 		char* feq = "";
 		eqConvert(g_parseInfo, text, &feq, &ffeq, &error);
-		printf("eq    = %s\nfeq   = %s\nffeq  = %s\nerror = %s\n", text, feq, ffeq, error);
+
+		if (error != NULL) {
+			swPopup("Error in Parsing Function", error);
+
+			return;
+		}
+
 		entry->graph = createGraph(feq, ffeq, GRAPH_PORT_SIZE, GRAPH_PORT_SIZE);
+
 		free(error);
 		free(feq);
 		free(ffeq);
@@ -55,6 +62,7 @@ void submitCallback(Entry* entry) {
 
 int main() {
 	swInit();
+	swInitGL();
 
 	SWindow* window = swCreateWindow(1000, 620, "Grapher2D");
 	SView* rootView = swGetRootView(window);
@@ -66,7 +74,9 @@ int main() {
 	attribs.swapInterval = 1;
 
 	SRect* glViewBounds = swMakeRect(390, 10, 600, 600);
-	SOpenGLView* glView = swCreateOpenGLView(rootView, glViewBounds, &attribs);
+	SView* view = swCreateView(rootView, glViewBounds);
+	SOpenGLContext* conetxt = swCreateOpenGLContext(view, &attribs);
+
 
 	UIState* state = malloc(sizeof(UIState));
 	state->y = 0;
@@ -76,6 +86,7 @@ int main() {
 	for (int i = 0; i < 15; i++) {
 		createEntry(state, i);
 	}
+
 
 	g_parseInfo = eqGetDefaultParseInfo();
 	g_colors[0].r = 0.8f;
@@ -98,9 +109,9 @@ int main() {
 	g_colors[4].g = 0.2f;
 	g_colors[4].b = 0.8f;
 
-	swMakeContextCurrent(glView);
+	swMakeContextCurrent(conetxt);
 
-	if (!gladLoadGLLoader((GLADloadproc)swGetProcAddress)) {
+	if (!gladLoadGLLoader((GLADloadproc)swGetProcAddressGL)) {
 		printf("Could not load opengl!\n");
 		return 0;
 	}
@@ -158,6 +169,8 @@ int main() {
 	float time = 0;
 
 	uint8_t i_color = 0;
+
+	//SLabel* label = swCreateLabel(rootView, swMakeRect(250, 200, 300, 100), "Hello World!");
 
 	while (!swCloseRequested(window)) {
 		swPollEvents();
@@ -232,7 +245,7 @@ int main() {
 		glActiveTexture(GL_TEXTURE0);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
-		swSwapBufers(glView);
+		swSwapBufers(conetxt);
 		swDraw(window);
 	}
 
