@@ -3,6 +3,8 @@
 #include "glUtils.h"
 #include <stdio.h>
 
+#include <swin/SWin.h>
+
 void* malloc(size_t);
 
 #define COLOR_NUM 5
@@ -17,6 +19,9 @@ ParsingInfo* g_parseInfo;
 
 int g_windowWidth = 600;
 int g_windowHeight = 600;
+
+double g_time = 0;
+SWindow* g_window = NULL;
 
 Color g_colors[COLOR_NUM];
 
@@ -35,10 +40,6 @@ void submitCallback(Entry* entry) {
 		entry->active = 0;
 	}
 	else {
-		if (entry->graph != NULL) {
-			deleteGraph(entry->graph);
-		}
-
 		char* error = NULL;
 
 		char* ffeq = "";
@@ -46,9 +47,15 @@ void submitCallback(Entry* entry) {
 		eqConvert(g_parseInfo, text, &feq, &ffeq, &error);
 
 		if (error != NULL) {
-			swPopup("Error in Parsing Function", error);
+			//fiswPopup(g_window, "Error in Parsing Function", error);
+            
+            printf("Error: %s\n", error);
 
 			return;
+		}
+		
+		if (entry->graph != NULL) {
+			deleteGraph(entry->graph);
 		}
 
 		entry->graph = createGraph(feq, ffeq, GRAPH_PORT_SIZE, GRAPH_PORT_SIZE);
@@ -57,6 +64,7 @@ void submitCallback(Entry* entry) {
 		free(feq);
 		free(ffeq);
 		entry->active = 1;
+		entry->time = g_time;
 	}
 }
 
@@ -65,6 +73,7 @@ int main() {
 	swInitGL();
 
 	SWindow* window = swCreateWindow(1000, 620, "Grapher2D");
+    g_window = window;
 	SView* rootView = swGetRootView(window);
 
 	SOpenGLContextAttribs attribs;
@@ -77,7 +86,6 @@ int main() {
 	SView* view = swCreateView(rootView, glViewBounds);
 	SOpenGLContext* conetxt = swCreateOpenGLContext(view, &attribs);
 
-
 	UIState* state = malloc(sizeof(UIState));
 	state->y = 0;
 	state->first = 1;
@@ -86,7 +94,6 @@ int main() {
 	for (int i = 0; i < 15; i++) {
 		createEntry(state, i);
 	}
-
 
 	g_parseInfo = eqGetDefaultParseInfo();
 	g_colors[0].r = 0.8f;
@@ -163,10 +170,8 @@ int main() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
-    int fps = 0;
-
-	float time = 0;
+	
+	double start_time = swGetTime();
 
 	uint8_t i_color = 0;
 
@@ -175,13 +180,9 @@ int main() {
 	while (!swCloseRequested(window)) {
 		swPollEvents();
 
-		//printf("%d\n", fps);
-
-		//fps++;
-
 		mouseUpdate(mouseState, &preMouseState, glViewBounds);
-		time += 1.0f / 60.0f;
-
+		g_time = swGetTime() - start_time;
+		
 		glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
 
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -202,7 +203,7 @@ int main() {
 		Entry* currentEntry = state->root;
 		while (currentEntry != NULL) {
 			if (currentEntry->active) {
-				drawGraphData(currentEntry->graph, time, 0);
+				drawGraphData(currentEntry->graph, (float)(g_time-currentEntry->time), (float)(g_time));
 			}
 			currentEntry = currentEntry->next;
 		}
@@ -249,7 +250,7 @@ int main() {
 		swDraw(window);
 	}
 
-	swCloseWindow(window);
+	swDestroyWindow(window);
 
 	return 0;
 }

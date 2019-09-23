@@ -26,6 +26,7 @@ typedef struct Entry {
 	SButton* deleteButton;
 	GLGraph* graph;
 	uint8_t active;
+	double time;
 
 	int ID;
 	struct Entry* next;
