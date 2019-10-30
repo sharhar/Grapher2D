@@ -55,5 +55,4 @@ double abs_c(double n1);
 void createEntry(UIState* uiState, int ID);
 void drawAxes(float* modelMat, GLuint modelLoc, int width, int height);
 void drawGrid(float* modelMat, GLuint modelLoc, double xl, double xr, double yd, double yu, int width, int height);
-void mouseUpdate(SMouseState* state, SMouseState* preState, SRect* bounds);
 void submitCallback(Entry* entry);

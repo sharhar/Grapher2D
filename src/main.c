@@ -28,6 +28,91 @@ Color g_colors[COLOR_NUM];
 GLuint g_gtex;
 GLuint g_fbo;
 
+float g_posx = 0;
+float g_posy = 0;
+
+uint8_t g_mouseDown = 0;
+
+void scrollCallback(float xpos, float ypos, float scroll) {
+	double x1 = 0;
+	double y1 = 0;
+	double x2 = g_right - g_left;
+	double y2 = g_up - g_down;
+	
+	double w1 = (g_posx / 600.0)*x2;
+	double w2 = x2 - w1;
+	
+	if (scroll > 0) {
+		x1 = 2 * ZOOM_PERCENT*w1;
+		x2 = x2 - 2 * ZOOM_PERCENT*w2;
+	}
+	else if (scroll < 0) {
+		x1 = -2 * ZOOM_PERCENT*w1;
+		x2 = x2 + 2 * ZOOM_PERCENT*w2;
+	}
+	
+	double h1 = ((600.0 - g_posy) / 600.0)*(y2);
+	double h2 = y2 - ((600.0 - g_posy) / 600.0)*(y2);
+	
+	if (scroll > 0) {
+		y1 = 2 * ZOOM_PERCENT*h1;
+		y2 = y2 - 2 * ZOOM_PERCENT*h2;
+	}
+	else if (scroll < 0) {
+		y1 = -2 * ZOOM_PERCENT*h1;
+		y2 = y2 + 2 * ZOOM_PERCENT*h2;
+	}
+	
+	g_right = g_left + x2;
+	g_left = g_left + x1;
+	g_up = g_down + y2;
+	g_down = g_down + y1;
+}
+
+void mouseDownCallback(float xpos, float ypos, int button) {
+	if(button == SWIN_MOUSE_BUTTON_LEFT) {
+		g_mouseDown = 1;
+	}
+	
+	g_posx = xpos;
+	g_posy = ypos;
+}
+
+void mouseUpCallback(float xpos, float ypos, int button) {
+	if(button == SWIN_MOUSE_BUTTON_LEFT) {
+		g_mouseDown = 0;
+	}
+	
+	g_posx = xpos;
+	g_posy = ypos;
+}
+
+void mouseMovedCallback(float xpos, float ypos) {
+	float dx = xpos - g_posx;
+	float dy = ypos - g_posy;
+	
+	if (g_mouseDown) {
+		double width = g_right - g_left;
+		double percentX = dx / g_windowWidth;
+		
+		double moveX = -width * percentX;
+		
+		g_left += moveX;
+		g_right += moveX;
+		
+		double height = g_up - g_down;
+		double percentY = dy / g_windowHeight;
+		
+		double moveY = height * percentY;
+		
+		g_down += moveY;
+		g_up += moveY;
+	}
+	
+	g_posx = xpos;
+	g_posy = ypos;
+}
+
 void submitCallback(Entry* entry) {
 	//printf("%d: %s\n", entry->ID, swGetTextFromTextField(entry->textField));
 	char* text = swGetTextFromTextField(entry->textField);
@@ -75,6 +160,8 @@ int main() {
 	SWindow* window = swCreateWindow(1000, 620, "Grapher2D");
     g_window = window;
 	SView* rootView = swGetRootView(window);
+	
+	
 
 	SOpenGLContextAttribs attribs;
 	attribs.major = 3;
@@ -85,6 +172,11 @@ int main() {
 	SRect* glViewBounds = swMakeRect(390, 10, 600, 600);
 	SView* view = swCreateView(rootView, glViewBounds);
 	SOpenGLContext* conetxt = swCreateOpenGLContext(view, &attribs);
+	
+	swSetMouseScrollCallback(view, scrollCallback);
+	swSetMouseDownCallback(view, mouseDownCallback);
+	swSetMouseUpCallback(view, mouseUpCallback);
+	swSetMouseMovedCallback(view, mouseMovedCallback);
 
 	UIState* state = malloc(sizeof(UIState));
 	state->y = 0;
@@ -144,13 +236,6 @@ int main() {
 
 	glUseProgram(0);
 
-	SMouseState preMouseState;
-	preMouseState.x = 0;
-	preMouseState.y = 0;
-	preMouseState.ldown = 0;
-	preMouseState.scroll = 0;
-	SMouseState* mouseState = swGetMouseState(window);
-
 	GLuint g_fbo, g_gtex;
 
 	glGenFramebuffers(1, &g_fbo);
@@ -180,7 +265,6 @@ int main() {
 	while (!swCloseRequested(window)) {
 		swPollEvents();
 
-		mouseUpdate(mouseState, &preMouseState, glViewBounds);
 		g_time = swGetTime() - start_time;
 		
 		glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
