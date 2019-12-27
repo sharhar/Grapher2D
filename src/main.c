@@ -2,10 +2,9 @@
 #include "equation.h"
 #include "glUtils.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <swin/SWin.h>
-
-void* malloc(size_t);
 
 #define COLOR_NUM 5
 #define ZOOM_PERCENT 0.025
