@@ -25,4 +25,5 @@ if(APPLE)
 	target_link_libraries (Grapher2D ${COCOA_LIBRARY})
 endif()
 
+target_link_libraries (Grapher2D LINK_PUBLIC VKL)
 target_link_libraries (Grapher2D LINK_PUBLIC SWin)

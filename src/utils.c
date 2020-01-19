@@ -14,7 +14,7 @@ AllocationLog* createAllocationLog() {
 	return result;
 }
 
-void* malloc_c(AllocationLog* log, size_t size) {
+void* malloc_c2(AllocationLog* log, size_t size) {
 	void* result = malloc(size);
 	memset(result, 0, size);
 	log->num += size;

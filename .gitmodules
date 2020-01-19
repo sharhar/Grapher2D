@@ -2,3 +2,9 @@
 	path = SWin
 	url = https://github.com/sharhar/SWin.git
 	branch = master
+[submodule "shaderc"]
+	path = shaderc
+	url = git@github.com:google/shaderc.git
+[submodule "VKL"]
+	path = VKL
+	url = git@github.com:sharhar/VKL.git

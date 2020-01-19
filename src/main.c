@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include <swin/SWin.h>
+#include <VKL/VKL.h>
 
 #define COLOR_NUM 5
 #define ZOOM_PERCENT 0.025
@@ -154,23 +155,48 @@ void submitCallback(Entry* entry) {
 
 int main() {
 	swInit();
-	swInitGL();
+	swInitVK();
 
 	SWindow* window = swCreateWindow(1000, 620, "Grapher2D");
     g_window = window;
 	SView* rootView = swGetRootView(window);
-	
-	
 
 	SOpenGLContextAttribs attribs;
 	attribs.major = 3;
 	attribs.minor = 3;
 	attribs.debug = 0;
-	attribs.swapInterval = 1;
+	attribs.swapInterval = 0;
 
 	SRect* glViewBounds = swMakeRect(390, 10, 600, 600);
 	SView* view = swCreateView(rootView, glViewBounds);
-	SOpenGLContext* conetxt = swCreateOpenGLContext(view, &attribs);
+
+	uint32_t count = 0;
+	char** extensions = swGetRequiredExtensionsVK(&count);
+
+	VKLInstance* instance;
+	VkBool32 debug = 0;
+	vklCreateInstance(&instance, NULL, debug, extensions[1], swGetProcAddressVK);
+
+	VKLSurface* surface = malloc_c(sizeof(VKLSurface));
+	surface->width = 600;
+	surface->height = 600;
+
+	swCreateWindowSurfaceVK(instance->instance, view, NULL, &surface->surface);
+
+	VKLDevice* device;
+	VKLDeviceGraphicsContext** deviceContexts;
+	vklCreateDevice(instance, &device, &surface, 1, &deviceContexts, 0, NULL);
+
+	VKLDeviceGraphicsContext* devCon = deviceContexts[0];
+
+	VKLSwapChain* swapChain;
+	VKLFrameBuffer* backBuffer;
+
+	vklCreateSwapChain(devCon, &swapChain, VK_TRUE);
+	
+	vklGetBackBuffer(swapChain, &backBuffer);
+
+	//SOpenGLContext* conetxt = swCreateOpenGLContext(view, &attribs);
 	
 	swSetMouseScrollCallback(view, scrollCallback);
 	swSetMouseDownCallback(view, mouseDownCallback);
@@ -207,6 +233,7 @@ int main() {
 	g_colors[4].g = 0.2f;
 	g_colors[4].b = 0.8f;
 
+	/*
 	swMakeContextCurrent(conetxt);
 
 	if (!gladLoadGLLoader((GLADloadproc)swGetProcAddressGL)) {
@@ -254,18 +281,50 @@ int main() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	
+	*/
+
 	double start_time = swGetTime();
 
 	uint8_t i_color = 0;
 
+	double lasttime = start_time;
+	uint32_t frames = 0;
+
 	//SLabel* label = swCreateLabel(rootView, swMakeRect(250, 200, 300, 100), "Hello World!");
+
+	VkCommandBuffer cmdBuffer;
+	vklAllocateCommandBuffer(devCon, &cmdBuffer, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+
+	vklSetClearColor(backBuffer, 0.25f, 0.45f, 1.0f, 1.0f);
 
 	while (!swCloseRequested(window)) {
 		swPollEvents();
 
+		frames++;
+
 		g_time = swGetTime() - start_time;
+
+		if (swGetTime() - lasttime > 1.0) {
+			printf("frames = %d\n", frames);
+			lasttime = swGetTime();
+			frames = 0;
+		}
+
+		vklBeginCommandBuffer(device, cmdBuffer);
+
+		vklBeginRender(device, backBuffer, cmdBuffer);
+
 		
+
+		vklEndRender(device, backBuffer, cmdBuffer);
+
+		vklEndCommandBuffer(device, cmdBuffer);
+
+		vklExecuteCommandBuffer(devCon, cmdBuffer);
+
+		vklPresent(swapChain);
+
+		/*
 		glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
 
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -330,6 +389,8 @@ int main() {
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		swSwapBufers(conetxt);
+		*/
+
 		swDraw(window);
 	}
 

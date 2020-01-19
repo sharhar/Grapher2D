@@ -153,6 +153,7 @@ else {coord.y = down;}\
 }\n";
 
 	char* preFragSource0 = "#version 330 core\n\
+#extension GL_NV_shader_buffer_load : enable\n\
 uniform float t;\n\
 uniform float at;\n\
 const float e = 2.718281828459045;\n\
@@ -205,7 +206,33 @@ h = a_+(k_*dx_);\n\
 result1_ += 2*pow_c(h, (num-1))*exp(-h);\n\
 }\n\
 return (dx_/2)*(result0_ + result1_)/x;\n\
-\n}\n";
+\n}\n\
+float sin_c(float x) {/*\
+float sx = 0.5 * x / pi;\
+	float tsx = abs(sx - float(int(sx)));\
+\
+	float negval = sign(x);\
+\
+	float sm = sign(1.0 - tsx * 2.0);\
+\
+	float stsx = tsx * 2.0 - float(int(tsx * 2.0));\
+\
+	float stsx_rep = 1.0 - abs(1.0 - stsx * 2.0);\
+\
+	float enable_cos = sign(stsx_rep * 2.0 - 1.0) * 0.5 + 0.5;\
+	float enable_sin = abs(enable_cos - 1.0);*/\
+\
+	float cx = 0.25 * pi - abs(1.0 - x * 2.0) * 0.25 * pi;\n\
+	float cx3 = cx  * cx * cx;\
+	float cx5 = cx3 * cx * cx;\
+	float cx7 = cx5 * cx * cx;\
+	float cx9 = cx7 * cx * cx;\n\
+\
+	float result = cx - (cx3 / 6.0) + (cx5 / 120.0) - (cx7 / 5040.0) + (cx9 / 362880.0);\n\
+\
+	float result_cos = sqrt(1.0 - result*result) ;\n\
+	return result + result_cos;//negval * sm * (result * enable_sin + result_cos * enable_cos);\n\
+}";
 
 	char* preFragSource1 = "void main(void) {\n\
 float x = coord.x;\n\
@@ -221,6 +248,12 @@ result = ";
 float total0 = result;\n\
 out_color = vec4(total, total0, 0.0, 1.0);\n\
 }\n";
+
+	/*
+	
+	
+	
+	*/
 
 	int pfs0l = strlen(preFragSource0);
 	int pfs1l = strlen(preFragSource1);

@@ -46,7 +46,7 @@ typedef struct Color {
 } Color;
 
 AllocationLog* createAllocationLog();
-void* malloc_c(AllocationLog* log, size_t size);
+void* malloc_c2(AllocationLog* log, size_t size);
 void cleanUp(AllocationLog* log);
 void getModelviewMatrix(float* vals, float x, float y, float w, float h);
 void getModelviewMatrixR(float* vals, float x, float y, float w, float h, float r);

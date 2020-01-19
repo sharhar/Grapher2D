@@ -15,4 +15,6 @@ include_directories(
 )
 
 add_subdirectory(SWin)
+add_subdirectory(VKL)
+add_subdirectory(shaderc)
 add_subdirectory(src)
